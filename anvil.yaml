@@ -3,7 +3,13 @@ correct_dependency_ids: {}
 db_schema:
   api_keys:
     client: none
-    columns: []
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: Key Title
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: Personal Access Key
+      type: string
     server: search
     title: API Keys
   call_statistics:
