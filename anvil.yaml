@@ -10,6 +10,12 @@ db_schema:
     - admin_ui: {order: 1, width: 200}
       name: Personal Access Key
       type: string
+    - admin_ui: {order: 2, width: 200}
+      name: Client ID
+      type: string
+    - admin_ui: {order: 3, width: 200}
+      name: Secret
+      type: string
     server: search
     title: API Keys
   call_statistics:
