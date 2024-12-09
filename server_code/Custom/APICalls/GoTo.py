@@ -3,67 +3,55 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.server
-import http.client
 import requests
 import json
+import time
 
-# Configuration
-ACCESS_TOKEN = "eyJraWQiOiI2MjAiLCJhbGciOiJSUzUxMiJ9.eyJzYyI6ImNhbGwtY29udHJvbC52MS5jYWxscy5jb250cm9sIGNhbGxzLnYyLmluaXRpYXRlIG1lc3NhZ2luZy52MS53cml0ZSBpZGVudGl0eTpzY2ltLm1lIGNhbGwtZXZlbnRzLnYxLmV2ZW50cy5yZWFkIG1lc3NhZ2luZy52MS5ub3RpZmljYXRpb25zLm1hbmFnZSB2b2ljZW1haWwudjEubm90aWZpY2F0aW9ucy5tYW5hZ2UgcmVjb3JkaW5nLnYxLm5vdGlmaWNhdGlvbnMubWFuYWdlIHN1cHBvcnQ6IHZvaWNlbWFpbC52MS52b2ljZW1haWxzLndyaXRlIGZheC52MS53cml0ZSB2b2ljZS1hZG1pbi52MS53cml0ZSBpZGVudGl0eTogd2VicnRjLnYxLnJlYWQgd2VicnRjLnYxLndyaXRlIGNvbGxhYjogdm9pY2UtYWRtaW4udjEucmVhZCBwcmVzZW5jZS52MS5yZWFkIHJlY29yZGluZy52MS5yZWFkIGNhbGwtZXZlbnRzLnYxLm5vdGlmaWNhdGlvbnMubWFuYWdlIGlkZW50aXR5OnNjaW0ub3JnIHByZXNlbmNlLnYxLndyaXRlIGZheC52MS5yZWFkIGNhbGwtaGlzdG9yeS52MS5ub3RpZmljYXRpb25zLm1hbmFnZSBwcmVzZW5jZS52MS5ub3RpZmljYXRpb25zLm1hbmFnZSBtZXNzYWdpbmcudjEuc2VuZCBtZXNzYWdpbmcudjEucmVhZCBjci52MS5yZWFkIGZheC52MS5ub3RpZmljYXRpb25zLm1hbmFnZSB1c2Vycy52MS5saW5lcy5yZWFkIHZvaWNlbWFpbC52MS52b2ljZW1haWxzLnJlYWQiLCJzdWIiOiIxOTIxNzAxNTU0NjE0MDIxMzk4IiwiYXVkIjoiMjA5M2ZjYjMtZGQzNS00MzIwLWI1YmYtMWU5MmU3ZWYwMDMyIiwib2duIjoicHdkIiwibHMiOiJhMjI0NzlmOC00MTRiLTRkYzYtOWIwNC1kNDhiY2MwNzlmN2QiLCJ0eXAiOiJhIiwiZXhwIjoxNzMzNzc5NDY2LCJpYXQiOjE3MzM3NzU4NjYsImp0aSI6ImNhZGNmODlkLTgwNjItNDAwYi1iNzViLTBjMWE4YWRjN2Q4OCIsImxvYSI6M30.P-bZsArlW6QWey1okPCzgjLZYBQM3ghzNMfGxMSFxEQv8tnq5gqOrn1DLZt5Pi-v46uqo9S-ax8mbAznM7Q3vM_DveU1JvuAIT34BYA9tsqrg7Jc-FrHyj6AE8XRnvJXKKHO45A5BG3EILakmeqcQUrMmpfhd-OYHjIPAmspW5LwKMwdV0lH98zlUmnEsENFlWh7WI8-JXYOpUav-e-F4ozd9zgzIr6MXPHgsliUpKKoeZ9SbaBunj4SU0sOYf47-vhv4fFdRnwRBbu1b8zl08EMtK_xGbdNBLmVCqp4OorBpGx7qswNRc1e22mK4tfsaZnGok1Pij4fFW62Fw1aEA"
-REFRESH_TOKEN = "eyJraWQiOiI2MjAiLCJhbGciOiJSUzUxMiJ9.eyJzYyI6ImNhbGwtY29udHJvbC52MS5jYWxscy5jb250cm9sIGNhbGxzLnYyLmluaXRpYXRlIG1lc3NhZ2luZy52MS53cml0ZSBpZGVudGl0eTpzY2ltLm1lIGNhbGwtZXZlbnRzLnYxLmV2ZW50cy5yZWFkIG1lc3NhZ2luZy52MS5ub3RpZmljYXRpb25zLm1hbmFnZSB2b2ljZW1haWwudjEubm90aWZpY2F0aW9ucy5tYW5hZ2UgcmVjb3JkaW5nLnYxLm5vdGlmaWNhdGlvbnMubWFuYWdlIHN1cHBvcnQ6IHZvaWNlbWFpbC52MS52b2ljZW1haWxzLndyaXRlIGZheC52MS53cml0ZSB2b2ljZS1hZG1pbi52MS53cml0ZSBpZGVudGl0eTogd2VicnRjLnYxLnJlYWQgd2VicnRjLnYxLndyaXRlIGNvbGxhYjogdm9pY2UtYWRtaW4udjEucmVhZCBwcmVzZW5jZS52MS5yZWFkIHJlY29yZGluZy52MS5yZWFkIGNhbGwtZXZlbnRzLnYxLm5vdGlmaWNhdGlvbnMubWFuYWdlIGlkZW50aXR5OnNjaW0ub3JnIHByZXNlbmNlLnYxLndyaXRlIGZheC52MS5yZWFkIGNhbGwtaGlzdG9yeS52MS5ub3RpZmljYXRpb25zLm1hbmFnZSBwcmVzZW5jZS52MS5ub3RpZmljYXRpb25zLm1hbmFnZSBtZXNzYWdpbmcudjEuc2VuZCBtZXNzYWdpbmcudjEucmVhZCBjci52MS5yZWFkIGZheC52MS5ub3RpZmljYXRpb25zLm1hbmFnZSB1c2Vycy52MS5saW5lcy5yZWFkIHZvaWNlbWFpbC52MS52b2ljZW1haWxzLnJlYWQiLCJzdWIiOiIxOTIxNzAxNTU0NjE0MDIxMzk4IiwiYXVkIjoiMjA5M2ZjYjMtZGQzNS00MzIwLWI1YmYtMWU5MmU3ZWYwMDMyIiwib2duIjoicHdkIiwidHlwIjoiciIsImV4cCI6MTczNjM2Nzg2NiwiaWF0IjoxNzMzNzc1ODY2LCJqdGkiOiI1MDBhYWMwYy0zY2FkLTQ5NWYtYTJmMS0zZWFhNWFhZWFmYjAiLCJsb2EiOjN9.1F04PPQEGDQG9ufoaFRknXxyI_29-5__WXG-lENrY03HwqlS7Nj_9zgLdQF4RhuMr4nUn7pvkKM0rDOp_hlcYpCbclT0FfJZMPakWF5VdRWtHg2zjw5u2fLQu2QzL8p4P3Fz89UeuEeXSAC5TbIugaKkZR8-K_SgsquMX6wWwaWutPE-u6Q_Y_0g5FYlcoz9erQuAWCbq-51zWWLqijrtCT2pPXO1ilskq8wg9lgacohL9T5I5AV0NXGvma0uSSrsM8wAZg2xK-WyPhf89vRqaPaVRGdVfVDOV2xkldzeJPvQEKbQ6u6u25--6G2mrAV7HaiZTV-gIbovozZctMGNw"
+# Configuration (Hardcoded credentials)
 CLIENT_ID = "2093fcb3-dd35-4320-b5bf-1e92e7ef0032"
 CLIENT_SECRET = "tEJzrrwv8SMVNBEH6OCTSZWg"
 TOKEN_URL = "https://authentication.logmeininc.com/oauth/token"
 CALL_REPORTS_URL = "https://api.goto.com/call-reports/v1/reports/user-activity"
 
-# Fetch call data using http.client
-@anvil.server.callable
-def fetch_call_reports_http():
-    conn = http.client.HTTPSConnection("api.goto.com")
-    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-    conn.request("GET", "/call-reports/v1/reports/user-activity?organizationId=0127d974-f9f3-0704-2dee-000100422009", headers=headers)
-    res = conn.getresponse()
+# Token variables
+ACCESS_TOKEN = None
+REFRESH_TOKEN = None
 
-    if res.status == 401:
-        # Token expired, refresh it
-        refresh_access_token()
-        headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-        conn.request("GET", "/call-reports/v1/reports/user-activity?organizationId=0127d974-f9f3-0704-2dee-000100422009", headers=headers)
-        res = conn.getresponse()
+# Function to initialize and fetch the access and refresh tokens
+def initialize_tokens():
+    global ACCESS_TOKEN, REFRESH_TOKEN
 
-    data = res.read()
-    return json.loads(data.decode("utf-8"))
-
-# Fetch call data using requests
-@anvil.server.callable
-def fetch_call_reports_requests():
-    headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Accept": "application/json"
+    payload = {
+        "grant_type": "client_credentials",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET
     }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    response = requests.get(
-        f"{CALL_REPORTS_URL}?organizationId=0127d974-f9f3-0704-2dee-000100422009", 
-        headers=headers
-    )
+    print("Initializing tokens...")  # Debugging log
+    try:
+        response = requests.post(TOKEN_URL, data=payload, headers=headers)
+        print("Initialization response status:", response.status_code)  # Debugging log
+        print("Initialization response body:", response.text)  # Debugging log
 
-    if response.status_code == 401:
-        # Token expired, refresh it
-        refresh_access_token()
-        headers["Authorization"] = f"Bearer {ACCESS_TOKEN}"
-        response = requests.get(
-            f"{CALL_REPORTS_URL}?organizationId=0127d974-f9f3-0704-2dee-000100422009", 
-            headers=headers
-        )
+        if response.status_code == 200:
+            tokens = response.json()
+            ACCESS_TOKEN = tokens["access_token"]
+            REFRESH_TOKEN = tokens.get("refresh_token", None)  # May not be provided for client_credentials
+            print("Tokens initialized successfully.")
+        else:
+            raise Exception(f"Failed to initialize tokens: {response.status_code} - {response.text}")
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"Failed to fetch call data: {response.status_code} - {response.text}")
+    except requests.exceptions.RequestException as e:
+        print("Network error during token initialization:", e)
+        raise Exception("Network error while initializing tokens.") from e
 
-# Refresh the access token
+# Function to refresh the access token
 def refresh_access_token():
-    global ACCESS_TOKEN
-    global REFRESH_TOKEN
+    global ACCESS_TOKEN, REFRESH_TOKEN
+
+    if not REFRESH_TOKEN:
+        raise Exception("Refresh token not available. Please reinitialize tokens.")
 
     payload = {
         "grant_type": "refresh_token",
@@ -71,18 +59,89 @@ def refresh_access_token():
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET
     }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    response = requests.post(TOKEN_URL, data=payload)
+    print("Attempting to refresh access token...")  # Debugging log
+    try:
+        response = requests.post(TOKEN_URL, data=payload, headers=headers)
+        print("Token refresh response status:", response.status_code)  # Debugging log
+        print("Token refresh response body:", response.text)  # Debugging log
 
-    if response.status_code == 200:
-        tokens = response.json()
-        ACCESS_TOKEN = tokens["access_token"]
-        REFRESH_TOKEN = tokens.get("refresh_token", REFRESH_TOKEN)
-    else:
-        raise Exception(f"Failed to refresh access token: {response.status_code} - {response.text}")
+        if response.status_code == 200:
+            tokens = response.json()
+            ACCESS_TOKEN = tokens["access_token"]
+            REFRESH_TOKEN = tokens.get("refresh_token", REFRESH_TOKEN)
+            print("Access token refreshed successfully.")
+        else:
+            raise Exception(f"Failed to refresh access token: {response.status_code} - {response.text}")
+
+    except requests.exceptions.RequestException as e:
+        print("Network error during token refresh:", e)
+        raise Exception("Network error while refreshing token.") from e
+
+# Fetch call data using requests
+@anvil.server.callable
+def fetch_call_reports_requests():
+    global ACCESS_TOKEN
+
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Accept": "application/json"
+    }
+
+    try:
+        print("Fetching call reports...")  # Debugging log
+        response = requests.get(
+            f"{CALL_REPORTS_URL}?organizationId=0127d974-f9f3-0704-2dee-000100422009",
+            headers=headers
+        )
+        print("Call reports response status:", response.status_code)  # Debugging log
+
+        if response.status_code == 401:
+            print("Access token expired. Attempting to refresh...")
+            refresh_access_token()
+            headers["Authorization"] = f"Bearer {ACCESS_TOKEN}"
+            response = requests.get(
+                f"{CALL_REPORTS_URL}?organizationId=0127d974-f9f3-0704-2dee-000100422009",
+                headers=headers
+            )
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to fetch call data: {response.status_code} - {response.text}")
+
+    except requests.exceptions.RequestException as e:
+        print("Network error during call report fetch:", e)
+        raise Exception("Network error while fetching call reports.") from e
+
+# Retry logic for network errors
+def safe_request(func, retries=3, delay=5):
+    for attempt in range(retries):
+        try:
+            return func()
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < retries - 1:
+                time.sleep(delay)
+            else:
+                raise
+
+# Test callable for debugging
+@anvil.server.callable
+def test_token_refresh():
+    print("Testing token refresh...")
+    try:
+        refresh_access_token()
+        return "Token refresh successful."
+    except Exception as e:
+        return f"Token refresh failed: {e}"
 
 # Example callable function
 @anvil.server.callable
 def say_hello(name):
     print(f"Hello, {name}!")
     return 42
+
+# Initialize tokens when the app starts
+initialize_tokens()
