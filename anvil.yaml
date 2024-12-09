@@ -16,6 +16,9 @@ db_schema:
     - admin_ui: {order: 3, width: 200}
       name: Secret
       type: string
+    - admin_ui: {order: 4, width: 200}
+      name: access_token
+      type: string
     server: search
     title: API Keys
   call_statistics:
