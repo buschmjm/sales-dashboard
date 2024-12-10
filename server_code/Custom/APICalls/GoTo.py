@@ -1,3 +1,4 @@
+import anvil.secrets
 import anvil.server
 import requests
 import json
@@ -40,10 +41,8 @@ def load_tokens():
 def save_tokens(access_token, refresh_token):
     """Save ACCESS_TOKEN and REFRESH_TOKEN to the tokens table, replacing any existing rows."""
     try:
-        # Clear existing rows
         for row in app_tables.tokens.search():
             row.delete()
-        # Add the new tokens
         app_tables.tokens.add_row(access_token=access_token, refresh_token=refresh_token)
     except Exception as e:
         print(f"Error saving tokens: {e}")
@@ -53,38 +52,6 @@ def save_tokens(access_token, refresh_token):
 # ===============================================
 def encode_client_credentials(client_id, client_secret):
     return base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
-
-def get_authorization_url(state="12345"):
-    scope = "call-control.v1.calls.control calls.v2.initiate cr.v1.read"
-    auth_url = (
-        f"{AUTH_URL}?response_type=code&client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}"
-        f"&scope={scope}&state={state}"
-    )
-    return auth_url
-
-def exchange_authorization_code(auth_code):
-    global ACCESS_TOKEN, REFRESH_TOKEN
-
-    payload = {
-        "grant_type": "authorization_code",
-        "code": auth_code,
-        "redirect_uri": REDIRECT_URI,
-        "client_id": CLIENT_ID
-    }
-    headers = {
-        "Authorization": f"Basic {encode_client_credentials(CLIENT_ID, CLIENT_SECRET)}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-
-    response = requests.post(TOKEN_URL, data=payload, headers=headers)
-    if response.status_code == 200:
-        tokens = response.json()
-        ACCESS_TOKEN = tokens["access_token"]
-        REFRESH_TOKEN = tokens.get("refresh_token")
-        save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
-        print("Tokens exchanged and saved successfully.")
-    else:
-        raise Exception(f"Failed to exchange authorization code: {response.text}")
 
 def refresh_access_token():
     global ACCESS_TOKEN, REFRESH_TOKEN
@@ -115,10 +82,54 @@ def refresh_access_token():
 load_tokens()
 
 # ===============================================
-# Fetch Call Reports for Yesterday
+# Update Data Table with API Data
+# ===============================================
+def update_call_statistics(data):
+    today_date = datetime.utcnow().date()
+
+    for item in data.get("items", []):
+        user_id = item["userId"]
+        user_name = item["userName"]
+        data_values = item["dataValues"]
+
+        # Check if a record exists for this user ID and today's date
+        existing_row = app_tables.call_statistics.get(
+            userId=user_id, reportDate=today_date
+        )
+
+        if existing_row:
+            # Update the existing record
+            existing_row.update(
+                inboundVolume=data_values["inboundVolume"],
+                inboundDuration=data_values["inboundDuration"],
+                outboundVolume=data_values["outboundVolume"],
+                outboundDuration=data_values["outboundDuration"],
+                averageDuration=data_values["averageDuration"],
+                volume=data_values["volume"],
+                totalDuration=data_values["totalDuration"],
+                inboundQueueVolume=data_values["inboundQueueVolume"],
+            )
+        else:
+            # Add a new record
+            app_tables.call_statistics.add_row(
+                userId=user_id,
+                userName=user_name,
+                inboundVolume=data_values["inboundVolume"],
+                inboundDuration=data_values["inboundDuration"],
+                outboundVolume=data_values["outboundVolume"],
+                outboundDuration=data_values["outboundDuration"],
+                averageDuration=data_values["averageDuration"],
+                volume=data_values["volume"],
+                totalDuration=data_values["totalDuration"],
+                inboundQueueVolume=data_values["inboundQueueVolume"],
+                reportDate=today_date,
+            )
+
+# ===============================================
+# Fetch Call Reports (Manual Trigger)
 # ===============================================
 @anvil.server.callable
-def fetch_call_reports_requests():
+def fetch_call_reports():
     global ACCESS_TOKEN
     if not ACCESS_TOKEN:
         raise Exception("Access token not available. Complete the authorization flow first.")
@@ -126,38 +137,36 @@ def fetch_call_reports_requests():
     # Calculate startTime as the start of today and endTime as the current time in UTC
     now = datetime.utcnow()
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    start_time = start_of_today.isoformat() + "Z"  # Start of today
-    end_time = now.isoformat() + "Z"  # Current time
+    start_time = start_of_today.isoformat() + "Z"
+    end_time = now.isoformat() + "Z"
 
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Accept": "application/json"
     }
 
-    # Construct the API URL with the updated time range
-    url = (
-        f"{CALL_REPORTS_URL}"
-        f"?startTime={start_time}"
-        f"&endTime={end_time}"
-    )
+    url = f"{CALL_REPORTS_URL}?startTime={start_time}&endTime={end_time}"
 
-    # Make the API request
     response = requests.get(url, headers=headers)
 
-    # Handle authentication errors
     if response.status_code == 401:
         print("Access token expired. Attempting to refresh...")
         refresh_access_token()
         headers["Authorization"] = f"Bearer {ACCESS_TOKEN}"
         response = requests.get(url, headers=headers)
 
-    # Handle response
     if response.status_code == 200:
         data = response.json()
-        print("Fetched data:", json.dumps(data, indent=4))  # Pretty-print JSON data to the console
-        return data
+        update_call_statistics(data)
+        return {"message": "Data refreshed successfully."}
     elif response.status_code == 404:
-        print("No data found for the specified time frame.")
         return {"message": "No data found for the specified time frame."}
     else:
         raise Exception(f"Failed to fetch call data: {response.status_code} - {response.text}")
+
+# ===============================================
+# Fetch Call Reports (Scheduled Task)
+# ===============================================
+@anvil.server.background_task
+def fetch_call_reports_scheduled():
+    fetch_call_reports()

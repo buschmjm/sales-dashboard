@@ -25,9 +25,12 @@ class Frame(FrameTemplate):
     def refresh_button_click(self, **event_args):
         """This method is called when the refresh button is clicked"""
         try:
-            # Call the server function to fetch call reports
-            result = anvil.server.call('fetch_call_reports_requests')
-            alert("Data refreshed successfully!", title="Success")
+            # Call the manually triggered function
+            result = anvil.server.call('fetch_call_reports')
+            if result:
+                alert("Data refreshed successfully!", title="Success")
+            else:
+                alert("No new data found.", title="Info")
         except Exception as e:
             alert(f"Failed to refresh data: {e}", title="Error")
 
