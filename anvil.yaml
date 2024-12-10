@@ -65,6 +65,17 @@ db_schema:
       type: datetime
     server: full
     title: Files
+  tokens:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: access_token
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: refresh_token
+      type: string
+    server: full
+    title: tokens
   users:
     client: none
     columns:
