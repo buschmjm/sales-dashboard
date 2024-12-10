@@ -122,9 +122,9 @@ db_schema:
     server: full
     title: Users
 dependencies: []
-name: Dashboard Template A
+name: Sales Dashboard
 native_deps: {head_html: '<link href="https://fonts.googleapis.com/css2?family=Eczar:wght@400;600&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet" rel="preload" as="font" crossorigin="anonymous">'}
-package_name: Dashboard_Template_A
+package_name: Sales_Dashboard
 runtime_options: {client_version: '3', preview_v3: true, server_spec: null, server_version: python3-sandbox, version: 2}
 scheduled_tasks:
 - job_id: BAXFLREV

@@ -8,6 +8,8 @@ from anvil.tables import app_tables
 from ..Reports import Reports
 from ..Sales import Sales
 
+anvil.users.login_with_form()
+
 class Frame(FrameTemplate):
     def __init__(self, **properties):
         # Set Form properties and Data Bindings.
@@ -49,3 +51,4 @@ class Frame(FrameTemplate):
     def signout_link_click(self, **event_args):
         """Placeholder method for the sign-out link click event."""
         alert("Sign out functionality not implemented yet.")
+  
