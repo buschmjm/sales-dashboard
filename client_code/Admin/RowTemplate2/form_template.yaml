@@ -1,3 +1,5 @@
 components: []
-container: {type: DataRowPanel}
+container:
+  data_bindings: []
+  type: DataRowPanel
 is_package: true

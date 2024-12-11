@@ -22,7 +22,7 @@ class Frame(FrameTemplate):
         self.add_component(self.refresh_button, slot="top-right")
 
         Plot.templates.default = "rally"
-        self.content_panel.add_component(Reports())
+        self.content_panel.add_component(Sales())
         self.sales_page_link.background = app.theme_colors['Primary Container']
 
     def refresh_button_click(self, **event_args):
@@ -42,18 +42,21 @@ class Frame(FrameTemplate):
         self.content_panel.add_component(Sales())
         self.sales_page_link.background = app.theme_colors['Primary Container']
         self.reports_page_link.background = "transparent"
+        self.admin.background = "transparent"
 
     def reports_page_link_click(self, **event_args):
         self.content_panel.clear()
         self.content_panel.add_component(Reports())
         self.reports_page_link.background = app.theme_colors['Primary Container']
         self.sales_page_link.background = "transparent" 
+        self.admin_page_link.background = "transparent"
       
     def admin_page_link_click(self, **event_args):
       self.content_panel.clear()
       self.content_panel.add_component(Admin())
-      self.reports_page_link.background = app.theme_colors['Primary Container']
+      self.admin_page_link.background = app.theme_colors['Primary Container']
       self.sales_page_link.background = "transparent"
+      self.reports_page_link.background = "transparent"
     
     def signout_link_click(self, **event_args):
         """Placeholder method for the sign-out link click event."""
