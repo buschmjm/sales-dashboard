@@ -2,44 +2,41 @@ from ._anvil_designer import ReportsTemplate
 from anvil import *
 import plotly.graph_objects as go
 import anvil.server
-import anvil.users
 import anvil.tables as tables
-import anvil.tables.query as q
 from anvil.tables import app_tables
+import datetime
 
 class Reports(ReportsTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    # Any code you write here will run before the form opens.
 
-    #Populate plot_1 with dummy data. All three Bar charts will be added to the same figure
-    self.plot_1.data = [
-      go.Bar(
-        x=[2019, 2020, 2021, 2022, 2023],
-        y=[510, 620, 687, 745, 881],
-        name="Europe"
-    ),
-      go.Bar(
-        x=[2019, 2020, 2021, 2022, 2023],
-        y=[733, 880, 964, 980, 1058],
-        name="Americas"
-    ),
-      go.Bar(
-        x=[2019, 2020, 2021, 2022, 2023],
-        y=[662, 728, 794, 814, 906],
-        name="Asia"
-    )
-    ]
+    # Add date selectors
+    self.date_selector_1 = DatePicker()
+    self.date_selector_2 = DatePicker()
+    self.date_selector_3 = DatePicker()
+    self.add_component(self.date_selector_1)
+    self.add_component(self.date_selector_2)
+    self.add_component(self.date_selector_3)
 
-    #Return the figure from the server to populate plot_2
-    self.plot_2.figure = anvil.server.call('return_bar_charts')
+    # Set default dates
+    self.date_selector_1.selected_value = datetime.date.today()
+    self.date_selector_2.selected_value = datetime.date.today()
+    self.date_selector_3.selected_value = datetime.date.today()
 
-    self.plot_3.data = [
-      go.Pie(
-        labels=["Mobile", "Tablet", "Desktop"],
-        values=[2650, 755, 9525]
-      )
-    ]
-    
+    # Line graph for last 7 days of statistics per sales rep
+    self.plot_1.data = []
+    self.update_line_graph()
 
+    # Pie graph for total volume split by person
+    self.plot_2.data = []
+    self.update_pie_chart()
+
+    # Data table for selected date range
+    self.data_grid.items = []
+    self.update_data_table()
+
+    # Date selector event handlers
+    self.date_selector_1.change = self.update_line_graph
+    self.date_selector_2.change = self.update_pie_chart
+    self.date_selector_3.change = self.update_data_table
