@@ -1,6 +1,10 @@
 from ._anvil_designer import SalesTemplate
 from anvil import *
-import .. 
+import anvil.server
+import anvil.users
+import anvil.tables as tables
+import anvil.tables.query as q
+from anvil.tables import app_tables
 
 class Sales(SalesTemplate):
   def __init__(self, **properties):
@@ -8,5 +12,4 @@ class Sales(SalesTemplate):
     self.init_components(**properties)
 
     # Add a frame overlay for the page
-    self.frame = Frame()
     self.add_component(self.frame, slot='frame')
