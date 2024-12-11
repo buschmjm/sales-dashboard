@@ -4,7 +4,7 @@ components:
   properties: {align: center, role: display, text: Users}
   type: Label
 - components:
-  - event_bindings: {show: repeating_panel_1_show}
+  - event_bindings: {}
     name: repeating_panel_1
     properties: {item_template: Admin.RowTemplate2}
     type: RepeatingPanel
@@ -12,10 +12,11 @@ components:
   name: data_grid_1
   properties:
     columns:
-    - {data_key: name, id: AXKKJG, title: Name}
-    - {data_key: email, id: EGOJDX, title: Email}
+    - {data_key: name, id: MTSLPP, title: Name}
     - {data_key: last_login, id: MMZKYV, title: Last Login}
     - {data_key: enabled, id: SPHNWP, title: Status}
+    - {data_key: email, id: LVNZUL, title: Email}
+    - {data_key: enabled, id: BIKMWT, title: Account Status}
   type: DataGrid
 container: {type: ColumnPanel}
 is_package: true
