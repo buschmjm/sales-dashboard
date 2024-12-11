@@ -1,5 +1,6 @@
 from ._anvil_designer import ReportsTemplate
 from anvil import *
+import plotly.graph_objects as go
 import anvil.server
 import anvil.users
 import anvil.tables as tables

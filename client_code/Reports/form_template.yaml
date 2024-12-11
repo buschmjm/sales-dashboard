@@ -1,5 +1,14 @@
 components:
-- layout_properties: {grid_position: 'OTFGAQ,TCPUFC'}
+- components:
+  - layout_properties: {grid_position: 'WXSLUP,OYRIGC'}
+    name: label_1
+    properties: {role: headline, text: Calls Reports}
+    type: Label
+  - layout_properties: {grid_position: 'LJNRES,SYUSLL'}
+    name: plot_1
+    properties: {}
+    type: Plot
+  layout_properties: {grid_position: 'OTFGAQ,TCPUFC'}
   name: card_1
   properties: {role: card}
   type: ColumnPanel
