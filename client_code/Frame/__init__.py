@@ -7,6 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from ..Reports import Reports
 from ..Sales import Sales
+from ..Admin import Admin
 
 anvil.users.login_with_form()
 
@@ -21,7 +22,7 @@ class Frame(FrameTemplate):
         self.add_component(self.refresh_button, slot="top-right")
 
         Plot.templates.default = "rally"
-        self.content_panel.add_component(Sales())
+        self.content_panel.add_component(Reports())
         self.sales_page_link.background = app.theme_colors['Primary Container']
 
     def refresh_button_click(self, **event_args):
@@ -46,8 +47,14 @@ class Frame(FrameTemplate):
         self.content_panel.clear()
         self.content_panel.add_component(Reports())
         self.reports_page_link.background = app.theme_colors['Primary Container']
-        self.sales_page_link.background = "transparent"
-
+        self.sales_page_link.background = "transparent" 
+      
+    def admin_page_link_click(self, **event_args):
+      self.content_panel.clear()
+      self.content_panel.add_component(Admin())
+      self.reports_page_link.background = app.theme_colors['Primary Container']
+      self.sales_page_link.background = "transparent"
+    
     def signout_link_click(self, **event_args):
         """Placeholder method for the sign-out link click event."""
         alert("Sign out functionality not implemented yet.")
