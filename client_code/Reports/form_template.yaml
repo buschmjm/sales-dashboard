@@ -4,10 +4,40 @@ components:
     name: label_1
     properties: {role: headline, text: Calls Reports}
     type: Label
-  - layout_properties: {grid_position: 'LJNRES,SYUSLL'}
+  - layout_properties: {grid_position: 'KULLQN,FTILQV'}
+    name: label_2
+    properties: {align: right, text: Start Date}
+    type: Label
+  - layout_properties: {grid_position: 'KULLQN,SILLHC'}
+    name: label_3
+    properties: {align: right, text: End Date}
+    type: Label
+  - layout_properties: {grid_position: 'FFAEPZ,EYGAOR'}
+    name: start_date_picker
+    properties: {}
+    type: DatePicker
+  - layout_properties: {grid_position: 'FFAEPZ,ERBECR'}
+    name: end_date_picker
+    properties: {}
+    type: DatePicker
+  - data_bindings:
+    - {code: 'self.item[''queryData'']', property: data, writeback: false}
+    layout_properties: {grid_position: 'LJNRES,SYUSLL'}
     name: plot_1
     properties: {}
     type: Plot
+  - components:
+    - name: repeating_panel_1
+      properties: {item_template: Reports.RowTemplate3}
+      type: RepeatingPanel
+    layout_properties: {grid_position: 'KCJXIF,JRHSJE'}
+    name: data_grid_1
+    properties:
+      columns:
+      - {data_key: column_1, id: JKSDUP, title: Column 1}
+      - {data_key: column_2, expand: false, id: VJQQOR, title: Column 2, width: 239.10888671875}
+      - {data_key: column_3, id: OJLQEN, title: Column 3}
+    type: DataGrid
   layout_properties: {grid_position: 'OTFGAQ,TCPUFC'}
   name: card_1
   properties: {role: card}
