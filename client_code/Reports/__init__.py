@@ -166,12 +166,23 @@ class Reports(ReportsTemplate):
             print(f"Error updating repeating panel: {e}")
 
     def filter_button_click(self, **event_args):
-        """Handle filter button click to update the plot and table."""
-        y_column = self.data_column_selector.selected_value
+      """Handle filter button click to update the plot, table, and fetch email stats."""
+      y_column = self.data_column_selector.selected_value
+  
+      if not y_column:
+          alert("Please select a column.")
+          return
+  
+      # Update plot and table
+      self._update_plot(y_column)
+      self._update_repeating_panel()
+  
+      # Fetch email stats from the server
+      try:
+          email_stats = anvil.server.call('get_email_stats')
+          print("Email Stats:")
+          for stat in email_stats:
+              print(stat)
+      except Exception as e:
+          print(f"Error fetching email stats: {e}")
 
-        if not y_column:
-            alert("Please select a column.")
-            return
-
-        self._update_plot(y_column)
-        self._update_repeating_panel()
