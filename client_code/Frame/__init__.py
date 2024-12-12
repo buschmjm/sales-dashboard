@@ -57,11 +57,18 @@ class Frame(FrameTemplate):
     def reports_page_link_click(self, **event_args):
       try:
           print("Switching to Reports page...")
-          self.content_panel.clear()
-          self.content_panel.add_component(Reports())  # Ensure Reports initializes its components properly
-          self.reports_page_link.background = app.theme_colors['Primary Container']
+          self.content_panel.clear()  # Clear any existing components
+  
+          # Add the new Reports page
+          print("Reports page initialized successfully.")
+          self.content_panel.add_component(Reports())
+  
+          # Update UI link highlights
+          self.reports_page_link.background = app.theme_colors['Primary']
           self.sales_page_link.background = "transparent"
           self.admin_page_link.background = "transparent"
+          print("Reports page added to content panel.")
+  
       except Exception as e:
           print(f"Error loading Reports page: {e}")
           alert(f"Error loading Reports page: {e}")
