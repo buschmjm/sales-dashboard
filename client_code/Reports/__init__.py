@@ -1,3 +1,4 @@
+# Reports Client-Side Code
 from ._anvil_designer import ReportsTemplate
 from anvil import *
 import plotly.graph_objects as go
@@ -17,6 +18,10 @@ class Reports(ReportsTemplate):
         self.end_date_picker.date = date.today() - timedelta(days=1)
         self.start_date_picker.date = date.today() - timedelta(days=15)
 
+        self.refresh_data()
+
+    def refresh_data(self):
+        """Fetch and display data based on current date range."""
         try:
             # Fetch data from the server
             data = anvil.server.call('get_call_data', self.start_date_picker.date, self.end_date_picker.date)
@@ -43,6 +48,16 @@ class Reports(ReportsTemplate):
             self.column_names = data["columns"]
             self.user_values = data["values"]
 
+            # Convert durations in milliseconds to minutes for relevant columns
+            duration_columns = [
+                col for col in self.column_names if 'duration' in col.lower()
+            ]
+            for row in self.user_values:
+                for col in duration_columns:
+                    col_index = self.column_names.index(col)
+                    row[col_index] = int(row[col_index] // 60000)  # Ensure integer division and convert ms to minutes
+
+
             # Populate dropdown with numeric columns
             numeric_columns = [
                 col for i, col in enumerate(self.column_names)
@@ -58,11 +73,10 @@ class Reports(ReportsTemplate):
                 self.data_column_selector.items = []  # Clear the dropdown if no numeric columns
                 return
 
-            # Determine default y-axis column
-            y_column = 'volume' if 'volume' in numeric_columns else numeric_columns[0]
-
-            # Set initial plot data
+            # Update the plot and table data with the first selected column or volume
+            y_column = self.data_column_selector.selected_value or ('volume' if 'volume' in numeric_columns else numeric_columns[0])
             self._update_plot(y_column)
+            self._update_repeating_panel()
 
         except Exception as e:
             alert(f"Error initializing Reports page: {e}")
@@ -81,21 +95,78 @@ class Reports(ReportsTemplate):
             if y_column not in self.column_names:
                 raise ValueError(f"Column '{y_column}' not found in data.")
 
+            # Group data by userId and associate with userName for labels
+            user_id_index = self.column_names.index('userId')
+            user_name_index = self.column_names.index('userName')
+            report_date_index = self.column_names.index('reportDate')
+            y_column_index = self.column_names.index(y_column)
+
+            grouped_data = {}
+            user_labels = {}
+            for row in self.user_values:
+                user_id = row[user_id_index]
+                user_name = row[user_name_index]
+                report_date = row[report_date_index].strftime('%Y-%m-%d')  # Format date as 'YYYY-MM-DD'
+                y_value = row[y_column_index]
+
+                if user_id not in grouped_data:
+                    grouped_data[user_id] = {'x': [], 'y': []}
+                    user_labels[user_id] = user_name  # Map userId to userName
+                grouped_data[user_id]['x'].append(report_date)
+                grouped_data[user_id]['y'].append(y_value)
+
+            # Create a line for each userId with userName as the label
             self.call_info_plot.data = [
                 {
-                    'x': [row[self.column_names.index('reportDate')] for row in self.user_values],
-                    'y': [row[self.column_names.index(y_column)] for row in self.user_values],
+                    'x': grouped_data[user_id]['x'],
+                    'y': grouped_data[user_id]['y'],
                     'type': 'scatter',
                     'mode': 'lines+markers',
-                    'name': f"{y_column} over time",
+                    'name': user_labels[user_id],  # Use userName for the legend
                 }
+                for user_id in grouped_data
             ]
+
         except Exception as e:
             alert(f"Error updating plot: {e}")
             print(f"Error updating plot: {e}")
 
+    def _update_repeating_panel(self):
+        """Update the repeating_panel_1 with consolidated filtered data."""
+        try:
+            selected_users = [trace['name'] for trace in self.call_info_plot.data]
+            print(f"Selected users for repeating panel: {selected_users}")
+
+            # Filter and consolidate rows by userName
+            user_name_index = self.column_names.index('userName')
+            grouped_rows = {}
+
+            for row in self.user_values:
+                user_name = row[user_name_index]
+                if user_name in selected_users:
+                    if user_name not in grouped_rows:
+                        grouped_rows[user_name] = dict(zip(self.column_names, row))
+                    else:
+                        # Consolidate numeric fields
+                        for i, col_name in enumerate(self.column_names):
+                            if isinstance(row[i], (int, float)):
+                                grouped_rows[user_name][col_name] += row[i]
+
+            # Convert grouped_rows to a list of dictionaries
+            consolidated_rows = list(grouped_rows.values())
+
+            # Debug consolidated rows
+            print(f"Consolidated rows for repeating panel: {consolidated_rows}")
+
+            # Display consolidated data in the repeating_panel_1
+            self.repeating_panel_1.items = consolidated_rows
+
+        except Exception as e:
+            alert(f"Error updating repeating panel: {e}")
+            print(f"Error updating repeating panel: {e}")
+
     def filter_button_click(self, **event_args):
-        """Handle filter button click to update the plot."""
+        """Handle filter button click to update the plot and table."""
         y_column = self.data_column_selector.selected_value
 
         if not y_column:
@@ -103,3 +174,4 @@ class Reports(ReportsTemplate):
             return
 
         self._update_plot(y_column)
+        self._update_repeating_panel()

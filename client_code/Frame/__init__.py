@@ -64,7 +64,7 @@ class Frame(FrameTemplate):
           self.content_panel.add_component(Reports())
   
           # Update UI link highlights
-          self.reports_page_link.background = app.theme_colors['Primary']
+          self.reports_page_link.background = app.theme_colors['Primary Container']
           self.sales_page_link.background = "transparent"
           self.admin_page_link.background = "transparent"
           print("Reports page added to content panel.")

@@ -1,4 +1,3 @@
-# Reports Server-Side Code
 import anvil.server
 from anvil.tables import app_tables
 import anvil.tables.query as q
@@ -17,12 +16,9 @@ def get_call_data(queryStart, queryEnd):
     first_row = queryData[0]
     print(f"First row: {first_row}")
 
-    # Use first_row to extract column names
-    if first_row:
-        column_names = list(first_row.keys())  # Properly extract column names from the Row object
-    else:
-        column_names = []
-
+    # Use app_tables schema to fetch column names if available
+    column_metadata = app_tables.call_statistics.list_columns()  # Get full metadata of columns
+    column_names = [col['name'] for col in column_metadata]  # Extract only column names
     print(f"Column names: {column_names}")
 
     # Validate column names are strings

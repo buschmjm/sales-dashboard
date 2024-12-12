@@ -49,9 +49,33 @@ components:
     name: call_info_plot
     properties: {}
     type: Plot
-  layout_properties: {grid_position: 'OTFGAQ,TCPUFC'}
+  - layout_properties: {grid_position: 'VDVLMA,YIELTQ'}
+    name: spacer_2
+    properties: {height: 32}
+    type: Spacer
+  layout_properties: {grid_position: 'OTFGAQ,SHOEHC'}
   name: card_1
   properties: {role: card}
   type: ColumnPanel
+- components:
+  - data_bindings: []
+    name: repeating_panel_1
+    properties: {item_template: Reports.RowTemplate4}
+    type: RepeatingPanel
+  layout_properties: {grid_position: 'SJRDYU,FEUWVZ'}
+  name: call_info_table
+  properties:
+    columns:
+    - {data_key: userName, id: LTGZXA, title: userName}
+    - {data_key: inboundVolume, expand: false, id: WAEZAT, title: inboundVolume, width: 115.9010009765625}
+    - {data_key: inboundDuration, expand: false, id: GSJPNI, title: inboundDuration, width: 119.07919311523438}
+    - {data_key: outboundVolume, expand: false, id: GILUJR, title: outboundVolume, width: 119.29705810546875}
+    - {data_key: outboundDuration, expand: false, id: CTHZTS, title: outboundDuration, width: 127.42572021484375}
+    - {data_key: averageDuration, expand: false, id: XAJAZO, title: averageDuration, width: 120.49505615234375}
+    - {data_key: volume, id: LVDKVX, title: volume}
+    - {data_key: totalDuration, expand: false, id: KJWXAO, title: totalDuration, width: 100.57421875}
+    - {data_key: inboundQueueVolume, expand: false, id: YNJLYB, title: inboundQueueVolume, width: 156.0989990234375}
+    role: null
+  type: DataGrid
 container: {type: ColumnPanel}
 is_package: true
