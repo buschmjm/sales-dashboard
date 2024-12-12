@@ -71,23 +71,11 @@ def get_email_stats():
         display_name = user["displayName"]
 
         try:
-            # Check if the user has a mailbox
-            mailbox_settings_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailboxSettings"
-            mailbox_response = requests.get(mailbox_settings_url, headers=headers)
-            if mailbox_response.status_code == 404:
-                print(f"User {display_name} does not have a mailbox. Skipping.")
-                continue
-
             # Fetch Inbox message count
             inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/Inbox/messages"
             inbox_response = requests.get(inbox_url, headers=headers, params={"$top": 1, "$count": "true"})
-            if inbox_response.status_code == 403:
-                print(f"Forbidden access to Inbox for user {display_name}. Skipping.")
-                emails_received_count = "Forbidden"
-            else:
-                inbox_response.raise_for_status()
-                emails_received_count = inbox_response.json().get("@odata.count", "Error")
-
+            inbox_response.raise_for_status()
+            emails_received_count = inbox_response.json().get("@odata.count", "Error")
         except Exception as e:
             print(f"Inbox fetch failed for user {display_name}: {e}")
             emails_received_count = "Error"
@@ -96,13 +84,8 @@ def get_email_stats():
             # Fetch SentItems message count
             sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/SentItems/messages"
             sent_response = requests.get(sent_url, headers=headers, params={"$top": 1, "$count": "true"})
-            if sent_response.status_code == 403:
-                print(f"Forbidden access to SentItems for user {display_name}. Skipping.")
-                emails_sent_count = "Forbidden"
-            else:
-                sent_response.raise_for_status()
-                emails_sent_count = sent_response.json().get("@odata.count", "Error")
-
+            sent_response.raise_for_status()
+            emails_sent_count = sent_response.json().get("@odata.count", "Error")
         except Exception as e:
             print(f"SentItems fetch failed for user {display_name}: {e}")
             emails_sent_count = "Error"
@@ -114,3 +97,33 @@ def get_email_stats():
         })
 
     return email_stats
+
+@anvil.server.callable
+def fetch_email_activity_user_detail(period="D30"):
+    """Fetch detailed email activity for users over a specified period."""
+    access_token = get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    url = f"{MICROSOFT_GRAPH_API_BASE_URL}/reports/getEmailActivityUserDetail(period='{period}')"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+
+    if response.status_code == 302:
+        print("Redirected to download URL. Parsing report not implemented as per requirement.")
+    else:
+        raise Exception("Failed to fetch email activity user detail report.")
+
+@anvil.server.callable
+def fetch_email_activity_counts(period="D30"):
+    """Fetch aggregated email activity counts for the organization."""
+    access_token = get_access_token()
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    url = f"{MICROSOFT_GRAPH_API_BASE_URL}/reports/getEmailActivityCounts(period='{period}')"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+
+    if response.status_code == 302:
+        print("Redirected to download URL. Parsing report not implemented as per requirement.")
+    else:
+        raise Exception("Failed to fetch email activity counts report.")

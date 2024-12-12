@@ -48,11 +48,15 @@ class Frame(FrameTemplate):
             for stat in email_stats:
                 print(stat)
 
-            alert("Data refreshed successfully!", title="Success")
+            return {
+                "success": True,
+                "email_stats": email_stats,
+                "call_reports_refreshed": call_reports_result
+            }
 
         except Exception as e:
             print(f"Error refreshing data: {e}")
-            alert(f"Failed to refresh data: {e}", title="Error")
+            return {"error": str(e)}
 
     def sales_page_link_click(self, **event_args):
         try:
