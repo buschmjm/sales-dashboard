@@ -9,26 +9,10 @@ from ..Reports import Reports
 from ..Sales import Sales
 from ..Admin import Admin
 
-anvil.users.login_with_form()
-
 class Frame(FrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
-
-        try:
-            self.refresh_button = Button(text="Refresh", align="right", role="primary-color")
-            self.refresh_button.set_event_handler("click", self.refresh_button_click)
-            self.add_component(self.refresh_button, slot="top-right")
-
-            Plot.templates.default = "rally"
-
-            print("Loading Sales page...")
-            self.content_panel.add_component(Sales())
-            self.sales_page_link.background = app.theme_colors['Primary Container']
-
-        except Exception as e:
-            print(f"Error initializing Frame: {e}")
-            alert(f"Error initializing Frame: {e}")
+        anvil.users.login_with_form()
 
     def refresh_button_click(self, **event_args):
         """Handle refresh button click to fetch call reports and email stats."""
