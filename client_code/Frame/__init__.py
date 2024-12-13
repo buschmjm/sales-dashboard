@@ -1,7 +1,8 @@
-from ._anvil_designer import FrameTemplate
+from ._anvil_designer import FrameTemplate, Reports_Template
 from anvil import *
 import anvil.server
 import anvil.users
+import anvil.http
 from anvil.tables import app_tables
 from ..Reports import Reports
 from ..Sales import Sales
@@ -163,7 +164,7 @@ def fetch_user_stats(email, headers, today):
         print(f"Error fetching user stats for {email}: {e}")
         raise
 
-from ._anvil_designer import ReportsTemplate
+from ._anvil_designer import Reports_Template
 from anvil import *
 import anvil.server
 
