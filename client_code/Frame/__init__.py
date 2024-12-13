@@ -43,7 +43,7 @@ class Frame(FrameTemplate):
                 print("No new call report data found.")
 
             # Fetch email stats
-            email_stats = anvil.server.call('get_email_stats')
+            email_stats = anvil.server.call('fetch_user_email_stats')
             print("Email Stats:")
             for stat in email_stats:
                 print(stat)

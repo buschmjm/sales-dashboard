@@ -6,6 +6,7 @@ from anvil.tables import app_tables
 import anvil.server
 import requests
 import time
+from datetime import datetime
 
 # This is a server module. It runs on the Anvil server,
 # rather than in the user's browser.
@@ -51,79 +52,62 @@ def get_access_token():
     return _access_token_cache["token"]
 
 @anvil.server.callable
-def get_email_stats():
-    """Fetch the number of emails sent and received for each user."""
+def fetch_user_email_stats():
+    """Fetch email stats (inbox and sent count) for all app users."""
     access_token = get_access_token()
     headers = {
-        "Authorization": f"Bearer {access_token}",
-        "ConsistencyLevel": "eventual"
+        "Authorization": f"Bearer {access_token}"
     }
 
-    users_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users"
-    response = requests.get(users_url, headers=headers)
-    response.raise_for_status()
+    # Get all app users
+    app_users = app_tables.users.search()
+    results = []
 
-    users = response.json()["value"]
-    email_stats = []
-
-    for user in users:
-        user_id = user["id"]
-        display_name = user["displayName"]
+    for user in app_users:
+        email = user["email"]
+        if not email:
+            continue
 
         try:
-            # Fetch Inbox message count
-            inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/Inbox/messages"
-            inbox_response = requests.get(inbox_url, headers=headers, params={"$top": 1, "$count": "true"})
+            # Search for user in Microsoft Graph
+            search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$filter=mail eq '{email}' or userPrincipalName eq '{email}'"
+            search_response = requests.get(search_url, headers=headers)
+            search_response.raise_for_status()
+
+            search_results = search_response.json().get("value", [])
+            if not search_results:
+                print(f"No Outlook user found for email: {email}")
+                continue
+
+            user_id = search_results[0]["id"]
+
+            # Get today's date in UTC
+            today = datetime.utcnow().strftime('%Y-%m-%dT00:00:00Z')
+
+            # Get inbox message count for today
+            inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/Inbox/messages?$count=true&$filter=receivedDateTime ge {today}"
+            inbox_response = requests.get(inbox_url, headers=headers)
             inbox_response.raise_for_status()
-            emails_received_count = inbox_response.json().get("@odata.count", "Error")
-        except Exception as e:
-            print(f"Inbox fetch failed for user {display_name}: {e}")
-            emails_received_count = "Error"
 
-        try:
-            # Fetch SentItems message count
-            sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/SentItems/messages"
-            sent_response = requests.get(sent_url, headers=headers, params={"$top": 1, "$count": "true"})
+            inbox_count = inbox_response.json().get("@odata.count", 0)
+
+            # Get sent message count for today
+            sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/SentItems/messages?$count=true&$filter=sentDateTime ge {today}"
+            sent_response = requests.get(sent_url, headers=headers)
             sent_response.raise_for_status()
-            emails_sent_count = sent_response.json().get("@odata.count", "Error")
+
+            sent_count = sent_response.json().get("@odata.count", 0)
+
+            # Append results
+            results.append({
+                "user": email,
+                "inbox_count": inbox_count,
+                "sent_count": sent_count
+            })
+
+        except requests.exceptions.HTTPError as e:
+            print(f"HTTPError fetching email stats for {email}: {e.response.status_code} {e.response.text}")
         except Exception as e:
-            print(f"SentItems fetch failed for user {display_name}: {e}")
-            emails_sent_count = "Error"
+            print(f"Error fetching email stats for {email}: {e}")
 
-        email_stats.append({
-            "user": display_name,
-            "emails_sent": emails_sent_count,
-            "emails_received": emails_received_count
-        })
-
-    return email_stats
-
-@anvil.server.callable
-def fetch_email_activity_user_detail(period="D30"):
-    """Fetch detailed email activity for users over a specified period."""
-    access_token = get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    url = f"{MICROSOFT_GRAPH_API_BASE_URL}/reports/getEmailActivityUserDetail(period='{period}')"
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-
-    if response.status_code == 302:
-        print("Redirected to download URL. Parsing report not implemented as per requirement.")
-    else:
-        raise Exception("Failed to fetch email activity user detail report.")
-
-@anvil.server.callable
-def fetch_email_activity_counts(period="D30"):
-    """Fetch aggregated email activity counts for the organization."""
-    access_token = get_access_token()
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    url = f"{MICROSOFT_GRAPH_API_BASE_URL}/reports/getEmailActivityCounts(period='{period}')"
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-
-    if response.status_code == 302:
-        print("Redirected to download URL. Parsing report not implemented as per requirement.")
-    else:
-        raise Exception("Failed to fetch email activity counts report.")
+    return results
