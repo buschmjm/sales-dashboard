@@ -2,13 +2,10 @@ from ._anvil_designer import FrameTemplate
 from anvil import *
 import anvil.server
 import anvil.users
-import anvil.tables as tables
-import anvil.tables.query as q
 from anvil.tables import app_tables
 from ..Reports import Reports
 from ..Sales import Sales
 from ..Admin import Admin
-import anvil.http
 from datetime import datetime
 
 class Frame(FrameTemplate):
