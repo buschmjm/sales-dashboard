@@ -164,9 +164,3 @@ def fetch_call_reports():
     else:
         raise Exception(f"Failed to fetch call data: {response.status_code} - {response.text}")
 
-# ===============================================
-# Fetch Call Reports (Scheduled Task)
-# ===============================================
-@anvil.server.background_task
-def fetch_call_reports_scheduled():
-    fetch_call_reports()
