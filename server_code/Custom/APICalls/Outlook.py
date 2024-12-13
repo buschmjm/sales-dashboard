@@ -113,3 +113,7 @@ def fetch_user_email_stats():
             print(f"Error fetching email stats for {email}: {e}")
 
     return results
+
+@anvil.server.background_task
+def fetch_user_email_stats_scheduled():
+    fetch_user_email_stats():
