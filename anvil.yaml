@@ -86,28 +86,20 @@ db_schema:
     - admin_ui: {order: 1, width: 200}
       name: userName
       type: string
-    server: full
-    title: Outlook Statistics
-  table_7:
-    client: none
-    columns:
-    - admin_ui: {order: 0, width: 200}
-      name: name
-      type: string
-    - admin_ui: {order: 1, width: 200}
-      name: sent
-      type: number
     - admin_ui: {order: 2, width: 200}
       name: inbound
       type: number
     - admin_ui: {order: 3, width: 200}
-      name: total
+      name: outbound
       type: number
     - admin_ui: {order: 4, width: 200}
+      name: total
+      type: number
+    - admin_ui: {order: 5, width: 200}
       name: reportDate
       type: date
     server: full
-    title: Table 7
+    title: Outlook Statistics
   tokens:
     client: none
     columns:
@@ -163,6 +155,12 @@ scheduled_tasks:
     at: {}
     every: minute
     n: 30
+- job_id: BXVVZEWT
+  task_name: fetch_call_reports_scheduled
+  time_spec:
+    at: {minute: 0}
+    every: hour
+    n: 1
 secrets:
   client_secret:
     type: secret
