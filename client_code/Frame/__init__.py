@@ -163,11 +163,11 @@ def fetch_user_stats(email, headers, today):
         print(f"Error fetching user stats for {email}: {e}")
         raise
 
-from ._anvil_designer import ReportsTemplate
+from ._anvil_designer import Reports_Template
 from anvil import *
 import anvil.server
 
-class Reports(ReportsTemplate):
+class Reports(Reports_Template):
     def __init__(self, **properties):
         self.init_components(**properties)
 
