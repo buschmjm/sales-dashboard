@@ -4,6 +4,7 @@ import anvil.secrets
 import anvil.http
 import pytz
 from datetime import datetime
+import anvil.tables as app_tables
 from ..APICalls.Outlook import get_access_token, fetch_user_stats
 
 @anvil.server.callable
