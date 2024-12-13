@@ -14,11 +14,24 @@ class Reports(ReportsTemplate):
         # Initialize form and components
         self.init_components(**properties)
 
-        # Set default date range
+        # Set default date range for calls
         self.end_date_picker.date = date.today() - timedelta(days=1)
         self.start_date_picker.date = date.today() - timedelta(days=15)
 
+        # Set default date range for emails
+        self.email_end_date.date = date.today() - timedelta(days=1)
+        self.email_start_date.date = date.today() - timedelta(days=8)
+
+        # Set up email metrics dropdown
+        self.email_metric_selector.items = [
+            ('Total Emails', 'total'),
+            ('Emails Received', 'inbound'),
+            ('Emails Sent', 'outbound')
+        ]
+        self.email_metric_selector.selected_value = 'total'
+
         self.refresh_data()
+        self.refresh_email_data()
 
     def refresh_data(self):
         """Fetch and display data based on current date range."""
@@ -82,6 +95,24 @@ class Reports(ReportsTemplate):
             alert(f"Error initializing Reports page: {e}")
             print(f"Error initializing Reports page: {e}")
 
+    def refresh_email_data(self):
+        """Fetch and display email data based on current date range."""
+        try:
+            # Fetch email data from the server for the selected date range
+            data = app_tables.outlook_statistics.search(
+                tables.order_by('reportDate', ascending=True),
+                reportDate=q.between(
+                    self.email_start_date.date,
+                    self.email_end_date.date
+                )
+            )
+            
+            self._update_email_plot(data)
+            
+        except Exception as e:
+            alert(f"Error refreshing email data: {e}")
+            print(f"Error refreshing email data: {e}")
+
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
         try:
@@ -130,6 +161,52 @@ class Reports(ReportsTemplate):
         except Exception as e:
             alert(f"Error updating plot: {e}")
             print(f"Error updating plot: {e}")
+
+    def _update_email_plot(self, data):
+        """Update the email statistics plot."""
+        try:
+            # Group data by user
+            grouped_data = {}
+            
+            for row in data:
+                user_name = row['userName']
+                if user_name not in grouped_data:
+                    grouped_data[user_name] = {
+                        'x': [],
+                        'y': [],
+                        'total': [],
+                        'inbound': [],
+                        'outbound': []
+                    }
+                
+                grouped_data[user_name]['x'].append(row['reportDate'].strftime('%Y-%m-%d'))
+                grouped_data[user_name]['total'].append(row['total'])
+                grouped_data[user_name]['inbound'].append(row['inbound'])
+                grouped_data[user_name]['outbound'].append(row['outbound'])
+
+            # Get selected metric
+            metric = self.email_metric_selector.selected_value
+
+            # Create plot data
+            self.email_numbers_plot.data = [
+                {
+                    'x': grouped_data[user]['x'],
+                    'y': grouped_data[user][metric],
+                    'type': 'scatter',
+                    'mode': 'lines+markers',
+                    'name': user,
+                }
+                for user in grouped_data
+            ]
+
+            # Update plot layout
+            self.email_numbers_plot.layout.title = f"Email Statistics - {dict(self.email_metric_selector.items)[metric]}"
+            self.email_numbers_plot.layout.xaxis.title = "Date"
+            self.email_numbers_plot.layout.yaxis.title = "Number of Emails"
+
+        except Exception as e:
+            alert(f"Error updating email plot: {e}")
+            print(f"Error updating email plot: {e}")
 
     def _update_repeating_panel(self):
         """Update the repeating_panel_1 with consolidated filtered data."""
@@ -185,4 +262,13 @@ class Reports(ReportsTemplate):
               print(stat)
       except Exception as e:
           print(f"Error fetching email stats: {e}")
+
+    def filter_button_email_click(self, **event_args):
+        """Handle email filter button click."""
+        # Validate date range
+        if self.email_start_date.date > self.email_end_date.date:
+            alert("Start date must be before end date")
+            return
+            
+        self.refresh_email_data()
 
