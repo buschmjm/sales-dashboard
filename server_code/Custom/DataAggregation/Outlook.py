@@ -6,7 +6,8 @@ from anvil.tables import app_tables
 import anvil.server
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 
 # This is a server module. It runs on the Anvil server,
 # rather than in the user's browser.
@@ -81,8 +82,9 @@ def fetch_user_email_stats():
 
             user_id = search_results[0]["id"]
 
-            # Get today's date in UTC
-            today = datetime.utcnow().strftime('%Y-%m-%dT00:00:00Z')
+            # Get today's date in CST (America/Chicago timezone)
+            cst_tz = pytz.timezone("America/Chicago")
+            today = datetime.now(cst_tz).strftime('%Y-%m-%dT00:00:00Z')
 
             # Get inbox message count for today
             inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/Inbox/messages?$count=true&$filter=receivedDateTime ge {today}"
