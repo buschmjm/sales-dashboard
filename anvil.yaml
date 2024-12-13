@@ -25,7 +25,7 @@ db_schema:
     server: search
     title: API Keys
   call_statistics:
-    client: search
+    client: none
     columns:
     - admin_ui: {order: 0, width: 200}
       name: userId
@@ -33,10 +33,6 @@ db_schema:
     - admin_ui: {order: 1, width: 200}
       name: userName
       type: string
-    - admin_ui: {order: 2, width: 200}
-      name: userRef
-      target: users
-      type: link_single
     - admin_ui: {order: 3, width: 200}
       name: inboundVolume
       type: number
@@ -81,6 +77,17 @@ db_schema:
       type: datetime
     server: full
     title: Files
+  outlook_statistics:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: userId
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: userName
+      type: string
+    server: full
+    title: Outlook Statistics
   tokens:
     client: none
     columns:
@@ -137,6 +144,15 @@ secrets:
   client_secret:
     type: secret
     value: {WIRNAIMTTJXDAIUV: L5e/DoqfORJmy24amIdpaXIMc1QLPRgatWmOLVR1ujRfu+HQKyp9D9tn+h9iiRbq9WbhjD7KyhFcwZiE15vy716cGTM34Ic2bmd93hV4hzYUWlfJcCwda7s7lTJkwiw+Gt+UeqH83asBmaJcY2Rx4wNqsKBjG+8=}
+  ms_client_id:
+    type: secret
+    value: {WIRNAIMTTJXDAIUV: uYZIvOvHr6lUecf5r1hPdRM7K/cLC9t3WwaxB2GX7KO3VL6GPtb2MWjixTnyDzh+Eb+042szXja3KBl93ISIkC6m3eZMxpQwXQ9uSS3xl0kQvt+eVhr8g8VEfdxXqWiMaGaDzl3UCtDh7z70TruOKeeSrXv+RwT4m2uPqLoiyv7L1sQ=}
+  ms_client_secret:
+    type: secret
+    value: {WIRNAIMTTJXDAIUV: Lkl8p8tKkKAKLwGsXEGuFiuiWWsIHU2Na7gEZDaygzrCcz9vJZ495UX3ueueDWrR7Ee/u1O5c/URkIHl9zT2WAFz394krUqFuxH4YkBLmoelks0K2Pn9ezdWcuqSVcK5Y5Yn2/j+VJlPNAQOQKPCFdboT65wRdHrEvYXf+XEO2BhrzZ8xi+k}
+  ms_tenant_id:
+    type: secret
+    value: {WIRNAIMTTJXDAIUV: rhCnyMAtrU7s+MSnv54Vgo1KkFH7qgJoJsbbzdlzfsCFXjxIto4qRPi3+uIVO+ccRRvmsGytETv8D55WShKouCAmEgdSX+Vf7hjYxR/8iwi5oQWu08cOcCkeATsYgN+rJ8GaTjFFx3Aa5OtG5t3Hls1mgB7SF+91bo4bI4tF05XJMJw=}
   refresh_token:
     type: secret
     value: {WIRNAIMTTJXDAIUV: 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}

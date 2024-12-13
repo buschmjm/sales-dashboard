@@ -31,16 +31,32 @@ class Frame(FrameTemplate):
             alert(f"Error initializing Frame: {e}")
 
     def refresh_button_click(self, **event_args):
+        """Handle refresh button click to fetch call reports and email stats."""
         try:
             print("Refreshing data...")
-            result = anvil.server.call('fetch_call_reports')
-            if result:
-                alert("Data refreshed successfully!", title="Success")
+
+            # Fetch call reports
+            call_reports_result = anvil.server.call('fetch_call_reports')
+            if call_reports_result:
+                print("Call reports refreshed successfully.")
             else:
-                alert("No new data found.", title="Info")
+                print("No new call report data found.")
+
+            # Fetch email stats
+            email_stats = anvil.server.call('fetch_user_email_stats')
+            print("Email Stats:")
+            for stat in email_stats:
+                print(stat)
+
+            return {
+                "success": True,
+                "email_stats": email_stats,
+                "call_reports_refreshed": call_reports_result
+            }
+
         except Exception as e:
             print(f"Error refreshing data: {e}")
-            alert(f"Failed to refresh data: {e}", title="Error")
+            return {"error": str(e)}
 
     def sales_page_link_click(self, **event_args):
         try:
@@ -55,25 +71,23 @@ class Frame(FrameTemplate):
             alert(f"Error loading Sales page: {e}")
 
     def reports_page_link_click(self, **event_args):
-      try:
-          print("Switching to Reports page...")
-          self.content_panel.clear()  # Clear any existing components
-  
-          # Add the new Reports page
-          reports_component = Reports()  # Make sure the Reports class matches your new page
-          print("Reports page initialized successfully.")
-          self.content_panel.add_component(reports_component)  # Add it to the content panel
-  
-          # Update UI link highlights
-          self.reports_page_link.background = app.theme_colors['Primary Container']
-          self.sales_page_link.background = "transparent"
-          self.admin_page_link.background = "transparent"
-          print("Reports page added to content panel.")
-  
-      except Exception as e:
-          print(f"Error loading Reports page: {e}")
-          alert(f"Error loading Reports page: {e}")
+        try:
+            print("Switching to Reports page...")
+            self.content_panel.clear()  # Clear any existing components
 
+            # Add the new Reports page
+            print("Reports page initialized successfully.")
+            self.content_panel.add_component(Reports())
+
+            # Update UI link highlights
+            self.reports_page_link.background = app.theme_colors['Primary Container']
+            self.sales_page_link.background = "transparent"
+            self.admin_page_link.background = "transparent"
+            print("Reports page added to content panel.")
+
+        except Exception as e:
+            print(f"Error loading Reports page: {e}")
+            alert(f"Error loading Reports page: {e}")
 
     def admin_page_link_click(self, **event_args):
         try:

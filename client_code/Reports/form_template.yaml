@@ -4,41 +4,76 @@ components:
     name: label_1
     properties: {role: headline, text: Calls Reports}
     type: Label
-  - layout_properties: {grid_position: 'KULLQN,FTILQV'}
-    name: label_2
-    properties: {align: right, text: Start Date}
-    type: Label
-  - layout_properties: {grid_position: 'KULLQN,SILLHC'}
-    name: label_3
-    properties: {align: right, text: End Date}
-    type: Label
-  - layout_properties: {grid_position: 'FFAEPZ,EYGAOR'}
-    name: start_date_picker
-    properties: {}
-    type: DatePicker
-  - layout_properties: {grid_position: 'FFAEPZ,ERBECR'}
-    name: end_date_picker
-    properties: {}
-    type: DatePicker
-  - data_bindings:
-    - {code: 'self.item[''queryData'']', property: data, writeback: false}
+  - components:
+    - layout_properties: {grid_position: 'PZLTAT,KIWCUC WVRSDA,EILYSH'}
+      name: label_4
+      properties: {text: Data Type}
+      type: Label
+    - data_bindings: []
+      layout_properties: {grid_position: 'PZLTAT,KIWCUC ILYHHN,BEJDPJ'}
+      name: data_column_selector
+      properties: {}
+      type: DropDown
+    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,WYFBNC AIYNMQ,AGLRYH'}
+      name: label_2
+      properties: {align: right, text: Start Date}
+      type: Label
+    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,WYFBNC THCPML,ZTBMWA'}
+      name: start_date_picker
+      properties: {align: right}
+      type: DatePicker
+    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,YGEOUV ZIGYWM,SJWKTD'}
+      name: label_3
+      properties: {align: right, text: End Date}
+      type: Label
+    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,YGEOUV DOFOMB,EGYJHW'}
+      name: end_date_picker
+      properties: {align: right}
+      type: DatePicker
+    - layout_properties: {grid_position: 'PZLTAT,FKRDSY OTVUDP,VVMVPD'}
+      name: spacer_1
+      properties: {height: 32}
+      type: Spacer
+    - event_bindings: {click: filter_button_click}
+      layout_properties: {grid_position: 'PZLTAT,FKRDSY'}
+      name: filter_button
+      properties: {text: Filter}
+      type: Button
+    layout_properties: {grid_position: 'KULLQN,FTILQV'}
+    name: card_2
+    properties: {role: card}
+    type: ColumnPanel
+  - data_bindings: []
+    event_bindings: {}
     layout_properties: {grid_position: 'LJNRES,SYUSLL'}
-    name: plot_1
+    name: call_info_plot
     properties: {}
     type: Plot
+  - layout_properties: {grid_position: 'VDVLMA,YIELTQ'}
+    name: spacer_2
+    properties: {height: 32}
+    type: Spacer
   - components:
-    - name: repeating_panel_1
-      properties: {item_template: Reports.RowTemplate3}
+    - data_bindings: []
+      name: repeating_panel_1
+      properties: {item_template: Reports.RowTemplate4}
       type: RepeatingPanel
-    layout_properties: {grid_position: 'KCJXIF,JRHSJE'}
-    name: data_grid_1
+    layout_properties: {grid_position: 'RHGHYM,JBRNSZ'}
+    name: call_info_table
     properties:
       columns:
-      - {data_key: column_1, id: JKSDUP, title: Column 1}
-      - {data_key: column_2, expand: false, id: VJQQOR, title: Column 2, width: 239.10888671875}
-      - {data_key: column_3, id: OJLQEN, title: Column 3}
+      - {data_key: userName, expand: false, id: LTGZXA, title: Name, width: 170.089111328125}
+      - {data_key: inboundVolume, expand: false, id: WAEZAT, title: 'Inbound #', width: 88.445556640625}
+      - {data_key: inboundDuration, expand: false, id: GSJPNI, title: Inbound Time, width: 94.3465576171875}
+      - {data_key: outboundVolume, expand: false, id: GILUJR, title: 'Outbound #', width: 102.287109375}
+      - {data_key: outboundDuration, expand: false, id: CTHZTS, title: 'Outbound #', width: 98.39605712890625}
+      - {data_key: averageDuration, expand: false, id: XAJAZO, title: Avg Time, width: 101.31683349609375}
+      - {data_key: volume, expand: false, id: LVDKVX, title: 'Total #', width: 74.76239013671875}
+      - {data_key: totalDuration, expand: false, id: KJWXAO, title: Total Time, width: 74.5643310546875}
+      - {data_key: inboundQueueVolume, expand: false, id: YNJLYB, title: 'Inbound Queue #', width: 125.7921142578125}
+      role: null
     type: DataGrid
-  layout_properties: {grid_position: 'OTFGAQ,TCPUFC'}
+  layout_properties: {grid_position: 'OTFGAQ,SHOEHC'}
   name: card_1
   properties: {role: card}
   type: ColumnPanel
