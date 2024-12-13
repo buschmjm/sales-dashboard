@@ -2,7 +2,7 @@ import anvil.files
 from anvil.files import data_files
 import anvil.secrets
 import anvil.server
-import requests
+import anvil.http
 import json
 import base64
 from anvil.tables import app_tables
@@ -71,7 +71,7 @@ def refresh_access_token():
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    response = requests.post(TOKEN_URL, headers=headers, data=payload)
+    response = anvil.http.request(TOKEN_URL, method="POST", headers=headers, data=payload, json=True)
     if response.status_code == 200:
         tokens = response.get_bytes()
         ACCESS_TOKEN = tokens["access_token"]

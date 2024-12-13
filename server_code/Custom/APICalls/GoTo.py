@@ -2,7 +2,7 @@ import anvil.files
 from anvil.files import data_files
 import anvil.secrets
 import anvil.server
-import requests
+import anvil.http
 import json
 import base64
 from anvil.tables import app_tables
