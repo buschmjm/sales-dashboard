@@ -1,10 +1,10 @@
 # Reports Client-Side Code
-from ._anvil_designer import Reports_Template
+from ._anvil_designer import ReportsTemplate
 from anvil import *
 import anvil.server
 from datetime import datetime, timedelta
 
-class Reports(Reports_Template):
+class Reports(ReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         self.column_names = []
