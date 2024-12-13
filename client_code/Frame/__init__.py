@@ -90,7 +90,7 @@ class Frame(FrameTemplate):
     def signout_link_click(self, **event_args):
         alert("Sign out functionality not implemented yet.")
 
-@anvil.server.callable
+
 def fetch_call_reports():
     try:
         url = "https://api.example.com/call_reports"
