@@ -1,74 +1,79 @@
 # Reports Client-Side Code
-from ._anvil_designer import ReportsTemplate
+from ._anvil_designer import Reports_Template
 from anvil import *
-import plotly.graph_objects as go
 import anvil.server
-import anvil.users
-import anvil.tables as tables
-import anvil.tables.query as q
-from anvil.tables import app_tables
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
-class Reports(ReportsTemplate):
+class Reports(Reports_Template):
     def __init__(self, **properties):
-        # Initialize form and components
         self.init_components(**properties)
+        self.column_names = []
+        self.user_values = []
+        self._setup_initial_state()
 
-        # Set default date range
-        self.end_date_picker.date = date.today() - timedelta(days=1)
-        self.start_date_picker.date = date.today() - timedelta(days=15)
-
+    def _setup_initial_state(self):
+        """Initialize the reports view with default settings."""
+        # Set default date range (last 7 days)
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=7)
+        self.start_date_picker.date = start_date
+        self.end_date_picker.date = end_date
+        
+        # Initial data load
         self.refresh_data()
 
     def refresh_data(self):
         """Fetch and display data based on current date range."""
         try:
-            # Fetch data from the server
-            data = anvil.server.call('get_call_data', self.start_date_picker.date, self.end_date_picker.date)
-
-            # Validate data existence and structure
-            if not data or "columns" not in data or "values" not in data:
-                raise ValueError("Missing 'columns' or 'values' in the data.")
-
-            # Validate the data structure
-            if not isinstance(data.get("columns"), list):
-                raise ValueError("Expected 'columns' to be a list of strings.")
-            if not all(isinstance(col, str) for col in data["columns"]):
-                raise ValueError("All column names must be strings.")
-
-            if not isinstance(data.get("values"), list):
-                raise ValueError("Expected 'values' to be a list of lists.")
-            if not all(isinstance(row, list) for row in data["values"]):
-                raise ValueError("Each row in 'values' must be a list.")
-
-            # Store data as instance attributes
+            data = anvil.server.call(
+                'get_call_data',
+                self.start_date_picker.date,
+                self.end_date_picker.date
+            )
+            
+            if not self._validate_data(data):
+                raise ValueError("Invalid data format received")
+                
             self.column_names = data["columns"]
             self.user_values = data["values"]
-
-            # Debugging: Print count only
-            print(f"Number of rows fetched: {len(self.user_values)}")
-
-            # Populate dropdown and update visuals
+            
             self._populate_numeric_columns()
-            self._update_plot(self.data_column_selector.selected_value or self._get_default_column())
-            self._update_repeating_panel()
-
+            self._update_visualizations()
+            
         except Exception as e:
-            alert(f"Error refreshing Reports page: {e}")
-            print(f"Error refreshing Reports page: {e}")
+            alert(f"Error refreshing data: {str(e)}")
+            print(f"Error in refresh_data: {e}")
+
+    def _validate_data(self, data):
+        """Validate the structure of received data."""
+        return (
+            isinstance(data, dict) and
+            "columns" in data and
+            "values" in data and
+            isinstance(data["columns"], list) and
+            isinstance(data["values"], list) and
+            all(isinstance(col, str) for col in data["columns"]) and
+            all(isinstance(row, list) for row in data["values"])
+        )
 
     def _populate_numeric_columns(self):
-        """Populate dropdown with numeric columns."""
-        numeric_columns = [
-            col for i, col in enumerate(self.column_names)
-            if all(isinstance(row[i], (int, float)) for row in self.user_values)
-        ]
-        print(f"Numeric columns identified: {numeric_columns}")
-        self.data_column_selector.items = [(col, col) for col in numeric_columns]
+        """Populate dropdown with numeric column options."""
+        try:
+            numeric_columns = [
+                col for col, val in zip(self.column_names, self.user_values[0])
+                if isinstance(val, (int, float))
+            ]
+            self.data_column_selector.items = numeric_columns
+            if numeric_columns:
+                self.data_column_selector.selected_value = numeric_columns[0]
+        except Exception as e:
+            print(f"Error populating numeric columns: {e}")
 
-    def _get_default_column(self):
-        """Get default column for visualization."""
-        return 'volume' if 'volume' in self.column_names else self.column_names[0]
+    def _update_visualizations(self):
+        """Update both plot and repeating panel."""
+        if self.data_column_selector.selected_value:
+            self._update_plot(self.data_column_selector.selected_value)
+            self._update_repeating_panel()
 
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
@@ -152,20 +157,9 @@ class Reports(ReportsTemplate):
             print(f"Error updating repeating panel: {e}")
 
     def filter_button_click(self, **event_args):
-        """Handle filter button click to update the plot, table, and fetch email stats."""
-        y_column = self.data_column_selector.selected_value
-
-        if not y_column:
-            alert("Please select a column.")
+        """Handle filter button click."""
+        if not self.data_column_selector.selected_value:
+            alert("Please select a data column")
             return
-
-        # Update plot and table
-        self._update_plot(y_column)
-        self._update_repeating_panel()
-
-        # Fetch email stats from the server
-        try:
-            email_stats = anvil.server.call('fetch_user_email_stats')
-            print(f"Number of email stats fetched: {len(email_stats)}")
-        except Exception as e:
-            print(f"Error fetching email stats: {e}")
+            
+        self._update_visualizations()
