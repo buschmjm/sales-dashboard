@@ -8,6 +8,7 @@ import requests
 import time
 from datetime import datetime, timedelta
 import pytz
+from ..DataAggregation.Email import update_outlook_statistics_db
 
 # This is a server module. It runs on the Anvil server,
 # rather than in the user's browser.
@@ -112,5 +113,8 @@ def fetch_user_email_stats():
         except Exception as e:
             print(f"Error fetching email stats for {email}: {e}")
 
+    # Update the database with the collected statistics
+    update_outlook_statistics_db(results)
+    
     return results
 
