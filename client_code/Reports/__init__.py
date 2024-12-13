@@ -26,9 +26,6 @@ class Reports(ReportsTemplate):
             # Fetch data from the server
             data = anvil.server.call('get_call_data', self.start_date_picker.date, self.end_date_picker.date)
 
-            # Debug: Inspect the fetched data
-            print(f"Fetched data: {data}")
-
             # Validate data existence and structure
             if not data or "columns" not in data or "values" not in data:
                 raise ValueError("Missing 'columns' or 'values' in the data.")
@@ -48,46 +45,35 @@ class Reports(ReportsTemplate):
             self.column_names = data["columns"]
             self.user_values = data["values"]
 
-            # Convert durations in milliseconds to minutes for relevant columns
-            duration_columns = [
-                col for col in self.column_names if 'duration' in col.lower()
-            ]
-            for row in self.user_values:
-                for col in duration_columns:
-                    col_index = self.column_names.index(col)
-                    row[col_index] = int(row[col_index] // 60000)  # Ensure integer division and convert ms to minutes
+            # Debugging: Print count only
+            print(f"Number of rows fetched: {len(self.user_values)}")
 
-
-            # Populate dropdown with numeric columns
-            numeric_columns = [
-                col for i, col in enumerate(self.column_names)
-                if all(isinstance(row[i], (int, float)) for row in self.user_values)
-            ]
-            print(f"Numeric columns identified: {numeric_columns}")
-
-            # Ensure dropdown items are tuples of hashable types
-            self.data_column_selector.items = [(col, col) for col in numeric_columns if isinstance(col, str)]
-
-            if not numeric_columns:
-                alert("No numeric columns available for plotting. Please check the data.")
-                self.data_column_selector.items = []  # Clear the dropdown if no numeric columns
-                return
-
-            # Update the plot and table data with the first selected column or volume
-            y_column = self.data_column_selector.selected_value or ('volume' if 'volume' in numeric_columns else numeric_columns[0])
-            self._update_plot(y_column)
+            # Populate dropdown and update visuals
+            self._populate_numeric_columns()
+            self._update_plot(self.data_column_selector.selected_value or self._get_default_column())
             self._update_repeating_panel()
 
         except Exception as e:
-            alert(f"Error initializing Reports page: {e}")
-            print(f"Error initializing Reports page: {e}")
+            alert(f"Error refreshing Reports page: {e}")
+            print(f"Error refreshing Reports page: {e}")
+
+    def _populate_numeric_columns(self):
+        """Populate dropdown with numeric columns."""
+        numeric_columns = [
+            col for i, col in enumerate(self.column_names)
+            if all(isinstance(row[i], (int, float)) for row in self.user_values)
+        ]
+        print(f"Numeric columns identified: {numeric_columns}")
+        self.data_column_selector.items = [(col, col) for col in numeric_columns]
+
+    def _get_default_column(self):
+        """Get default column for visualization."""
+        return 'volume' if 'volume' in self.column_names else self.column_names[0]
 
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
         try:
             print(f"Updating plot with y_column: {y_column}")
-            print(f"Column names: {self.column_names}")
-            print(f"User values: {self.user_values}")
 
             # Validate 'reportDate' and 'y_column' existence
             if 'reportDate' not in self.column_names:
@@ -135,7 +121,7 @@ class Reports(ReportsTemplate):
         """Update the repeating_panel_1 with consolidated filtered data."""
         try:
             selected_users = [trace['name'] for trace in self.call_info_plot.data]
-            print(f"Selected users for repeating panel: {selected_users}")
+            print(f"Number of selected users for repeating panel: {len(selected_users)}")
 
             # Filter and consolidate rows by userName
             user_name_index = self.column_names.index('userName')
@@ -155,8 +141,8 @@ class Reports(ReportsTemplate):
             # Convert grouped_rows to a list of dictionaries
             consolidated_rows = list(grouped_rows.values())
 
-            # Debug consolidated rows
-            print(f"Consolidated rows for repeating panel: {consolidated_rows}")
+            # Debugging: Print count only
+            print(f"Number of consolidated rows: {len(consolidated_rows)}")
 
             # Display consolidated data in the repeating_panel_1
             self.repeating_panel_1.items = consolidated_rows
@@ -166,23 +152,20 @@ class Reports(ReportsTemplate):
             print(f"Error updating repeating panel: {e}")
 
     def filter_button_click(self, **event_args):
-      """Handle filter button click to update the plot, table, and fetch email stats."""
-      y_column = self.data_column_selector.selected_value
-  
-      if not y_column:
-          alert("Please select a column.")
-          return
-  
-      # Update plot and table
-      self._update_plot(y_column)
-      self._update_repeating_panel()
-  
-      # Fetch email stats from the server
-      try:
-          email_stats = anvil.server.call('get_email_stats')
-          print("Email Stats:")
-          for stat in email_stats:
-              print(stat)
-      except Exception as e:
-          print(f"Error fetching email stats: {e}")
+        """Handle filter button click to update the plot, table, and fetch email stats."""
+        y_column = self.data_column_selector.selected_value
 
+        if not y_column:
+            alert("Please select a column.")
+            return
+
+        # Update plot and table
+        self._update_plot(y_column)
+        self._update_repeating_panel()
+
+        # Fetch email stats from the server
+        try:
+            email_stats = anvil.server.call('fetch_user_email_stats')
+            print(f"Number of email stats fetched: {len(email_stats)}")
+        except Exception as e:
+            print(f"Error fetching email stats: {e}")

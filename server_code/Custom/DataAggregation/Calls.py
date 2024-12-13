@@ -34,7 +34,7 @@ def get_call_data(queryStart, queryEnd):
     except Exception as e:
         raise ValueError(f"Error processing row data: {e}")
 
-    # Print count of user value sets instead of full details
+    # Print the count of rows for debugging
     print(f"Number of user value sets: {len(user_values)}")
 
     return {"columns": column_names, "values": user_values}
