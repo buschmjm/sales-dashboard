@@ -150,7 +150,7 @@ def fetch_call_reports():
 
     url = f"{CALL_REPORTS_URL}?startTime={start_time}&endTime={end_time}"
 
-    response = requests.get(url, headers=headers)
+    response = anvil.http.request(url, method="GET", headers=headers, json=True)
 
     if response.status_code == 401:
         print("Access token expired. Attempting to refresh...")

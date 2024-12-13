@@ -70,15 +70,15 @@ def refresh_access_token():
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    response = requests.post(TOKEN_URL, data=payload, headers=headers)
+    response = anvil.http.request(TOKEN_URL, method="POST", headers=headers, data=payload, json=True)
     if response.status_code == 200:
-        tokens = response.json()
+        tokens = response.get_bytes()
         ACCESS_TOKEN = tokens["access_token"]
         REFRESH_TOKEN = tokens.get("refresh_token", REFRESH_TOKEN)
         save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
         print("Access token refreshed and saved successfully.")
     else:
-        raise Exception(f"Failed to refresh access token: {response.text}")
+        raise Exception(f"Failed to refresh access token: {response.content}")
 
 # Load any previously saved tokens
 load_tokens()
@@ -149,22 +149,22 @@ def fetch_call_reports():
 
     url = f"{CALL_REPORTS_URL}?startTime={start_time}&endTime={end_time}"
 
-    response = requests.get(url, headers=headers)
+    response = anvil.http.request(url, method="GET", headers=headers, json=True)
 
     if response.status_code == 401:
         print("Access token expired. Attempting to refresh...")
         refresh_access_token()
         headers["Authorization"] = f"Bearer {ACCESS_TOKEN}"
-        response = requests.get(url, headers=headers)
+        response = anvil.http.request(url, method="GET", headers=headers, json=True)
 
     if response.status_code == 200:
-        data = response.json()
+        data = response.get_bytes()
         update_call_statistics(data)
         return {"message": "Data refreshed successfully."}
     elif response.status_code == 404:
         return {"message": "No data found for the specified time frame."}
     else:
-        raise Exception(f"Failed to fetch call data: {response.status_code} - {response.text}")
+        raise Exception(f"Failed to fetch call data: {response.status_code} - {response.content}")
 
 # ===============================================
 # Fetch Call Reports (Scheduled Task)
