@@ -168,7 +168,7 @@ from ._anvil_designer import Reports_Template
 from anvil import *
 import anvil.server
 
-class Reports(ReportsTemplate):
+class Reports(Reports_Template):
     def __init__(self, **properties):
         self.init_components(**properties)
 
