@@ -8,6 +8,7 @@ from anvil.tables import app_tables
 from ..Reports import Reports
 from ..Sales import Sales
 from ..Admin import Admin
+from ..ReportsInnerFrame import ReportsInnerFrame  # Add this import
 
 anvil.users.login_with_form()
 
@@ -67,17 +68,17 @@ class Frame(FrameTemplate):
     def reports_page_link_click(self, **event_args):
         try:
             print("Switching to Reports page...")
-            self.content_panel.clear()  # Clear any existing components
+            self.content_panel.clear()
 
-            # Add the new Reports page
-            print("Reports page initialized successfully.")
-            self.content_panel.add_component(Reports())
+            # Add the ReportsInnerFrame instead of Reports
+            reports_frame = ReportsInnerFrame()
+            self.content_panel.add_component(reports_frame)
 
             # Update UI link highlights
             self.reports_page_link.background = app.theme_colors['Primary Container']
             self.sales_page_link.background = "transparent"
             self.admin_page_link.background = "transparent"
-            print("Reports page added to content panel.")
+            print("Reports inner frame added to content panel.")
 
         except Exception as e:
             print(f"Error loading Reports page: {e}")

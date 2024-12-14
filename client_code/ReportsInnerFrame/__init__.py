@@ -5,23 +5,39 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from ..PhoneReports import PhoneReports
+from ..EmailReports import EmailReports
+from ..B2bReports import B2bReports
 
 
 class ReportsInnerFrame(ReportsInnerFrameTemplate):
-  def __init__(self, **properties):
-    # Set Form properties and Data Bindings.
-    self.init_components(**properties)
+    def __init__(self, **properties):
+        self.init_components(**properties)
+        
+        # Load PhoneReports by default
+        self.content_panel.add_component(PhoneReports())
+        self.phone_nav.background = app.theme_colors['Primary Container']
 
-    # Any code you write here will run before the form opens.
+    def phone_nav_click(self, **event_args):
+        """Handle phone reports navigation"""
+        self.content_panel.clear()
+        self.content_panel.add_component(PhoneReports())
+        self._update_nav_highlights('phone')
 
-  def b2b_nav_click(self, **event_args):
-    """This method is called when the button is clicked"""
-    pass
+    def email_nav_click(self, **event_args):
+        """Handle email reports navigation"""
+        self.content_panel.clear()
+        self.content_panel.add_component(EmailReports())
+        self._update_nav_highlights('email')
 
-  def email_nav_click(self, **event_args):
-    """This method is called when the button is clicked"""
-    pass
+    def b2b_nav_click(self, **event_args):
+        """Handle B2B reports navigation"""
+        self.content_panel.clear()
+        self.content_panel.add_component(B2bReports())
+        self._update_nav_highlights('b2b')
 
-  def phone_nav_click(self, **event_args):
-    """This method is called when the button is clicked"""
-    pass
+    def _update_nav_highlights(self, active_nav):
+        """Helper to update navigation highlighting"""
+        self.phone_nav.background = app.theme_colors['Primary Container'] if active_nav == 'phone' else 'transparent'
+        self.email_nav.background = app.theme_colors['Primary Container'] if active_nav == 'email' else 'transparent'
+        self.b2b_nav.background = app.theme_colors['Primary Container'] if active_nav == 'b2b' else 'transparent'
