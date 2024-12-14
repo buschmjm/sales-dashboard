@@ -27,12 +27,12 @@ components:
   - data_bindings: []
     layout_properties: {grid_position: 'SHVKWP,XDUDUD'}
     name: button_1
-    properties: {align: right, bold: false, foreground: 'theme:Tertiary', icon: 'fa:sun-o', text: ''}
+    properties: {align: right, background: 'theme:Outline', bold: false, foreground: 'theme:On Primary', icon: 'fa:sun-o', role: null, text: ''}
     type: Button
   - data_bindings: []
     layout_properties: {grid_position: 'SHVKWP,LFYEDY'}
     name: button_1_copy
-    properties: {align: left, icon: 'fa:moon-o', text: ''}
+    properties: {align: left, background: 'theme:Outline', foreground: 'theme:On Primary', icon: 'fa:moon-o', role: null, text: ''}
     type: Button
   layout_properties: {slot: left-nav}
   name: column_panel_2
