@@ -5,10 +5,9 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ..Reports import Reports
 from ..Sales import Sales
 from ..Admin import Admin
-from ..ReportsInnerFrame import ReportsInnerFrame  # Add this import
+from ..ReportsInnerFrame import ReportsInnerFrame
 
 anvil.users.login_with_form()
 
