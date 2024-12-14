@@ -16,12 +16,16 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         
         # Load PhoneReports by default
         self.content_panel.add_component(PhoneReports())
-        self._update_nav_highlights('phone')
         
         # Add hover effects to navigation buttons
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = "transparent"
-            nav.hover_background = self._get_hover_color()
+            nav.hover_background = app.theme_colors['Surface Variant']
+            nav.foreground = "On Secondary Container"
+        
+        # Set initial active state for phone
+        self.phone_nav.background = app.theme_colors['Primary Container']
+        self.phone_nav.foreground = app.theme_colors['Secondary']
 
     def phone_nav_click(self, **event_args):
         """Handle phone reports navigation"""
@@ -47,15 +51,12 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
 
     def _update_nav_highlights(self, active_nav):
         """Helper to update navigation highlighting"""
-        # Reset all backgrounds first
-        self.phone_nav.background = "transparent"
-        self.email_nav.background = "transparent"
-        self.b2b_nav.background = "transparent"
+        # Reset all to default state
+        for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
+            nav.background = "transparent"
+            nav.foreground = "On Secondary Container"
         
-        # Set active background
-        if active_nav == 'phone':
-            self.phone_nav.background = app.theme_colors['Primary Container']
-        elif active_nav == 'email':
-            self.email_nav.background = app.theme_colors['Primary Container']
-        elif active_nav == 'b2b':
-            self.b2b_nav.background = app.theme_colors['Primary Container']
+        # Set active state
+        active_button = getattr(self, f"{active_nav}_nav")
+        active_button.background = app.theme_colors['Primary Container']
+        active_button.foreground = app.theme_colors['Secondary']

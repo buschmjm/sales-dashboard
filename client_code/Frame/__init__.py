@@ -25,18 +25,32 @@ class Frame(FrameTemplate):
 
             Plot.templates.default = "rally"
 
-            # Add hover effects to navigation links
+            # Enhanced hover effects for navigation links
             for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
                 nav.background = "transparent"
                 nav.hover_background = app.theme_colors['Surface Variant']
+                nav.foreground = "On Secondary Container"
 
+            # Set initial active state
             print("Loading Sales page...")
             self.content_panel.add_component(Sales())
-            self.sales_page_link.background = app.theme_colors['Primary Container']
+            self._update_nav_highlights('sales')
 
         except Exception as e:
             print(f"Error initializing Frame: {e}")
             alert(f"Error initializing Frame: {e}")
+
+    def _update_nav_highlights(self, active_page):
+        """Helper to update navigation highlighting"""
+        # Reset all to default state
+        for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
+            nav.background = "transparent"
+            nav.foreground = "On Secondary Container"
+        
+        # Set active state
+        active_link = getattr(self, f"{active_page}_page_link")
+        active_link.background = app.theme_colors['Primary Container']
+        active_link.foreground = app.theme_colors['Secondary']
 
     def refresh_button_click(self, **event_args):
         """Handle refresh button click - only triggers database refresh APIs."""
@@ -65,9 +79,7 @@ class Frame(FrameTemplate):
             print("Switching to Sales page...")
             self.content_panel.clear()
             self.content_panel.add_component(Sales())
-            self.sales_page_link.background = app.theme_colors['Primary Container']
-            self.reports_page_link.background = "transparent"
-            self.admin_page_link.background = "transparent"
+            self._update_nav_highlights('sales')
         except Exception as e:
             print(f"Error loading Sales page: {e}")
             alert(f"Error loading Sales page: {e}")
@@ -81,10 +93,7 @@ class Frame(FrameTemplate):
             reports_frame = ReportsInnerFrame()
             self.content_panel.add_component(reports_frame)
 
-            # Update UI link highlights
-            self.reports_page_link.background = app.theme_colors['Primary Container']
-            self.sales_page_link.background = "transparent"
-            self.admin_page_link.background = "transparent"
+            self._update_nav_highlights('reports')
             print("Reports inner frame added to content panel.")
 
         except Exception as e:
@@ -96,9 +105,7 @@ class Frame(FrameTemplate):
             print("Switching to Admin page...")
             self.content_panel.clear()
             self.content_panel.add_component(Admin())
-            self.admin_page_link.background = app.theme_colors['Primary Container']
-            self.sales_page_link.background = "transparent"
-            self.reports_page_link.background = "transparent"
+            self._update_nav_highlights('admin')
         except Exception as e:
             print(f"Error loading Admin page: {e}")
             alert(f"Error loading Admin page: {e}")
