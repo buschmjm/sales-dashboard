@@ -14,55 +14,43 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Set basic roles
+        # Basic initialization
         self.content_panel.role = 'none'
+        self.current_section = 'phone'
         
-        # Initialize navigation buttons
-        nav_buttons = [self.phone_nav, self.email_nav, self.b2b_nav]
-        for nav in nav_buttons:
-            nav.background = "transparent"
-            nav.foreground = "black"
+        # Set up navigation styling
+        for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
+            nav.background = 'transparent'
+            nav.foreground = 'black'
+            nav.role = 'none'
         
-        # Load initial view and set initial navigation state
+        # Initialize with phone view
         self.content_panel.add_component(PhoneReports())
-        self._update_nav_highlights('phone')
+        self.phone_nav.background = app.theme_colors['Primary Container']
+        self.phone_nav.foreground = 'white'
+
+    def _switch_section(self, section, component):
+        """Handle section switching"""
+        if self.current_section != section:
+            self.current_section = section
+            self.content_panel.clear()
+            self.content_panel.add_component(component)
+            
+            # Reset all nav buttons
+            for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
+                nav.background = 'transparent'
+                nav.foreground = 'black'
+            
+            # Set active button
+            active_nav = getattr(self, f"{section}_nav")
+            active_nav.background = app.theme_colors['Primary Container']
+            active_nav.foreground = 'white'
 
     def phone_nav_click(self, **event_args):
-        """Handle phone reports navigation"""
-        self.content_panel.clear()
-        self.content_panel.add_component(PhoneReports())
-        self._update_nav_highlights('phone')
+        self._switch_section('phone', PhoneReports())
 
     def email_nav_click(self, **event_args):
-        """Handle email reports navigation"""
-        self.content_panel.clear()
-        self.content_panel.add_component(EmailReports())
-        self._update_nav_highlights('email')
+        self._switch_section('email', EmailReports())
 
     def b2b_nav_click(self, **event_args):
-        """Handle B2B reports navigation"""
-        self.content_panel.clear()
-        self.content_panel.add_component(B2bReports())
-        self._update_nav_highlights('b2b')
-
-    def _get_hover_color(self):
-        """Returns a slightly lighter version of Primary Container for hover effects"""
-        return app.theme_colors['Surface Variant']
-
-    def _update_nav_highlights(self, active_nav):
-        """Helper to update navigation highlighting"""
-        nav_map = {
-            'phone': self.phone_nav,
-            'email': self.email_nav,
-            'b2b': self.b2b_nav
-        }
-        
-        # Reset all buttons
-        for button in nav_map.values():
-            button.background = "transparent"
-            button.foreground = "black"
-            
-        # Set active button
-        if active_nav in nav_map:
-            nav_map[active_nav].background = app.theme_colors['Primary Container']
-            nav_map[active_nav].foreground = "white"
+        self._switch_section('b2b', B2bReports())
