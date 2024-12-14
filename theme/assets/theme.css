@@ -190,8 +190,8 @@ input[disabled] ~ span {
 /* Column Panel */
 
 .anvil-panel-col {
-  padding-bottom: 10px;
-  margin-bottom: -10px;
+  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 /* Date Picker */
@@ -487,6 +487,8 @@ input[disabled] ~ span {
 .nav-holder {
   flex-grow: 1;
   overflow-y: auto;
+  margin: 0;
+  padding: 0;
 }
 
 @media print {
@@ -497,12 +499,14 @@ input[disabled] ~ span {
 
 /* Mobile and desktop margins for content */
 .content > * > .anvil-container {
-  padding: 8px;
+  padding: 0;
+  margin: 0;
 }
 
 @media(min-width:991px) {
   .content > * > .anvil-container {
-    padding: 16px 24px;
+    padding: 0;
+    margin: 0;
   }
 }
 
@@ -526,7 +530,7 @@ input[disabled] ~ span {
 
 .nav-holder .left-nav {
   position: relative;
-  padding: 10px;
+  padding: 0;
   flex-shrink: 0;
   min-width: 160px;
   max-width: 400px;
@@ -709,6 +713,8 @@ input[disabled] ~ span {
 .nav-holder .content {
   flex: 1;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-holder > .logo > .placeholder { outline: 1px dotted; padding-left: 16px; padding-right: 16px; margin: 8px 8px 0;}

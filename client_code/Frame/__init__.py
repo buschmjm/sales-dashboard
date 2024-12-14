@@ -14,6 +14,9 @@ anvil.users.login_with_form()
 class Frame(FrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
+        
+        # Add this line to remove any theme-based spacing
+        self.content_panel.role = 'none'
 
         try:
             self.refresh_button = Button(text="Refresh", align="right", role="primary-color")

@@ -38,7 +38,7 @@ components:
   properties:
     col_spacing: none
     spacing:
-      margin: ['0', '0', '0', null]
+      margin: ['0', '0', '0', '0']  # Changed this line to remove left margin
       padding: ['0', '0', '0', '0']
   type: ColumnPanel
 container:
