@@ -98,21 +98,18 @@ class Reports(ReportsTemplate):
     def refresh_email_data(self):
         """Fetch and display email data based on current date range."""
         try:
-            # Fetch email data from the server for the selected date range
-            data = anvil.server.call('get_email_stats', 
-                                   self.email_start_date.date,
-                                   self.email_end_date.date)
+            # Ensure dates are in the correct order
+            start_date = min(self.email_start_date.date, self.email_end_date.date)
+            end_date = max(self.email_start_date.date, self.email_end_date.date)
             
-            # Debug data received from server
+            data = anvil.server.call('get_email_stats', start_date, end_date)
             print("Email data received:", data)
             
-            # Update the plot directly with the data
             self._update_email_plot(data)
             
         except Exception as e:
             alert(f"Error refreshing email data: {e}")
             print(f"Error refreshing email data: {e}")
-            print(f"Data received: {data}")
 
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
@@ -166,14 +163,13 @@ class Reports(ReportsTemplate):
     def _update_email_plot(self, data):
         """Update the email statistics plot with a grouped bar chart."""
         try:
-            # Verify data structure
             if not data or 'users' not in data or 'metrics' not in data:
                 raise ValueError("Invalid data structure received from server")
             
             users = data['users']
             metrics = data['metrics']
             
-            if not users:
+            if users == ['No Data']:
                 # Show empty state
                 self.email_numbers_plot.data = [{
                     'name': 'No Data',
@@ -189,32 +185,23 @@ class Reports(ReportsTemplate):
                 })
                 return
 
-            # Create grouped bar chart
-            self.email_numbers_plot.data = [
-                {
-                    'name': 'Total Emails',
-                    'type': 'bar',
-                    'x': users,
-                    'y': metrics['total']
-                },
-                {
-                    'name': 'Emails Received',
-                    'type': 'bar',
-                    'x': users,
-                    'y': metrics['inbound']
-                },
-                {
-                    'name': 'Emails Sent',
-                    'type': 'bar',
-                    'x': users,
-                    'y': metrics['outbound']
-                }
-            ]
+            # Get selected metric
+            metric = self.email_metric_selector.selected_value
+            if not metric:
+                metric = 'total'
 
-            # Update layout for bar chart
+            # Create bar chart based on selected metric
+            self.email_numbers_plot.data = [{
+                'name': dict(self.email_metric_selector.items)[metric],
+                'type': 'bar',
+                'x': users,
+                'y': metrics[metric]
+            }]
+
+            # Update layout
             self.email_numbers_plot.layout.update({
                 'barmode': 'group',
-                'title': 'Email Statistics by User',
+                'title': f'Email Statistics by User - {dict(self.email_metric_selector.items)[metric]}',
                 'xaxis': {'title': 'Users'},
                 'yaxis': {'title': 'Number of Emails'},
                 'showlegend': True
@@ -286,10 +273,6 @@ class Reports(ReportsTemplate):
 
     def filter_button_email_click(self, **event_args):
         """Handle email filter button click."""
-        # Validate date range
-        if self.email_start_date.date > self.email_end_date.date:
-            alert("Start date must be before end date")
-            return
-            
+        # Always refresh data when filter is clicked
         self.refresh_email_data()
 

@@ -4,7 +4,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.server
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 @anvil.server.callable
@@ -68,34 +68,26 @@ def update_outlook_statistics_db(stats_data):
 def get_email_stats(start_date, end_date):
     """Fetch and aggregate email statistics for the specified date range."""
     try:
-        # Debug input parameters with explicit date formatting
-        print(f"Fetching email stats for date range: {start_date} to {end_date}")
+        # Add one day to end_date to include the end date in results
+        end_date = end_date + timedelta(days=1)
+        print(f"Adjusted date range: {start_date} to {end_date}")
         
-        # First, check if we have any data at all
-        all_records = list(app_tables.outlook_statistics.search())
-        print(f"Total records in database: {len(all_records)}")
-        if all_records:
-            print(f"Sample record: {dict(all_records[0])}")
-        
-        # Query the database for email statistics
+        # Query the database for email statistics with explicit date comparison
         results = app_tables.outlook_statistics.search(
             tables.order_by('reportDate', ascending=True),
-            reportDate=q.between(start_date, end_date)
+            reportDate=q.greater_than_or_equal_to(start_date),
+            reportDate=q.less_than(end_date)
         )
         
-        # Debug query results
-        results_list = [dict(r) for r in results]
-        print(f"Found {len(results_list)} records for date range")
-        if results_list:
-            print(f"Sample result: {results_list[0]}")
-        
-        # Convert results to list to check if empty
+        # Convert results to list and debug
         results_list = [dict(r) for r in results]
         print(f"Found {len(results_list)} records")
+        if results_list:
+            print("Date range of results:", min(r['reportDate'] for r in results_list),
+                  "to", max(r['reportDate'] for r in results_list))
         
         if not results_list:
             print("No email statistics found for the specified date range")
-            # Return dummy data for testing (remove in production)
             return {
                 'users': ['No Data'],
                 'metrics': {
