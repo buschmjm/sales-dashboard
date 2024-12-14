@@ -1,13 +1,17 @@
 components:
+- layout_properties: {grid_position: 'OEQTHA,DFRZCS'}
+  name: spacer_1
+  properties: {height: '250'}
+  type: Spacer
 - components:
   - components:
     - layout_properties: {grid_position: 'NNDSER,RCPRGZ'}
       name: label_13
-      properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: title, spacing_above: small, spacing_below: small, text: UNDER CONSTRUCTION, tooltip: '', underline: false, visible: true}
+      properties: {align: center, background: '', bold: true, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: title, spacing_above: small, spacing_below: small, text: UNDER CONSTRUCTION, tooltip: '', underline: false, visible: true}
       type: Label
     layout_properties: {grid_position: 'ZWYAMV,XJDGPO'}
     name: card_5
-    properties: {background: 'theme:Primary Overlay 3', col_widths: '{}', role: card}
+    properties: {background: 'theme:Tertiary', col_widths: '{}', role: card}
     type: ColumnPanel
   layout_properties:
     col_widths: {}
