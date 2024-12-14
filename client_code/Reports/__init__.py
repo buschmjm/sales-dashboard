@@ -33,12 +33,33 @@ class Reports(ReportsTemplate):
         # Bind metric selector change event
         self.email_metric_selector.set_event_handler('change', self.email_metric_changed)
 
+        # Bind change events to date pickers
+        self.start_date_picker.set_event_handler('change', self.date_picker_change)
+        self.end_date_picker.set_event_handler('change', self.date_picker_change)
+        self.email_start_date.set_event_handler('change', self.email_date_change)
+        self.email_end_date.set_event_handler('change', self.email_date_change)
+        self.data_column_selector.set_event_handler('change', self.column_selector_change)
+
         self.refresh_data()
         self.refresh_email_data()
 
     def email_metric_changed(self, **event_args):
         """Handle metric selector change"""
         self.refresh_email_data()  # Refresh data when metric changes
+
+    def date_picker_change(self, **event_args):
+        """Handle call statistics date picker changes"""
+        self.refresh_data()
+
+    def email_date_change(self, **event_args):
+        """Handle email statistics date picker changes"""
+        self.refresh_email_data()
+
+    def column_selector_change(self, **event_args):
+        """Handle column selector changes"""
+        if self.data_column_selector.selected_value:
+            self._update_plot(self.data_column_selector.selected_value)
+            self._update_repeating_panel()
 
     def refresh_data(self):
         """Fetch and display data based on current date range."""
@@ -247,17 +268,4 @@ class Reports(ReportsTemplate):
         except Exception as e:
             alert(f"Error updating repeating panel: {e}")
             print(f"Error updating repeating panel: {e}")
-
-    def filter_button_click(self, **event_args):
-        """Handle filter button click to update the plot and table."""
-        if not self.data_column_selector.selected_value:
-            alert("Please select a column.")
-            return
-    
-        self._update_plot(self.data_column_selector.selected_value)
-        self._update_repeating_panel()
-
-    def filter_button_email_click(self, **event_args):
-        """Handle email filter button click."""
-        self.refresh_email_data()
 
