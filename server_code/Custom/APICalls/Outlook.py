@@ -65,6 +65,16 @@ def fetch_user_email_stats():
     app_users = app_tables.users.search()
     results = []
 
+    # Get today's date in CST (America/Chicago timezone)
+    cst_tz = pytz.timezone("America/Chicago")
+    now = datetime.now(cst_tz)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Format date for Microsoft Graph API
+    today_iso = today_start.isoformat() + 'Z'
+    
+    print(f"Fetching email stats for date: {today_iso}")
+
     for user in app_users:
         email = user["email"]
         if not email:
@@ -83,23 +93,21 @@ def fetch_user_email_stats():
 
             user_id = search_results[0]["id"]
 
-            # Get today's date in CST (America/Chicago timezone)
-            cst_tz = pytz.timezone("America/Chicago")
-            today = datetime.now(cst_tz).strftime('%Y-%m-%dT00:00:00Z')
-
             # Get inbox message count for today
-            inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/Inbox/messages?$count=true&$filter=receivedDateTime ge {today}"
-            inbox_response = requests.get(inbox_url, headers=headers)
+            inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/Inbox/messages?$count=true&$filter=receivedDateTime ge {today_iso}"
+            inbox_response = requests.get(inbox_url, headers={"Authorization": f"Bearer {access_token}", "Prefer": "outlook.timezone=\"Central Standard Time\""})
             inbox_response.raise_for_status()
 
             inbox_count = inbox_response.json().get("@odata.count", 0)
 
             # Get sent message count for today
-            sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/SentItems/messages?$count=true&$filter=sentDateTime ge {today}"
-            sent_response = requests.get(sent_url, headers=headers)
+            sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/SentItems/messages?$count=true&$filter=sentDateTime ge {today_iso}"
+            sent_response = requests.get(sent_url, headers={"Authorization": f"Bearer {access_token}", "Prefer": "outlook.timezone=\"Central Standard Time\""})
             sent_response.raise_for_status()
 
             sent_count = sent_response.json().get("@odata.count", 0)
+
+            print(f"Stats for {email}: inbox={inbox_count}, sent={sent_count}")
 
             # Append results
             results.append({
@@ -108,13 +116,15 @@ def fetch_user_email_stats():
                 "sent_count": sent_count
             })
 
-        except requests.exceptions.HTTPError as e:
-            print(f"HTTPError fetching email stats for {email}: {e.response.status_code} {e.response.text}")
         except Exception as e:
             print(f"Error fetching email stats for {email}: {e}")
 
     # Update the database with the collected statistics
-    update_outlook_statistics_db(results)
+    if results:
+        print(f"Updating database with {len(results)} records")
+        update_outlook_statistics_db(results)
+    else:
+        print("No email statistics to update")
     
     return results
 
