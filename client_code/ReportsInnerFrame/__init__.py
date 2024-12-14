@@ -14,15 +14,15 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Set up sticky navigation styling
-        self.nav_panel.role = 'sticky-nav'  # Custom role for styling
-        self.nav_panel.background = 'white'  # Ensure background is solid
-        self.nav_panel.style.update({
-            'position': 'sticky',
-            'top': '0',
-            'z-index': '100',
-            'box-shadow': '0 2px 4px rgba(0,0,0,0.1)'  # Add subtle shadow for depth
-        })
+        # Set up sticky navigation styling using Anvil properties
+        self.nav_panel.role = 'navigation'
+        self.nav_panel.background = 'white'
+        self.nav_panel.spacing_above = 'none'
+        self.nav_panel.spacing_below = 'none'
+        self.nav_panel.border = '0 0 1px 0 solid #eee'  # Add subtle bottom border
+        
+        # Add padding to content panel to prevent overlap
+        self.content_panel.spacing_above = 'small'
         
         # Load PhoneReports by default
         self.content_panel.add_component(PhoneReports())
@@ -32,6 +32,8 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             nav.background = "transparent"
             nav.hover_background = app.theme_colors['Surface Variant']
             nav.foreground = "black"
+            nav.spacing_above = 'none'
+            nav.spacing_below = 'none'
         
         # Set initial active state for phone
         self.phone_nav.background = app.theme_colors['Primary Container']
