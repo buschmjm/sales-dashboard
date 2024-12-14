@@ -14,21 +14,18 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Simplify navigation panel setup
-        self.nav_panel.background = 'white'
-        self.nav_panel.border = '0 0 1px 0 solid #eee'
+        # Set the role to 'none' for the content panel like in Frame
+        self.content_panel.role = 'none'
         
-        # Configure content panel
-        self.content_panel.padding = ('12px', 0, 0, 0)
-        
-        # Initialize navigation buttons with simpler styling
+        # Simple navigation setup without custom styling
         nav_buttons = [self.phone_nav, self.email_nav, self.b2b_nav]
         for nav in nav_buttons:
             nav.background = "transparent"
             nav.foreground = "black"
-            
-        # Add initial component after button setup
-        self._update_nav_highlights('phone')  # This will set the correct button state
+            nav.role = 'primary-color'  # Use Anvil's built-in roles
+        
+        # Load initial view
+        self._update_nav_highlights('phone')
         self.content_panel.add_component(PhoneReports())
 
     def phone_nav_click(self, **event_args):
@@ -54,7 +51,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         return app.theme_colors['Surface Variant']
 
     def _update_nav_highlights(self, active_nav):
-        """Simplified navigation highlight update"""
+        """Simplified navigation highlight update using Anvil properties"""
         nav_map = {
             'phone': self.phone_nav,
             'email': self.email_nav,
@@ -63,6 +60,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         
         # Reset all buttons
         for button in nav_map.values():
+            button.role = 'primary-color'
             button.background = "transparent"
             button.foreground = "black"
         
