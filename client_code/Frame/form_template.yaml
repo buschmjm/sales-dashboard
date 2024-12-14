@@ -32,15 +32,14 @@ components:
   name: logo
   properties: {background: '', border: '', display_mode: shrink_to_fit, foreground: '', height: 192.46804809570312, horizontal_align: center, role: null, source: _/theme/matts-moving-company.png, spacing_above: small, spacing_below: small, tooltip: '', vertical_align: center, visible: true}
   type: Image
-- components: []
-  layout_properties: {slot: default}
+- layout_properties: {slot: default}
   name: content_panel
   properties:
     col_spacing: none
     full_width_row: true
+    spacing: {margin: 0, padding: 0}
     spacing_above: none
     spacing_below: none
-    spacing: {padding: 0, margin: 0}
   type: ColumnPanel
 container:
   properties: {html: '@theme:standard-page.html'}
