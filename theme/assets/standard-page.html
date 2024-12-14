@@ -3,17 +3,13 @@
     <a class="sidebar-toggle" anvil-drop-slot="top-left-btn" href="javascript:void(0)"><i class="fa fa-bars"></i></a>
     
     <div class="left-nav">
-      <div class="logo" anvil-slot="logo">
-        <div class="placeholder logo-placeholder anvil-designer-only" anvil-if-slot-empty="logo" anvil-drop-here>Add your logo here</div>
-      </div>
-      <div class="left-nav-container anvil-measure-this" anvil-slot-repeat="left-nav" anvil-drop-container=">.anvil-container"></div>
+      <div class="logo" anvil-slot="logo"></div>
+      <div class="left-nav-container" anvil-slot-repeat="left-nav"></div>
     </div>
 
     <div class="content">
-      <div anvil-slot-repeat="default" class="anvil-measure-this"></div>
+      <div anvil-slot-repeat="default"></div>
     </div>
-    
-    <div class="nav-shield"></div>
   </div>
 </div>
 

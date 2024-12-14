@@ -37,9 +37,10 @@ components:
   name: content_panel
   properties:
     col_spacing: none
-    spacing:
-      margin: ['0', '0', '0', '0']
-      padding: ['0', '0', '0', '0']
+    full_width_row: true
+    spacing_above: none
+    spacing_below: none
+    spacing: {padding: 0, margin: 0}
   type: ColumnPanel
 container:
   properties: {html: '@theme:standard-page.html'}
