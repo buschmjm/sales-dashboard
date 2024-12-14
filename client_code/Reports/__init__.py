@@ -103,15 +103,16 @@ class Reports(ReportsTemplate):
                                    self.email_start_date.date,
                                    self.email_end_date.date)
             
-            # Store data as instance attributes for email data
-            self.email_columns = data["columns"]
-            self.email_values = data["values"]
+            # Debug data received from server
+            print("Email data received:", data)
             
+            # Update the plot directly with the data
             self._update_email_plot(data)
             
         except Exception as e:
             alert(f"Error refreshing email data: {e}")
             print(f"Error refreshing email data: {e}")
+            print(f"Data received: {data}")
 
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
