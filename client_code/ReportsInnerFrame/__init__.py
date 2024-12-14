@@ -14,15 +14,16 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Set the role to 'none' for the content panel like in Frame
+        # Configure panels for sticky navigation
         self.content_panel.role = 'none'
+        self.nav_panel.add_class('sticky-nav')
         
-        # Simple navigation setup without custom styling
+        # Initialize navigation buttons
         nav_buttons = [self.phone_nav, self.email_nav, self.b2b_nav]
         for nav in nav_buttons:
             nav.background = "transparent"
             nav.foreground = "black"
-            nav.role = 'primary-color'  # Use Anvil's built-in roles
+            nav.role = 'primary-color'
         
         # Load initial view
         self._update_nav_highlights('phone')
