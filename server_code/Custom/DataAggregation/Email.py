@@ -68,11 +68,21 @@ def update_outlook_statistics_db(stats_data):
 def get_email_stats(start_date, end_date):
     """Fetch and aggregate email statistics for the specified date range."""
     try:
+        # Debug database structure
+        table_columns = [col['name'] for col in app_tables.outlook_statistics.list_columns()]
+        print(f"Database columns: {table_columns}")
+        
         # Add one day to end_date to include the end date in results
-        end_date = end_date + timedelta(days=1)
+        end_date = end_date + timedelta(days(1))
         print(f"Adjusted date range: {start_date} to {end_date}")
         
-        # Query the database for email statistics with combined date range condition
+        # Get sample record to verify structure
+        sample = app_tables.outlook_statistics.search()
+        for record in sample:
+            print("Sample record structure:", dict(record))
+            break
+            
+        # Query with explicit date comparison
         results = app_tables.outlook_statistics.search(
             tables.order_by('reportDate', ascending=True),
             reportDate=q.all_of(
@@ -81,13 +91,19 @@ def get_email_stats(start_date, end_date):
             )
         )
         
-        # Convert results to list and debug
+        # Debug raw results
         results_list = [dict(r) for r in results]
         print(f"Found {len(results_list)} records")
         if results_list:
+            print("First result:", results_list[0])
             print("Date range of results:", min(r['reportDate'] for r in results_list),
                   "to", max(r['reportDate'] for r in results_list))
         
+        # Debug all records in date range
+        for record in results_list:
+            print(f"Record: Date={record.get('reportDate')}, User={record.get('userName')}, "
+                  f"Total={record.get('total')}, In={record.get('inbound')}, Out={record.get('outbound')}")
+            
         if not results_list:
             print("No email statistics found for the specified date range")
             return {

@@ -163,11 +163,18 @@ class Reports(ReportsTemplate):
     def _update_email_plot(self, data):
         """Update the email statistics plot with a grouped bar chart."""
         try:
+            print("Email plot update - Input data:", data)
+            print("Current metric selection:", self.email_metric_selector.selected_value)
+            
             if not data or 'users' not in data or 'metrics' not in data:
                 raise ValueError("Invalid data structure received from server")
             
             users = data['users']
             metrics = data['metrics']
+            
+            print(f"Users found: {users}")
+            print(f"Available metrics: {list(metrics.keys())}")
+            print(f"Metric values: {metrics}")
             
             if users == ['No Data']:
                 # Show empty state
@@ -189,6 +196,9 @@ class Reports(ReportsTemplate):
             metric = self.email_metric_selector.selected_value
             if not metric:
                 metric = 'total'
+            
+            print(f"Creating plot with metric '{metric}' for users:", users)
+            print(f"Values being plotted:", metrics[metric])
 
             # Create bar chart based on selected metric
             self.email_numbers_plot.data = [{
