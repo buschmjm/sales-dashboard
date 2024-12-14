@@ -81,7 +81,8 @@ class EmailReports(EmailReportsTemplate):
                 metric
             ]
 
-            # Create plot with consistent styling
+            # Update color references
+            colors = ['Primary', 'Primary Container', 'Secondary', 'Surface']
             self.email_numbers_plot.data = [{
                 "type": "bar",
                 "x": users,
@@ -89,7 +90,7 @@ class EmailReports(EmailReportsTemplate):
                 "name": f"{metric_name} Emails",
                 "marker": {
                     "color": [
-                        app.theme_colors[f'Primary {(i%3)+1}'] 
+                        app.theme_colors[colors[i % len(colors)]]
                         for i in range(len(users))
                     ],
                     "opacity": 0.9,

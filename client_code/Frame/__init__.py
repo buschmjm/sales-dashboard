@@ -16,15 +16,14 @@ class Frame(FrameTemplate):
         self.init_components(**properties)
         
         try:
-            # Define global theme settings
+            # Define global theme settings with correct color keys
             app.theme_colors.update({
                 'Primary': '#2196F3',
-                'Primary 1': '#1976D2',
-                'Primary 2': '#42A5F5',
-                'Primary 3': '#64B5F6',
-                'Secondary': '#FF4081',
+                'Primary Container': '#1976D2',  # Changed from 'Primary 1'
+                'Secondary': '#42A5F5',  # Changed from 'Primary 2'
+                'Surface': '#64B5F6',    # Changed from 'Primary 3'
+                'On Primary': '#FFFFFF',
                 'Background': '#FFFFFF',
-                'Surface': '#F5F5F5',
                 'Text': '#212121',
                 'Text Secondary': '#757575'
             })

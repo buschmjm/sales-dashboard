@@ -112,10 +112,11 @@ class PhoneReports(PhoneReportsTemplate):
                 grouped_data[user_id]['x'].append(row[report_date_index].strftime('%Y-%m-%d'))
                 grouped_data[user_id]['y'].append(row[y_column_index])
 
-            # Update plot with styling AND data
+            # Update plot with corrected color references
             traces = []
+            colors = ['Primary', 'Primary Container', 'Secondary', 'Surface']  # Updated color keys
             for i, (user_id, data) in enumerate(grouped_data.items()):
-                color = app.theme_colors[f'Primary {(i%3)+1}'] if i < 3 else app.theme_colors['Primary']
+                color = app.theme_colors[colors[i % len(colors)]]
                 traces.append({
                     'x': data['x'],
                     'y': data['y'],
