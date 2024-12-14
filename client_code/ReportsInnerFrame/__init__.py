@@ -14,23 +14,16 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Set container roles - match Frame approach
+        # Set basic roles
         self.content_panel.role = 'none'
-        self.nav_panel.role = 'none'
-        
-        # Set nav panel styling without custom properties
-        self.nav_panel.background = 'white'
-        self.nav_panel.border = '0 0 1px 0 solid rgba(0,0,0,0.1)'
-        self.nav_panel.padding = 8
         
         # Initialize navigation buttons
         nav_buttons = [self.phone_nav, self.email_nav, self.b2b_nav]
         for nav in nav_buttons:
             nav.background = "transparent"
             nav.foreground = "black"
-            nav.role = 'primary-color'
         
-        # Load initial view
+        # Load initial view and set initial navigation state
         self.content_panel.add_component(PhoneReports())
         self._update_nav_highlights('phone')
 
@@ -57,7 +50,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         return app.theme_colors['Surface Variant']
 
     def _update_nav_highlights(self, active_nav):
-        """Simple navigation highlight update"""
+        """Helper to update navigation highlighting"""
         nav_map = {
             'phone': self.phone_nav,
             'email': self.email_nav,
@@ -68,7 +61,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         for button in nav_map.values():
             button.background = "transparent"
             button.foreground = "black"
-        
+            
         # Set active button
         if active_nav in nav_map:
             nav_map[active_nav].background = app.theme_colors['Primary Container']
