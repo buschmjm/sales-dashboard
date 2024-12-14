@@ -14,6 +14,14 @@ class EmailReports(EmailReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
+        # Set table role and styling
+        if hasattr(self, 'repeating_panel_1'):
+            self.repeating_panel_1.role = 'table'
+            self.repeating_panel_1.tag.style = """
+                width: 100%;
+                margin-top: 16px;
+            """
+        
         # Set default date range for emails
         self.email_end_date.date = date.today()
         self.email_start_date.date = date.today() - timedelta(days=7)

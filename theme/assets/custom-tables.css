@@ -1,0 +1,73 @@
+/* Modern table styling */
+.anvil-data-grid {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: white;
+    margin: 16px 0;
+}
+
+.anvil-data-grid-header {
+    background-color: var(--primary-color, #2196F3);
+    color: white;
+    font-weight: 500;
+    padding: 16px;
+    border: none;
+}
+
+.anvil-data-grid-row {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    transition: background-color 0.2s ease;
+}
+
+.anvil-data-grid-row:hover {
+    background-color: rgba(33, 150, 243, 0.05);
+}
+
+.anvil-data-grid-row:last-child {
+    border-bottom: none;
+}
+
+.anvil-data-grid-cell {
+    padding: 12px 16px;
+    color: #333;
+}
+
+.anvil-data-grid-row:nth-child(even) {
+    background-color: rgba(0,0,0,0.02);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .anvil-data-grid-cell,
+    .anvil-data-grid-header {
+        padding: 8px 12px;
+    }
+}
+
+/* RepeatingPanel styling when used as table */
+[role="table"].anvil-panel {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: white;
+    margin: 16px 0;
+}
+
+[role="table"] .anvil-panel-row {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 12px 16px;
+    transition: background-color 0.2s ease;
+}
+
+[role="table"] .anvil-panel-row:hover {
+    background-color: rgba(33, 150, 243, 0.05);
+}
+
+[role="table"] .anvil-panel-row:last-child {
+    border-bottom: none;
+}
+
+[role="table"] .anvil-panel-row:nth-child(even) {
+    background-color: rgba(0,0,0,0.02);
+}

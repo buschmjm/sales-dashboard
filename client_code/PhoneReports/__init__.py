@@ -13,6 +13,14 @@ class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
+        # Set table role and styling
+        if hasattr(self, 'repeating_panel_1'):
+            self.repeating_panel_1.role = 'table'
+            self.repeating_panel_1.tag.style = """
+                width: 100%;
+                margin-top: 16px;
+            """
+        
         # Set default date range for calls
         self.end_date_picker.date = date.today()
         self.start_date_picker.date = date.today() - timedelta(days=7)
