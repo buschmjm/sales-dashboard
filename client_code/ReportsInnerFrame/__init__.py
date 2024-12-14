@@ -14,6 +14,10 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
+        # Add table styling
+        if hasattr(self, 'repeating_panel_1'):
+            self.repeating_panel_1.role = 'table'
+        
         # Basic initialization
         self.content_panel.role = 'none'
         self.current_section = 'phone'
