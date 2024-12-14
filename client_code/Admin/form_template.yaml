@@ -11,6 +11,7 @@ components:
   layout_properties: {grid_position: 'BOUZXJ,EBWYTR'}
   name: data_grid_1
   properties:
+    background: theme:Primary Overlay 3
     columns:
     - {data_key: name, id: MTSLPP, title: Name}
     - {data_key: last_login, id: MMZKYV, title: Last Login}

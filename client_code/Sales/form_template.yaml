@@ -7,7 +7,7 @@ components:
       type: Label
     layout_properties: {grid_position: 'ZWYAMV,XJDGPO'}
     name: card_5
-    properties: {col_widths: '{}', role: card}
+    properties: {background: 'theme:Primary Overlay 3', col_widths: '{}', role: card}
     type: ColumnPanel
   layout_properties:
     col_widths: {}
