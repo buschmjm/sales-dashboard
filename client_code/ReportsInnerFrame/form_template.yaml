@@ -1,0 +1,68 @@
+components:
+- layout_properties: {grid_position: 'HLQHKS,CBRPRE'}
+  name: spacer_1
+  properties: {height: '100'}
+  type: Spacer
+- components:
+  - event_bindings: {click: phone_nav_click}
+    layout_properties: {}
+    name: phone_nav
+    properties:
+      align: center
+      background: theme:Secondary Container
+      border: ''
+      foreground: ''
+      icon: ''
+      icon_align: top
+      role: outlined
+      spacing:
+        padding: ['10', '20', '10', '20']
+      spacing_above: medium
+      spacing_below: medium
+      text: Phone
+    type: Button
+  layout_properties: {grid_position: 'JYMCBR,MSWZVU'}
+  name: linear_panel_1
+  properties: {}
+  type: LinearPanel
+- data_bindings: []
+  event_bindings: {click: email_nav_click}
+  layout_properties: {grid_position: 'EWIWHN,LVWFXP'}
+  name: email_nav
+  properties:
+    align: center
+    background: theme:Secondary Container
+    icon: ''
+    icon_align: top
+    role: outlined
+    spacing:
+      padding: ['10', '20', '10', '20']
+    spacing_above: medium
+    spacing_below: medium
+    text: Email
+  type: Button
+- data_bindings: []
+  event_bindings: {click: b2b_nav_click}
+  layout_properties: {grid_position: 'DLBXEV,IBYOQR'}
+  name: b2b_nav
+  properties:
+    align: center
+    background: theme:Secondary Container
+    icon: ''
+    icon_align: top
+    role: outlined
+    spacing:
+      padding: ['10', '20', '10', '20']
+    spacing_above: medium
+    spacing_below: medium
+    text: B2B
+  type: Button
+container:
+  properties:
+    col_spacing: medium
+    role: null
+    spacing:
+      margin: [null, 0, null, null]
+      padding: [null, '700', null, null]
+  type: ColumnPanel
+is_package: true
