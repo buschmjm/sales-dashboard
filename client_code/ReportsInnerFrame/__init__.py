@@ -21,11 +21,11 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = "transparent"
             nav.hover_background = app.theme_colors['Surface Variant']
-            nav.foreground = "On Secondary Container"
+            nav.foreground = "black"  # Default text color
         
         # Set initial active state for phone
         self.phone_nav.background = app.theme_colors['Primary Container']
-        self.phone_nav.foreground = app.theme_colors['Secondary']
+        self.phone_nav.foreground = "white"
 
     def phone_nav_click(self, **event_args):
         """Handle phone reports navigation"""
@@ -54,9 +54,9 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         # Reset all to default state
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = "transparent"
-            nav.foreground = "On Secondary Container"
+            nav.foreground = "black"
         
         # Set active state
         active_button = getattr(self, f"{active_nav}_nav")
         active_button.background = app.theme_colors['Primary Container']
-        active_button.foreground = app.theme_colors['Secondary']
+        active_button.foreground = "white"

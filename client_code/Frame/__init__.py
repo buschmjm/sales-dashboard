@@ -29,7 +29,7 @@ class Frame(FrameTemplate):
             for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
                 nav.background = "transparent"
                 nav.hover_background = app.theme_colors['Surface Variant']
-                nav.foreground = "On Secondary Container"
+                nav.foreground = "black"  # Default text color
 
             # Set initial active state
             print("Loading Sales page...")
@@ -45,12 +45,12 @@ class Frame(FrameTemplate):
         # Reset all to default state
         for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
             nav.background = "transparent"
-            nav.foreground = "On Secondary Container"
+            nav.foreground = "black"
         
         # Set active state
         active_link = getattr(self, f"{active_page}_page_link")
         active_link.background = app.theme_colors['Primary Container']
-        active_link.foreground = app.theme_colors['Secondary']
+        active_link.foreground = "white"
 
     def refresh_button_click(self, **event_args):
         """Handle refresh button click - only triggers database refresh APIs."""
