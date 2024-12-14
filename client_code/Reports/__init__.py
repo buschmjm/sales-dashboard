@@ -163,17 +163,14 @@ class Reports(ReportsTemplate):
             print(f"Error updating plot: {e}")
 
     def _update_email_plot(self, data):
-        """Update the email statistics plot."""
+        """Update the email statistics plot with a grouped bar chart."""
         try:
             # Verify data structure
             if not data or "columns" not in data or "values" not in data:
                 raise ValueError("Invalid data structure received from server")
 
-            # Group data by user
-            grouped_data = {}
-            
             # Get column indices with error checking
-            required_columns = ['userName', 'reportDate', 'total', 'inbound', 'outbound']
+            required_columns = ['userName', 'total', 'inbound', 'outbound']
             indices = {}
             
             for col in required_columns:
@@ -181,60 +178,66 @@ class Reports(ReportsTemplate):
                     raise ValueError(f"Missing required column: {col}")
                 indices[col] = data["columns"].index(col)
             
+            # Aggregate data by user
+            user_totals = {}
             for row in data["values"]:
                 if len(row) != len(data["columns"]):
-                    continue  # Skip invalid rows
-                    
+                    continue
+                
                 user_name = row[indices['userName']]
-                if user_name not in grouped_data:
-                    grouped_data[user_name] = {
-                        'x': [],
-                        'total': [],
-                        'inbound': [],
-                        'outbound': []
+                if user_name not in user_totals:
+                    user_totals[user_name] = {
+                        'total': 0,
+                        'inbound': 0,
+                        'outbound': 0
                     }
                 
-                # Convert date to string if it's a datetime object
-                date_val = row[indices['reportDate']]
-                if hasattr(date_val, 'strftime'):
-                    date_str = date_val.strftime('%Y-%m-%d')
-                else:
-                    date_str = str(date_val)
-                
-                grouped_data[user_name]['x'].append(date_str)
-                grouped_data[user_name]['total'].append(row[indices['total']])
-                grouped_data[user_name]['inbound'].append(row[indices['inbound']])
-                grouped_data[user_name]['outbound'].append(row[indices['outbound']])
+                # Sum up the values for each metric
+                user_totals[user_name]['total'] += row[indices['total']]
+                user_totals[user_name]['inbound'] += row[indices['inbound']]
+                user_totals[user_name]['outbound'] += row[indices['outbound']]
 
-            # Get selected metric with error checking
-            metric = self.email_metric_selector.selected_value
-            if not metric or metric not in ['total', 'inbound', 'outbound']:
-                metric = 'total'  # Default to total if invalid metric
+            # Prepare data for plotting
+            users = list(user_totals.keys())
+            totals = [user_totals[user]['total'] for user in users]
+            inbound = [user_totals[user]['inbound'] for user in users]
+            outbound = [user_totals[user]['outbound'] for user in users]
 
-            # Create plot data
+            # Create grouped bar chart
             self.email_numbers_plot.data = [
                 {
-                    'x': grouped_data[user]['x'],
-                    'y': grouped_data[user][metric],
-                    'type': 'scatter',
-                    'mode': 'lines+markers',
-                    'name': user,
+                    'name': 'Total Emails',
+                    'type': 'bar',
+                    'x': users,
+                    'y': totals
+                },
+                {
+                    'name': 'Emails Received',
+                    'type': 'bar',
+                    'x': users,
+                    'y': inbound
+                },
+                {
+                    'name': 'Emails Sent',
+                    'type': 'bar',
+                    'x': users,
+                    'y': outbound
                 }
-                for user in grouped_data
             ]
 
-            # Update plot layout
-            metric_names = {'total': 'Total Emails', 'inbound': 'Emails Received', 'outbound': 'Emails Sent'}
-            self.email_numbers_plot.layout.title = f"Email Statistics - {metric_names.get(metric, 'Total Emails')}"
-            self.email_numbers_plot.layout.xaxis.title = "Date"
-            self.email_numbers_plot.layout.yaxis.title = "Number of Emails"
+            # Update layout for bar chart
+            self.email_numbers_plot.layout.update({
+                'barmode': 'group',
+                'title': 'Email Statistics by User',
+                'xaxis': {'title': 'Users'},
+                'yaxis': {'title': 'Number of Emails'},
+                'showlegend': True
+            })
 
         except Exception as e:
             alert(f"Error updating email plot: {str(e)}")
             print(f"Error updating email plot: {str(e)}")
-            # Print additional debug information
             print(f"Data structure: {data}")
-            print(f"Selected metric: {self.email_metric_selector.selected_value}")
 
     def _update_repeating_panel(self):
         """Update the repeating_panel_1 with consolidated filtered data."""
