@@ -14,20 +14,14 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Configure panels using Anvil properties
+        # Set container roles - match Frame approach
         self.content_panel.role = 'none'
-        self.nav_panel.role = 'navigation'
+        self.nav_panel.role = 'none'
+        
+        # Set nav panel styling without custom properties
         self.nav_panel.background = 'white'
         self.nav_panel.border = '0 0 1px 0 solid rgba(0,0,0,0.1)'
-        
-        # Ensure nav panel stays on top
-        self.nav_panel.layout_properties = {
-            'sticky': 'top',
-            'z-index': 100
-        }
-        
-        # Add padding below nav panel
-        self.content_panel.padding_top = 8
+        self.nav_panel.padding = 8
         
         # Initialize navigation buttons
         nav_buttons = [self.phone_nav, self.email_nav, self.b2b_nav]
@@ -37,8 +31,8 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             nav.role = 'primary-color'
         
         # Load initial view
-        self._update_nav_highlights('phone')
         self.content_panel.add_component(PhoneReports())
+        self._update_nav_highlights('phone')
 
     def phone_nav_click(self, **event_args):
         """Handle phone reports navigation"""
@@ -63,7 +57,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         return app.theme_colors['Surface Variant']
 
     def _update_nav_highlights(self, active_nav):
-        """Simplified navigation highlight update using Anvil properties"""
+        """Simple navigation highlight update"""
         nav_map = {
             'phone': self.phone_nav,
             'email': self.email_nav,
@@ -72,7 +66,6 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         
         # Reset all buttons
         for button in nav_map.values():
-            button.role = 'primary-color'
             button.background = "transparent"
             button.foreground = "black"
         
