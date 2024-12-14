@@ -261,8 +261,10 @@ class Reports(ReportsTemplate):
                                           self.email_start_date.date,
                                           self.email_end_date.date)
             print("Email Stats:")
-            for stat in email_stats:
-                print(stat)
+            print(f"Users: {email_stats.get('users', [])}")
+            print(f"Metrics:")
+            for metric, values in email_stats.get('metrics', {}).items():
+                print(f"  {metric}: {values}")
         except Exception as e:
             print(f"Error fetching email stats: {e}")
 

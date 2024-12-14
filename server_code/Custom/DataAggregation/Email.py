@@ -50,11 +50,17 @@ def update_outlook_statistics_db(stats_data):
 @anvil.server.callable
 def get_email_stats(start_date, end_date):
     """Fetch and aggregate email statistics for the specified date range."""
+    # Debug input parameters
+    print(f"Fetching email stats for date range: {start_date} to {end_date}")
+    
     # Query the database for email statistics
     results = app_tables.outlook_statistics.search(
         tables.order_by('reportDate', ascending=True),
         reportDate=q.between(start_date, end_date)
     )
+    
+    # Debug raw results
+    print(f"Raw results from database: {[dict(r) for r in results]}")
     
     # Aggregate data by user
     user_totals = {}
@@ -72,8 +78,8 @@ def get_email_stats(start_date, end_date):
         user_totals[user_name]['inbound'] += row['inbound']
         user_totals[user_name]['outbound'] += row['outbound']
     
-    # Format data for client
-    return {
+    # Prepare response
+    response = {
         'users': list(user_totals.keys()),
         'metrics': {
             'total': [user_totals[user]['total'] for user in user_totals],
@@ -81,3 +87,7 @@ def get_email_stats(start_date, end_date):
             'outbound': [user_totals[user]['outbound'] for user in user_totals]
         }
     }
+    
+    # Debug final response
+    print(f"Returning email stats: {response}")
+    return response
