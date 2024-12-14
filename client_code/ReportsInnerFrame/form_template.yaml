@@ -1,27 +1,35 @@
 components:
 - components:
   - event_bindings: {click: phone_nav_click}
-    layout_properties: {grid_position: 'PRLGWQ,DDGUOR'}
+    layout_properties: {grid_position: 'CAZNNT,KWERBV'}
     name: phone_nav
     properties: {align: center, background: '', foreground: '', role: filled, text: Phone}
     type: Button
   - event_bindings: {click: email_nav_click}
-    layout_properties: {grid_position: 'PRLGWQ,IZGRIR'}
+    layout_properties: {grid_position: 'CAZNNT,GMXDMP'}
     name: email_nav
     properties: {align: center, background: '', foreground: '', role: filled, text: Email}
     type: Button
   - event_bindings: {click: b2b_nav_click}
-    layout_properties: {grid_position: 'PRLGWQ,KWAZHQ'}
+    layout_properties: {grid_position: 'CAZNNT,ACPEWQ'}
     name: b2b_nav
     properties: {align: center, background: '', foreground: '', role: filled, text: B2B}
     type: Button
+  layout_properties: {grid_position: 'UVXZQM,VXHWPJ'}
   name: nav_panel
-  properties: {col_spacing: none, role: card}
+  properties: {col_spacing: none, role: null}
   type: ColumnPanel
-- name: content_panel
+- components: []
+  layout_properties: {grid_position: 'JOOPUH,QIKUCG'}
+  name: content_panel
   properties: {role: none}
   type: ColumnPanel
 container:
-  properties: {col_spacing: none, role: none}
+  properties:
+    col_spacing: none
+    col_widths: '{}'
+    role: none
+    spacing:
+      margin: [null, null, null, null]
   type: ColumnPanel
 is_package: true
