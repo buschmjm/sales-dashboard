@@ -29,9 +29,7 @@
         hideSidebar();
       }
     } else {
-      if (ln.hasClass('hidden')) {
-        showSidebar();
-      }
+      showSidebar();
     }
   }
 
@@ -57,9 +55,9 @@
   // Initialize and bind events
   $(document).ready(function() {
     checkWidth();  // Check on page load
-    $(window).resize(checkWidth);  // Check on window resize
+    $(window).on('resize', checkWidth);  // Changed from resize() to on('resize',...)
 
-    $('.sidebar-toggle, .nav-shield').off('click').on('click', function() {
+    $('.sidebar-toggle, .nav-shield').on('click', function() {
       if (ln.is(":visible") || $('.nav-shield').is(".shown")) {
         hideSidebar();
       } else if(!ln.is(":empty")) {
@@ -67,8 +65,8 @@
       }
     });
 
-    $('.left-nav').off('click').on('click', 'a, button', function() {
-      if ($(window).width() <= 768 && $('.nav-shield').is(":visible")) {
+    $('.left-nav').on('click', 'a, button', function() {
+      if ($(window).width() <= 768) {
         hideSidebar();
       }
     });
