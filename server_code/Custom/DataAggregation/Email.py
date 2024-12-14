@@ -72,11 +72,13 @@ def get_email_stats(start_date, end_date):
         end_date = end_date + timedelta(days=1)
         print(f"Adjusted date range: {start_date} to {end_date}")
         
-        # Query the database for email statistics with explicit date comparison
+        # Query the database for email statistics with combined date range condition
         results = app_tables.outlook_statistics.search(
             tables.order_by('reportDate', ascending=True),
-            reportDate=q.greater_than_or_equal_to(start_date),
-            reportDate=q.less_than(end_date)
+            reportDate=q.all_of(
+                q.greater_than_or_equal_to(start_date),
+                q.less_than(end_date)
+            )
         )
         
         # Convert results to list and debug
