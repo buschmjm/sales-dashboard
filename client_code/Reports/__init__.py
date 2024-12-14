@@ -165,33 +165,51 @@ class Reports(ReportsTemplate):
     def _update_email_plot(self, data):
         """Update the email statistics plot."""
         try:
+            # Verify data structure
+            if not data or "columns" not in data or "values" not in data:
+                raise ValueError("Invalid data structure received from server")
+
             # Group data by user
             grouped_data = {}
             
-            user_name_index = data["columns"].index('userName')
-            date_index = data["columns"].index('reportDate')
-            total_index = data["columns"].index('total')
-            inbound_index = data["columns"].index('inbound')
-            outbound_index = data["columns"].index('outbound')
+            # Get column indices with error checking
+            required_columns = ['userName', 'reportDate', 'total', 'inbound', 'outbound']
+            indices = {}
+            
+            for col in required_columns:
+                if col not in data["columns"]:
+                    raise ValueError(f"Missing required column: {col}")
+                indices[col] = data["columns"].index(col)
             
             for row in data["values"]:
-                user_name = row[user_name_index]
+                if len(row) != len(data["columns"]):
+                    continue  # Skip invalid rows
+                    
+                user_name = row[indices['userName']]
                 if user_name not in grouped_data:
                     grouped_data[user_name] = {
                         'x': [],
-                        'y': [],
                         'total': [],
                         'inbound': [],
                         'outbound': []
                     }
                 
-                grouped_data[user_name]['x'].append(row[date_index].strftime('%Y-%m-%d'))
-                grouped_data[user_name]['total'].append(row[total_index])
-                grouped_data[user_name]['inbound'].append(row[inbound_index])
-                grouped_data[user_name]['outbound'].append(row[outbound_index])
+                # Convert date to string if it's a datetime object
+                date_val = row[indices['reportDate']]
+                if hasattr(date_val, 'strftime'):
+                    date_str = date_val.strftime('%Y-%m-%d')
+                else:
+                    date_str = str(date_val)
+                
+                grouped_data[user_name]['x'].append(date_str)
+                grouped_data[user_name]['total'].append(row[indices['total']])
+                grouped_data[user_name]['inbound'].append(row[indices['inbound']])
+                grouped_data[user_name]['outbound'].append(row[indices['outbound']])
 
-            # Get selected metric
+            # Get selected metric with error checking
             metric = self.email_metric_selector.selected_value
+            if not metric or metric not in ['total', 'inbound', 'outbound']:
+                metric = 'total'  # Default to total if invalid metric
 
             # Create plot data
             self.email_numbers_plot.data = [
@@ -206,13 +224,17 @@ class Reports(ReportsTemplate):
             ]
 
             # Update plot layout
-            self.email_numbers_plot.layout.title = f"Email Statistics - {dict(self.email_metric_selector.items)[metric]}"
+            metric_names = {'total': 'Total Emails', 'inbound': 'Emails Received', 'outbound': 'Emails Sent'}
+            self.email_numbers_plot.layout.title = f"Email Statistics - {metric_names.get(metric, 'Total Emails')}"
             self.email_numbers_plot.layout.xaxis.title = "Date"
             self.email_numbers_plot.layout.yaxis.title = "Number of Emails"
 
         except Exception as e:
-            alert(f"Error updating email plot: {e}")
-            print(f"Error updating email plot: {e}")
+            alert(f"Error updating email plot: {str(e)}")
+            print(f"Error updating email plot: {str(e)}")
+            # Print additional debug information
+            print(f"Data structure: {data}")
+            print(f"Selected metric: {self.email_metric_selector.selected_value}")
 
     def _update_repeating_panel(self):
         """Update the repeating_panel_1 with consolidated filtered data."""
