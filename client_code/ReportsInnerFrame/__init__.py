@@ -12,6 +12,8 @@ from ..B2bReports import B2bReports
 
 class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
+        # Set fixed height before initialization
+        properties['height'] = '800'
         self.init_components(**properties)
         
         # Set fixed height for content panel
@@ -38,6 +40,9 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         if self.current_section != section:
             self.current_section = section
             self.content_panel.clear()
+            
+            # Add component with fixed height
+            component.height = '700'
             self.content_panel.add_component(component)
             
             # Reset all nav buttons

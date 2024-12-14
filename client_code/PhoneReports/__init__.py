@@ -11,18 +11,29 @@ from datetime import datetime, timedelta, date
 
 class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
+        # Set fixed dimensions before initialization
+        properties['height'] = '700'
         self.init_components(**properties)
+        
+        # Configure plot with fixed dimensions
+        self.call_info_plot.height = '500'
+        self.call_info_plot.width = '100%'
         
         # Set default date range for calls
         self.end_date_picker.date = date.today()
         self.start_date_picker.date = date.today() - timedelta(days=7)
         
-        # Bind change events to date pickers
+        # Initialize event handlers
+        self._setup_event_handlers()
+        
+        # Single initial data refresh
+        self.refresh_data()
+    
+    def _setup_event_handlers(self):
+        """Set up all event handlers at once"""
         self.start_date_picker.set_event_handler('change', self.date_picker_change)
         self.end_date_picker.set_event_handler('change', self.date_picker_change)
         self.data_column_selector.set_event_handler('change', self.column_selector_change)
-
-        self.refresh_data()
 
     def date_picker_change(self, **event_args):
         self.refresh_data()
@@ -33,44 +44,49 @@ class PhoneReports(PhoneReportsTemplate):
             self._update_repeating_panel()
 
     def refresh_data(self):
+        """Fetch and display call data based on current date range."""
         try:
-            data = anvil.server.call('get_call_data', self.start_date_picker.date, self.end_date_picker.date)
-            print("Call data fetched successfully:", len(data.get('values', [])), "rows")
-
+            with anvil.server.no_loading_indicator:
+                data = anvil.server.call('get_call_data', 
+                                       self.start_date_picker.date, 
+                                       self.end_date_picker.date)
+            
             if not data or "columns" not in data or "values" not in data:
-                raise ValueError("Missing data structure")
+                raise ValueError("Invalid data structure received")
 
-            # Store data as instance attributes
             self.column_names = data["columns"]
             self.user_values = data["values"]
+            self._process_data()
+            
+        except Exception as e:
+            print(f"Error refreshing call data: {e}")
+            alert(f"Error refreshing data: {e}")
 
-            # Convert durations in milliseconds to minutes
+    def _process_data(self):
+        """Process the fetched data and update UI components"""
+        try:
+            # Process duration columns
             duration_columns = [col for col in self.column_names if 'duration' in col.lower()]
             for row in self.user_values:
                 for col in duration_columns:
                     col_index = self.column_names.index(col)
-                    row[col_index] = int(row[col_index] // 60000)
+                    if row[col_index] is not None:
+                        row[col_index] = int(row[col_index] // 60000)
 
-            # Populate dropdown with numeric columns
+            # Update column selector
             numeric_columns = [
                 col for i, col in enumerate(self.column_names)
                 if all(isinstance(row[i], (int, float)) for row in self.user_values)
             ]
-
-            self.data_column_selector.items = [(col, col) for col in numeric_columns if isinstance(col, str)]
-
-            if not numeric_columns:
-                alert("No numeric columns available for plotting")
-                return
-
-            # Update visualization
-            y_column = self.data_column_selector.selected_value or ('volume' if 'volume' in numeric_columns else numeric_columns[0])
-            self._update_plot(y_column)
-            self._update_repeating_panel()
-
+            
+            if numeric_columns:
+                self.data_column_selector.items = [(col, col) for col in numeric_columns]
+                y_column = self.data_column_selector.selected_value or numeric_columns[0]
+                self._update_plot(y_column)
+                self._update_repeating_panel()
+                
         except Exception as e:
-            print(f"Error refreshing call data: {e}")
-            alert(f"Error refreshing data: {e}")
+            print(f"Error processing data: {e}")
 
     def _update_plot(self, y_column):
         try:
