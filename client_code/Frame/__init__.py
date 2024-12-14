@@ -16,52 +16,6 @@ class Frame(FrameTemplate):
         self.init_components(**properties)
         
         try:
-            # Define global theme settings with correct color keys
-            app.theme_colors.update({
-                'Primary': '#2196F3',
-                'Primary Container': '#1976D2',  # Changed from 'Primary 1'
-                'Secondary': '#42A5F5',  # Changed from 'Primary 2'
-                'Surface': '#64B5F6',    # Changed from 'Primary 3'
-                'On Primary': '#FFFFFF',
-                'Background': '#FFFFFF',
-                'Text': '#212121',
-                'Text Secondary': '#757575'
-            })
-
-            # Configure global plot theme
-            Plot.templates.default = {
-                'layout': {
-                    'paper_bgcolor': app.theme_colors['Background'],
-                    'plot_bgcolor': app.theme_colors['Surface'],
-                    'font': {
-                        'family': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                        'size': 12,
-                        'color': app.theme_colors['Text']
-                    },
-                    'margin': {'t': 32, 'r': 16, 'l': 64, 'b': 64},
-                    'showlegend': True,
-                    'legend': {
-                        'bgcolor': app.theme_colors['Background'],
-                        'bordercolor': 'rgba(0,0,0,0.1)',
-                        'borderwidth': 1
-                    },
-                    'xaxis': {
-                        'gridcolor': 'rgba(0,0,0,0.05)',
-                        'linecolor': 'rgba(0,0,0,0.1)',
-                        'tickfont': {'size': 10},
-                        'showgrid': True,
-                        'tickcolor': app.theme_colors['Text Secondary']
-                    },
-                    'yaxis': {
-                        'gridcolor': 'rgba(0,0,0,0.05)',
-                        'linecolor': 'rgba(0,0,0,0.1)',
-                        'tickfont': {'size': 10},
-                        'showgrid': True,
-                        'tickcolor': app.theme_colors['Text Secondary']
-                    }
-                }
-            }
-            
             # Minimal configuration
             self.content_panel.role = 'none'
             

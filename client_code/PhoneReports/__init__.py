@@ -112,52 +112,22 @@ class PhoneReports(PhoneReportsTemplate):
                 grouped_data[user_id]['x'].append(row[report_date_index].strftime('%Y-%m-%d'))
                 grouped_data[user_id]['y'].append(row[y_column_index])
 
-            # Update plot with corrected color references
+            # Basic plot update
             traces = []
-            colors = ['Primary', 'Primary Container', 'Secondary', 'Surface']  # Updated color keys
-            for i, (user_id, data) in enumerate(grouped_data.items()):
-                color = app.theme_colors[colors[i % len(colors)]]
+            for user_id, data in grouped_data.items():
                 traces.append({
                     'x': data['x'],
                     'y': data['y'],
                     'type': 'scatter',
                     'mode': 'lines+markers',
-                    'name': user_labels[user_id],
-                    'line': {
-                        'width': 2,
-                        'shape': 'spline',
-                        'smoothing': 1.3,
-                        'color': color
-                    },
-                    'marker': {
-                        'size': 8,
-                        'line': {'width': 2, 'color': 'white'},
-                        'color': color
-                    }
+                    'name': user_labels[user_id]
                 })
             
             self.call_info_plot.data = traces
-
-            # Modern layout with consistent styling
             self.call_info_plot.layout.update({
-                'height': 400,
-                'title': {'text': f"{y_column} Over Time", 'x': 0.5, 'xanchor': 'center'},
-                'xaxis': {
-                    'title': None,
-                    'showspikes': True,
-                    'spikecolor': 'rgba(0,0,0,0.3)',
-                    'spikesnap': 'cursor',
-                    'spikemode': 'across'
-                },
-                'yaxis': {
-                    'title': y_column,
-                    'showspikes': True,
-                    'spikecolor': 'rgba(0,0,0,0.3)',
-                    'spikesnap': 'cursor',
-                    'spikemode': 'across'
-                },
-                'hoverlabel': {'bgcolor': 'white', 'font': {'size': 12}},
-                'hovermode': 'x unified'
+                'title': f"{y_column} Over Time",
+                'xaxis': {'title': None},
+                'yaxis': {'title': y_column}
             })
 
         except Exception as e:
