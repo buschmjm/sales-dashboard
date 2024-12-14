@@ -13,19 +13,24 @@ anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
     def __init__(self, **properties):
+        # Set fixed dimensions before initialization
+        properties['height'] = '900'  # Increased height to accommodate all content
+        properties['width'] = '100%'
         self.init_components(**properties)
         
         try:
-            # Set fixed height for content panel to prevent recursive calculations
-            self.content_panel.height = '800'  # or any appropriate height
+            # Set fixed dimensions for content panel
+            self.content_panel.height = '800'
+            self.content_panel.width = '100%'
             self.content_panel.role = 'none'
+            self.content_panel.background = 'white'  # Ensure background is set
             
-            # Setup refresh button with fixed positioning
+            # Configure refresh button with absolute positioning
             self.refresh_button = Button(
                 text="Refresh",
-                align="right",
                 role="primary-color",
-                width='100',  # Fixed width
+                width='100',
+                height='40'
             )
             self.refresh_button.set_event_handler("click", self.refresh_button_click)
             self.add_component(self.refresh_button, slot="top-right")
@@ -58,6 +63,10 @@ class Frame(FrameTemplate):
         if getattr(self, 'current_page', None) != page_name:
             self.current_page = page_name
             self.content_panel.clear()
+            
+            # Set fixed dimensions for new component
+            component.width = '100%'
+            component.height = '800'
             self.content_panel.add_component(component)
             
             # Reset all navigation backgrounds

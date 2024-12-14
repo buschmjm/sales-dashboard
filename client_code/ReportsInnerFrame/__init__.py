@@ -12,23 +12,26 @@ from ..B2bReports import B2bReports
 
 class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
-        # Set fixed height before initialization
-        properties['height'] = '800'
+        # Set fixed dimensions
+        properties['height'] = '900'
+        properties['width'] = '100%'
         self.init_components(**properties)
         
-        # Set fixed height for content panel
-        self.content_panel.height = '700'  # or any appropriate height
+        # Set content panel dimensions
+        self.content_panel.height = '800'
+        self.content_panel.width = '100%'
         self.content_panel.role = 'none'
         
         # Basic initialization
         self.current_section = 'phone'
         
-        # Set up navigation styling with fixed dimensions
+        # Configure navigation with fixed dimensions
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = 'transparent'
             nav.foreground = 'black'
             nav.role = 'none'
-            nav.width = '100'  # Fixed width for nav buttons
+            nav.width = '100'
+            nav.height = '40'
         
         # Initialize with phone view
         self.content_panel.add_component(PhoneReports())
@@ -41,8 +44,9 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             self.current_section = section
             self.content_panel.clear()
             
-            # Add component with fixed height
-            component.height = '700'
+            # Set fixed dimensions for new component
+            component.width = '100%'
+            component.height = '800'
             self.content_panel.add_component(component)
             
             # Reset all nav buttons
