@@ -38,6 +38,6 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
 
     def _update_nav_highlights(self, active_nav):
         """Helper to update navigation highlighting"""
-        self.phone_nav.background = app.theme_colors['Primary Container'] if active_nav == 'phone' else 'transparent'
-        self.email_nav.background = app.theme_colors['Primary Container'] if active_nav == 'email' else 'transparent'
-        self.b2b_nav.background = app.theme_colors['Primary Container'] if active_nav == 'b2b' else 'transparent'
+        self.phone_nav.foreground = app.theme_colors['Secondary'] if active_nav == 'phone' else 'On Secondary Container'
+        self.email_nav.foreground = app.theme_colors['Secondary'] if active_nav == 'email' else 'On Secondary Container'
+        self.b2b_nav.foreground = app.theme_colors['Secondary'] if active_nav == 'b2b' else 'On Secondary Container'
