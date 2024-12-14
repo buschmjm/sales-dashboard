@@ -172,6 +172,22 @@ class Reports(ReportsTemplate):
             
             users = data['users']
             metrics = data['metrics']
+            
+            if not users:
+                # Show empty state
+                self.email_numbers_plot.data = [{
+                    'name': 'No Data',
+                    'type': 'bar',
+                    'x': ['No email data available'],
+                    'y': [0]
+                }]
+                self.email_numbers_plot.layout.update({
+                    'title': 'No Email Statistics Available for Selected Date Range',
+                    'xaxis': {'title': 'Users'},
+                    'yaxis': {'title': 'Number of Emails'},
+                    'showlegend': False
+                })
+                return
 
             # Create grouped bar chart
             self.email_numbers_plot.data = [

@@ -50,44 +50,60 @@ def update_outlook_statistics_db(stats_data):
 @anvil.server.callable
 def get_email_stats(start_date, end_date):
     """Fetch and aggregate email statistics for the specified date range."""
-    # Debug input parameters
-    print(f"Fetching email stats for date range: {start_date} to {end_date}")
-    
-    # Query the database for email statistics
-    results = app_tables.outlook_statistics.search(
-        tables.order_by('reportDate', ascending=True),
-        reportDate=q.between(start_date, end_date)
-    )
-    
-    # Debug raw results
-    print(f"Raw results from database: {[dict(r) for r in results]}")
-    
-    # Aggregate data by user
-    user_totals = {}
-    for row in results:
-        user_name = row['userName']
-        if user_name not in user_totals:
-            user_totals[user_name] = {
-                'total': 0,
-                'inbound': 0,
-                'outbound': 0
+    try:
+        # Debug input parameters
+        print(f"Fetching email stats for date range: {start_date} to {end_date}")
+        
+        # Query the database for email statistics
+        results = app_tables.outlook_statistics.search(
+            tables.order_by('reportDate', ascending=True),
+            reportDate=q.between(start_date, end_date)
+        )
+        
+        # Convert results to list to check if empty
+        results_list = [dict(r) for r in results]
+        print(f"Found {len(results_list)} records")
+        
+        if not results_list:
+            print("No email statistics found for the specified date range")
+            # Return dummy data for testing (remove in production)
+            return {
+                'users': ['No Data'],
+                'metrics': {
+                    'total': [0],
+                    'inbound': [0],
+                    'outbound': [0]
+                }
             }
         
-        # Sum up the values for each metric
-        user_totals[user_name]['total'] += row['total']
-        user_totals[user_name]['inbound'] += row['inbound']
-        user_totals[user_name]['outbound'] += row['outbound']
-    
-    # Prepare response
-    response = {
-        'users': list(user_totals.keys()),
-        'metrics': {
-            'total': [user_totals[user]['total'] for user in user_totals],
-            'inbound': [user_totals[user]['inbound'] for user in user_totals],
-            'outbound': [user_totals[user]['outbound'] for user in user_totals]
+        # Aggregate data by user
+        user_totals = {}
+        for row in results_list:
+            user_name = row['userName']
+            if user_name not in user_totals:
+                user_totals[user_name] = {
+                    'total': 0,
+                    'inbound': 0,
+                    'outbound': 0
+                }
+            
+            # Sum up the values for each metric
+            user_totals[user_name]['total'] += row['total']
+            user_totals[user_name]['inbound'] += row['inbound']
+            user_totals[user_name]['outbound'] += row['outbound']
+        
+        response = {
+            'users': list(user_totals.keys()),
+            'metrics': {
+                'total': [user_totals[user]['total'] for user in user_totals],
+                'inbound': [user_totals[user]['inbound'] for user in user_totals],
+                'outbound': [user_totals[user]['outbound'] for user in user_totals]
+            }
         }
-    }
-    
-    # Debug final response
-    print(f"Returning email stats: {response}")
-    return response
+        
+        print(f"Returning aggregated stats for {len(response['users'])} users")
+        return response
+        
+    except Exception as e:
+        print(f"Error in get_email_stats: {str(e)}")
+        raise
