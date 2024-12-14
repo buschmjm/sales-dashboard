@@ -72,14 +72,22 @@ def get_email_stats(start_date, end_date):
         table_columns = [col['name'] for col in app_tables.outlook_statistics.list_columns()]
         print(f"Database columns: {table_columns}")
         
+        # Ensure dates are datetime.date objects and handle timezone
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            
         # Add one day to end_date to include the end date in results
-        end_date = end_date + timedelta(days=1)  # Fixed syntax error here
-        print(f"Adjusted date range: {start_date} to {end_date}")
+        end_date = end_date + timedelta(days=1)
         
-        # Get sample record to verify structure
+        print(f"Processing date range - Start: {start_date} ({type(start_date)})")
+        print(f"                        End: {end_date} ({type(end_date)})")
+        
+        # Get sample record to verify date format
         sample = app_tables.outlook_statistics.search()
         for record in sample:
-            print("Sample record structure:", dict(record))
+            print(f"Sample record date format: {record['reportDate']} ({type(record['reportDate'])})")
             break
             
         # Query with explicit date comparison
@@ -90,6 +98,12 @@ def get_email_stats(start_date, end_date):
                 q.less_than(end_date)
             )
         )
+        
+        # Debug raw results
+        results_list = [dict(r) for r in results]
+        if results_list:
+            dates = [r['reportDate'] for r in results_list]
+            print(f"Found records with dates: {dates}")
         
         # Debug query parameters
         print(f"Query parameters - Start: {start_date}, End: {end_date}")

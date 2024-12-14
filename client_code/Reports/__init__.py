@@ -98,9 +98,16 @@ class Reports(ReportsTemplate):
     def refresh_email_data(self):
         """Fetch and display email data based on current date range."""
         try:
-            # Ensure dates are in the correct order
-            start_date = min(self.email_start_date.date, self.email_end_date.date)
-            end_date = max(self.email_start_date.date, self.email_end_date.date)
+            # Ensure dates are datetime.date objects
+            start_date = self.email_start_date.date
+            end_date = self.email_end_date.date
+            
+            if not isinstance(start_date, date):
+                print(f"Warning: start_date is not a date object: {type(start_date)}")
+            if not isinstance(end_date, date):
+                print(f"Warning: end_date is not a date object: {type(end_date)}")
+            
+            print(f"Requesting data for date range: {start_date} to {end_date}")
             
             data = anvil.server.call('get_email_stats', start_date, end_date)
             print("Email data received:", data)
@@ -110,6 +117,8 @@ class Reports(ReportsTemplate):
         except Exception as e:
             alert(f"Error refreshing email data: {e}")
             print(f"Error refreshing email data: {e}")
+            print(f"Start date: {self.email_start_date.date} ({type(self.email_start_date.date)})")
+            print(f"End date: {self.email_end_date.date} ({type(self.email_end_date.date)})")
 
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
