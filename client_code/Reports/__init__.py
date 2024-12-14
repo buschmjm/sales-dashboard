@@ -15,12 +15,12 @@ class Reports(ReportsTemplate):
         self.init_components(**properties)
 
         # Set default date range for calls
-        self.end_date_picker.date = date.today() - timedelta(days=1)
-        self.start_date_picker.date = date.today() - timedelta(days=15)
+        self.end_date_picker.date = date.today()  # Change to include today
+        self.start_date_picker.date = date.today() - timedelta(days=7)  # Last 7 days
 
         # Set default date range for emails
-        self.email_end_date.date = date.today() - timedelta(days=1)
-        self.email_start_date.date = date.today() - timedelta(days=8)
+        self.email_end_date.date = date.today()  # Change to include today
+        self.email_start_date.date = date.today() - timedelta(days=7)  # Last 7 days
 
         # Set up email metrics dropdown
         self.email_metric_selector.items = [
@@ -30,8 +30,15 @@ class Reports(ReportsTemplate):
         ]
         self.email_metric_selector.selected_value = 'total'
 
+        # Bind metric selector change event
+        self.email_metric_selector.set_event_handler('change', self.email_metric_changed)
+
         self.refresh_data()
         self.refresh_email_data()
+
+    def email_metric_changed(self, **event_args):
+        """Handle metric selector change"""
+        self.refresh_email_data()  # Refresh data when metric changes
 
     def refresh_data(self):
         """Fetch and display data based on current date range."""
@@ -98,27 +105,32 @@ class Reports(ReportsTemplate):
     def refresh_email_data(self):
         """Fetch and display email data based on current date range."""
         try:
-            # Ensure dates are datetime.date objects
+            # Ensure dates are datetime.date objects and in correct order
             start_date = self.email_start_date.date
             end_date = self.email_end_date.date
             
-            if not isinstance(start_date, date):
-                print(f"Warning: start_date is not a date object: {type(start_date)}")
-            if not isinstance(end_date, date):
-                print(f"Warning: end_date is not a date object: {type(end_date)}")
-            
+            # Ensure we're querying for complete days
+            if isinstance(end_date, date):
+                # Include the full end date
+                end_date = end_date
+
             print(f"Requesting data for date range: {start_date} to {end_date}")
             
+            # Force immediate data refresh from Outlook
+            anvil.server.call('fetch_user_email_stats')
+            
+            # Then get the statistics
             data = anvil.server.call('get_email_stats', start_date, end_date)
             print("Email data received:", data)
+            
+            if data['users'] == ['No Data']:
+                alert("No email data found for the selected date range. Try adjusting the dates.")
             
             self._update_email_plot(data)
             
         except Exception as e:
             alert(f"Error refreshing email data: {e}")
             print(f"Error refreshing email data: {e}")
-            print(f"Start date: {self.email_start_date.date} ({type(self.email_start_date.date)})")
-            print(f"End date: {self.email_end_date.date} ({type(self.email_end_date.date)})")
 
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
