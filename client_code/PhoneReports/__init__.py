@@ -112,9 +112,11 @@ class PhoneReports(PhoneReportsTemplate):
                 grouped_data[user_id]['x'].append(row[report_date_index].strftime('%Y-%m-%d'))
                 grouped_data[user_id]['y'].append(row[y_column_index])
 
-            # Update plot with modern styling
-            self.call_info_plot.data = [
-                {
+            # Update plot with styling AND data
+            traces = []
+            for i, (user_id, data) in enumerate(grouped_data.items()):
+                color = app.theme_colors[f'Primary {(i%3)+1}'] if i < 3 else app.theme_colors['Primary']
+                traces.append({
                     'x': data['x'],
                     'y': data['y'],
                     'type': 'scatter',
@@ -124,16 +126,16 @@ class PhoneReports(PhoneReportsTemplate):
                         'width': 2,
                         'shape': 'spline',
                         'smoothing': 1.3,
-                        'color': app.theme_colors[f'Primary {(i%3)+1}']
+                        'color': color
                     },
                     'marker': {
                         'size': 8,
                         'line': {'width': 2, 'color': 'white'},
-                        'color': app.theme_colors[f'Primary {(i%3)+1}']
+                        'color': color
                     }
-                }
-                for i, (user_id, data) in enumerate(grouped_data.items())
-            ]
+                })
+            
+            self.call_info_plot.data = traces
 
             # Modern layout with consistent styling
             self.call_info_plot.layout.update({

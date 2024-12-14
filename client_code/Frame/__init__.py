@@ -16,26 +16,49 @@ class Frame(FrameTemplate):
         self.init_components(**properties)
         
         try:
+            # Define global theme settings
+            app.theme_colors.update({
+                'Primary': '#2196F3',
+                'Primary 1': '#1976D2',
+                'Primary 2': '#42A5F5',
+                'Primary 3': '#64B5F6',
+                'Secondary': '#FF4081',
+                'Background': '#FFFFFF',
+                'Surface': '#F5F5F5',
+                'Text': '#212121',
+                'Text Secondary': '#757575'
+            })
+
             # Configure global plot theme
             Plot.templates.default = {
                 'layout': {
-                    'paper_bgcolor': 'white',
-                    'plot_bgcolor': 'rgba(0,0,0,0.02)',
-                    'font': {'family': 'Inter, sans-serif', 'size': 12},
+                    'paper_bgcolor': app.theme_colors['Background'],
+                    'plot_bgcolor': app.theme_colors['Surface'],
+                    'font': {
+                        'family': 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        'size': 12,
+                        'color': app.theme_colors['Text']
+                    },
                     'margin': {'t': 32, 'r': 16, 'l': 64, 'b': 64},
                     'showlegend': True,
-                    'legend': {'bgcolor': 'white', 'bordercolor': 'rgba(0,0,0,0.1)', 'borderwidth': 1},
+                    'legend': {
+                        'bgcolor': app.theme_colors['Background'],
+                        'bordercolor': 'rgba(0,0,0,0.1)',
+                        'borderwidth': 1
+                    },
                     'xaxis': {
                         'gridcolor': 'rgba(0,0,0,0.05)',
                         'linecolor': 'rgba(0,0,0,0.1)',
                         'tickfont': {'size': 10},
-                        'showgrid': True
+                        'showgrid': True,
+                        'tickcolor': app.theme_colors['Text Secondary']
                     },
                     'yaxis': {
                         'gridcolor': 'rgba(0,0,0,0.05)',
                         'linecolor': 'rgba(0,0,0,0.1)',
                         'tickfont': {'size': 10},
-                        'showgrid': True
+                        'showgrid': True,
+                        'tickcolor': app.theme_colors['Text Secondary']
                     }
                 }
             }

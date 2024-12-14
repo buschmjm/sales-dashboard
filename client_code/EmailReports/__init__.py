@@ -81,14 +81,17 @@ class EmailReports(EmailReportsTemplate):
                 metric
             ]
 
-            # Create plot with modern styling
+            # Create plot with consistent styling
             self.email_numbers_plot.data = [{
                 "type": "bar",
                 "x": users,
                 "y": data["metrics"][metric],
                 "name": f"{metric_name} Emails",
                 "marker": {
-                    "color": app.theme_colors['Primary'],
+                    "color": [
+                        app.theme_colors[f'Primary {(i%3)+1}'] 
+                        for i in range(len(users))
+                    ],
                     "opacity": 0.9,
                     "line": {
                         "color": "white",
