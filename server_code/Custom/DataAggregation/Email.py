@@ -49,28 +49,35 @@ def update_outlook_statistics_db(stats_data):
 
 @anvil.server.callable
 def get_email_stats(start_date, end_date):
-    """Fetch email statistics for the specified date range and return in client-friendly format."""
+    """Fetch and aggregate email statistics for the specified date range."""
     # Query the database for email statistics
     results = app_tables.outlook_statistics.search(
         tables.order_by('reportDate', ascending=True),
         reportDate=q.between(start_date, end_date)
     )
     
-    # Format the data similar to call statistics
-    columns = ['userId', 'userName', 'reportDate', 'total', 'inbound', 'outbound']
-    values = []
-    
+    # Aggregate data by user
+    user_totals = {}
     for row in results:
-        values.append([
-            row['userId'],
-            row['userName'],
-            row['reportDate'],
-            row['total'],
-            row['inbound'],
-            row['outbound']
-        ])
+        user_name = row['userName']
+        if user_name not in user_totals:
+            user_totals[user_name] = {
+                'total': 0,
+                'inbound': 0,
+                'outbound': 0
+            }
+        
+        # Sum up the values for each metric
+        user_totals[user_name]['total'] += row['total']
+        user_totals[user_name]['inbound'] += row['inbound']
+        user_totals[user_name]['outbound'] += row['outbound']
     
+    # Format data for client
     return {
-        "columns": columns,
-        "values": values
+        'users': list(user_totals.keys()),
+        'metrics': {
+            'total': [user_totals[user]['total'] for user in user_totals],
+            'inbound': [user_totals[user]['inbound'] for user in user_totals],
+            'outbound': [user_totals[user]['outbound'] for user in user_totals]
+        }
     }

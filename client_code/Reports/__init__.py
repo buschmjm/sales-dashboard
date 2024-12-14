@@ -166,42 +166,11 @@ class Reports(ReportsTemplate):
         """Update the email statistics plot with a grouped bar chart."""
         try:
             # Verify data structure
-            if not data or "columns" not in data or "values" not in data:
+            if not data or 'users' not in data or 'metrics' not in data:
                 raise ValueError("Invalid data structure received from server")
-
-            # Get column indices with error checking
-            required_columns = ['userName', 'total', 'inbound', 'outbound']
-            indices = {}
             
-            for col in required_columns:
-                if col not in data["columns"]:
-                    raise ValueError(f"Missing required column: {col}")
-                indices[col] = data["columns"].index(col)
-            
-            # Aggregate data by user
-            user_totals = {}
-            for row in data["values"]:
-                if len(row) != len(data["columns"]):
-                    continue
-                
-                user_name = row[indices['userName']]
-                if user_name not in user_totals:
-                    user_totals[user_name] = {
-                        'total': 0,
-                        'inbound': 0,
-                        'outbound': 0
-                    }
-                
-                # Sum up the values for each metric
-                user_totals[user_name]['total'] += row[indices['total']]
-                user_totals[user_name]['inbound'] += row[indices['inbound']]
-                user_totals[user_name]['outbound'] += row[indices['outbound']]
-
-            # Prepare data for plotting
-            users = list(user_totals.keys())
-            totals = [user_totals[user]['total'] for user in users]
-            inbound = [user_totals[user]['inbound'] for user in users]
-            outbound = [user_totals[user]['outbound'] for user in users]
+            users = data['users']
+            metrics = data['metrics']
 
             # Create grouped bar chart
             self.email_numbers_plot.data = [
@@ -209,19 +178,19 @@ class Reports(ReportsTemplate):
                     'name': 'Total Emails',
                     'type': 'bar',
                     'x': users,
-                    'y': totals
+                    'y': metrics['total']
                 },
                 {
                     'name': 'Emails Received',
                     'type': 'bar',
                     'x': users,
-                    'y': inbound
+                    'y': metrics['inbound']
                 },
                 {
                     'name': 'Emails Sent',
                     'type': 'bar',
                     'x': users,
-                    'y': outbound
+                    'y': metrics['outbound']
                 }
             ]
 
