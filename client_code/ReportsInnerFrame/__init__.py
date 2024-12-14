@@ -13,3 +13,15 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     self.init_components(**properties)
 
     # Any code you write here will run before the form opens.
+
+  def b2b_nav_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    pass
+
+  def email_nav_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    pass
+
+  def phone_nav_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    pass
