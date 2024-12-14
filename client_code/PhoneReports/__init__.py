@@ -112,7 +112,7 @@ class PhoneReports(PhoneReportsTemplate):
                 grouped_data[user_id]['x'].append(row[report_date_index].strftime('%Y-%m-%d'))
                 grouped_data[user_id]['y'].append(row[y_column_index])
 
-            # Update plot
+            # Update plot with modern styling
             self.call_info_plot.data = [
                 {
                     'x': data['x'],
@@ -120,22 +120,42 @@ class PhoneReports(PhoneReportsTemplate):
                     'type': 'scatter',
                     'mode': 'lines+markers',
                     'name': user_labels[user_id],
+                    'line': {
+                        'width': 2,
+                        'shape': 'spline',
+                        'smoothing': 1.3,
+                        'color': app.theme_colors[f'Primary {(i%3)+1}']
+                    },
+                    'marker': {
+                        'size': 8,
+                        'line': {'width': 2, 'color': 'white'},
+                        'color': app.theme_colors[f'Primary {(i%3)+1}']
+                    }
                 }
-                for user_id, data in grouped_data.items()
+                for i, (user_id, data) in enumerate(grouped_data.items())
             ]
 
-            # Update plot with fixed dimensions
-            self.call_info_plot.layout = {
-                'width': None,  # Let Plotly handle width
-                'height': 400,  # Fixed height
-                'autosize': True,
-                'showlegend': True,
-                'margin': {'l': 50, 'r': 50, 't': 50, 'b': 50},
-                'plot_bgcolor': 'rgba(0,0,0,0)',
-                'paper_bgcolor': 'rgba(0,0,0,0)',
-                'xaxis': {'fixedrange': True},
-                'yaxis': {'fixedrange': True}
-            }
+            # Modern layout with consistent styling
+            self.call_info_plot.layout.update({
+                'height': 400,
+                'title': {'text': f"{y_column} Over Time", 'x': 0.5, 'xanchor': 'center'},
+                'xaxis': {
+                    'title': None,
+                    'showspikes': True,
+                    'spikecolor': 'rgba(0,0,0,0.3)',
+                    'spikesnap': 'cursor',
+                    'spikemode': 'across'
+                },
+                'yaxis': {
+                    'title': y_column,
+                    'showspikes': True,
+                    'spikecolor': 'rgba(0,0,0,0.3)',
+                    'spikesnap': 'cursor',
+                    'spikemode': 'across'
+                },
+                'hoverlabel': {'bgcolor': 'white', 'font': {'size': 12}},
+                'hovermode': 'x unified'
+            })
 
         except Exception as e:
             print(f"Error updating plot: {e}")

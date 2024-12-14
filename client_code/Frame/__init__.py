@@ -16,6 +16,30 @@ class Frame(FrameTemplate):
         self.init_components(**properties)
         
         try:
+            # Configure global plot theme
+            Plot.templates.default = {
+                'layout': {
+                    'paper_bgcolor': 'white',
+                    'plot_bgcolor': 'rgba(0,0,0,0.02)',
+                    'font': {'family': 'Inter, sans-serif', 'size': 12},
+                    'margin': {'t': 32, 'r': 16, 'l': 64, 'b': 64},
+                    'showlegend': True,
+                    'legend': {'bgcolor': 'white', 'bordercolor': 'rgba(0,0,0,0.1)', 'borderwidth': 1},
+                    'xaxis': {
+                        'gridcolor': 'rgba(0,0,0,0.05)',
+                        'linecolor': 'rgba(0,0,0,0.1)',
+                        'tickfont': {'size': 10},
+                        'showgrid': True
+                    },
+                    'yaxis': {
+                        'gridcolor': 'rgba(0,0,0,0.05)',
+                        'linecolor': 'rgba(0,0,0,0.1)',
+                        'tickfont': {'size': 10},
+                        'showgrid': True
+                    }
+                }
+            }
+            
             # Minimal configuration
             self.content_panel.role = 'none'
             

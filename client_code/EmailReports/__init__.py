@@ -81,24 +81,47 @@ class EmailReports(EmailReportsTemplate):
                 metric
             ]
 
-            # Create plot with minimal operations
-            self.email_numbers_plot.data = [
-                {
-                    "type": "bar",
-                    "x": users,
-                    "y": data["metrics"][metric],
-                    "name": f"{metric_name} Emails",
-                }
-            ]
+            # Create plot with modern styling
+            self.email_numbers_plot.data = [{
+                "type": "bar",
+                "x": users,
+                "y": data["metrics"][metric],
+                "name": f"{metric_name} Emails",
+                "marker": {
+                    "color": app.theme_colors['Primary'],
+                    "opacity": 0.9,
+                    "line": {
+                        "color": "white",
+                        "width": 1
+                    }
+                },
+                "hovertemplate": "%{x}<br>%{y} Emails<extra></extra>"
+            }]
 
-            # Update only necessary layout properties
-            self.email_numbers_plot.layout.update(
-                {
-                    "title": f"{metric_name} Emails ({self.email_start_date.date} - {self.email_end_date.date})",
-                    "xaxis": {"tickangle": 45},
-                    "height": 600,
-                }
-            )
+            # Modern layout with consistent styling
+            self.email_numbers_plot.layout.update({
+                "height": 400,
+                "title": {
+                    "text": f"{metric_name} Emails ({self.email_start_date.date} - {self.email_end_date.date})",
+                    "x": 0.5,
+                    "xanchor": "center",
+                    "font": {"size": 16}
+                },
+                "xaxis": {
+                    "title": None,
+                    "tickangle": 45,
+                    "showline": True
+                },
+                "yaxis": {
+                    "title": "Number of Emails",
+                    "showline": True,
+                    "zeroline": True,
+                    "zerolinecolor": "rgba(0,0,0,0.1)"
+                },
+                "bargap": 0.3,
+                "hoverlabel": {"bgcolor": "white"},
+                "hovermode": "x unified"
+            })
 
         except Exception as e:
             self._show_empty_plot()
