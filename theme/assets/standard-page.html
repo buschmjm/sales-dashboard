@@ -21,6 +21,20 @@
 
 <script>
   var ln = $('.structure > .nav-holder > .left-nav');
+  
+  function checkWidth() {
+    var windowWidth = $(window).width();
+    if (windowWidth <= 768) {  // Tablet/mobile breakpoint
+      if (!ln.hasClass('hidden')) {
+        hideSidebar();
+      }
+    } else {
+      if (ln.hasClass('hidden')) {
+        showSidebar();
+      }
+    }
+  }
+
   function hideSidebar() {
     ln.animate({left: -ln.outerWidth()}, function() {
       ln.removeClass("in-transition shown").addClass("hidden");
@@ -28,33 +42,35 @@
       $(window).trigger('resize');
     });
   }
+
   function showSidebar() {
     $('.nav-shield').addClass("shown");
-    ln.addClass("shown").removeClass("hidden").css({left: "-100%"}).css({left: -ln.outerWidth()}).animate({left: 0}, function() {
-      ln.removeClass("in-transition");
-    });
+    ln.addClass("shown").removeClass("hidden")
+      .css({left: "-100%"})
+      .css({left: -ln.outerWidth()})
+      .animate({left: 0}, function() {
+        ln.removeClass("in-transition");
+      });
     $(window).trigger('resize');
   }
-  $('.sidebar-toggle, .nav-shield').off('click').on('click', function() {
-    if (ln.is(":visible") || $('.nav-shield').is(".shown")) {
-      hideSidebar();
-    } else if(!ln.is(":empty")) {
-      showSidebar();
-    }
-  });
-  $('.left-nav').off('click').on('click', 'a, button', function() {
-    if ($('.nav-shield').is(":visible")) {
-      $('.nav-shield').trigger('click');
-    }
-  });
-  
-  function pinLeftNav() {
-    if (window.innerWidth > 998) {
-      ln.addClass('shown').removeClass('hidden').css({left: '0px'})
-      $('.nav-shield').addClass('shown')
-    }
-  }
-  
-  $(window).on('resize', pinLeftNav)
 
+  // Initialize and bind events
+  $(document).ready(function() {
+    checkWidth();  // Check on page load
+    $(window).resize(checkWidth);  // Check on window resize
+
+    $('.sidebar-toggle, .nav-shield').off('click').on('click', function() {
+      if (ln.is(":visible") || $('.nav-shield').is(".shown")) {
+        hideSidebar();
+      } else if(!ln.is(":empty")) {
+        showSidebar();
+      }
+    });
+
+    $('.left-nav').off('click').on('click', 'a, button', function() {
+      if ($(window).width() <= 768 && $('.nav-shield').is(":visible")) {
+        hideSidebar();
+      }
+    });
+  });
 </script>

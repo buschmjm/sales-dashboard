@@ -501,6 +501,8 @@ input[disabled] ~ span {
 .content > * > .anvil-container {
   padding: 0;
   margin: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 @media(min-width:991px) {
@@ -604,6 +606,39 @@ input[disabled] ~ span {
     background-color: rgba(0,0,0,0.2);
   }
  }
+
+@media (max-width: 768px) {
+  .nav-holder .left-nav {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 240px;  /* Fixed width for mobile nav */
+    z-index: 1000;
+  }
+  
+  .nav-shield {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+  
+  .nav-shield.shown {
+    display: block;
+  }
+  
+  .sidebar-toggle {
+    display: block;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1001;
+  }
+}
 
 .nav-holder .left-nav, .left-nav-placeholder {
   display: flex;
