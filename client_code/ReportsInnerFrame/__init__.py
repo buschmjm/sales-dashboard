@@ -14,15 +14,19 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Basic initialization
+        # Set fixed height for content panel
+        self.content_panel.height = '700'  # or any appropriate height
         self.content_panel.role = 'none'
+        
+        # Basic initialization
         self.current_section = 'phone'
         
-        # Set up navigation styling
+        # Set up navigation styling with fixed dimensions
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = 'transparent'
             nav.foreground = 'black'
             nav.role = 'none'
+            nav.width = '100'  # Fixed width for nav buttons
         
         # Initialize with phone view
         self.content_panel.add_component(PhoneReports())

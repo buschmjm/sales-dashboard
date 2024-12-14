@@ -14,17 +14,23 @@ anvil.users.login_with_form()
 class Frame(FrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
-        self.content_panel.role = 'none'
         
         try:
-            # Setup refresh button
-            self.refresh_button = Button(text="Refresh", align="right", role="primary-color")
+            # Set fixed height for content panel to prevent recursive calculations
+            self.content_panel.height = '800'  # or any appropriate height
+            self.content_panel.role = 'none'
+            
+            # Setup refresh button with fixed positioning
+            self.refresh_button = Button(
+                text="Refresh",
+                align="right",
+                role="primary-color",
+                width='100',  # Fixed width
+            )
             self.refresh_button.set_event_handler("click", self.refresh_button_click)
             self.add_component(self.refresh_button, slot="top-right")
 
             Plot.templates.default = "rally"
-
-            # Initialize navigation state
             self._setup_navigation()
             
         except Exception as e:
