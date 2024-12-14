@@ -17,53 +17,93 @@
 
 <script>
   var ln = $('.structure > .nav-holder > .left-nav');
+  var isTransitioning = false;
+  var resizeTimeout;
   
   function checkWidth() {
+    if (isTransitioning) return;
+    
     var windowWidth = $(window).width();
     if (windowWidth <= 768) {  // Tablet/mobile breakpoint
       if (!ln.hasClass('hidden')) {
-        hideSidebar();
+        hideSidebar(false);
       }
     } else {
-      showSidebar();
+      showSidebar(false);
     }
   }
 
-  function hideSidebar() {
-    ln.animate({left: -ln.outerWidth()}, function() {
-      ln.removeClass("in-transition shown").addClass("hidden");
+  function hideSidebar(animate = true) {
+    if (isTransitioning) return;
+    isTransitioning = true;
+    
+    var width = ln.outerWidth();
+    if (animate) {
+      ln.animate({left: -width}, {
+        duration: 200,
+        complete: function() {
+          ln.removeClass("in-transition shown").addClass("hidden");
+          $('.nav-shield').removeClass("shown");
+          isTransitioning = false;
+        }
+      });
+    } else {
+      ln.css({left: -width})
+        .removeClass("in-transition shown")
+        .addClass("hidden");
       $('.nav-shield').removeClass("shown");
-      $(window).trigger('resize');
-    });
+      isTransitioning = false;
+    }
   }
 
-  function showSidebar() {
+  function showSidebar(animate = true) {
+    if (isTransitioning) return;
+    isTransitioning = true;
+    
     $('.nav-shield').addClass("shown");
-    ln.addClass("shown").removeClass("hidden")
-      .css({left: "-100%"})
-      .css({left: -ln.outerWidth()})
-      .animate({left: 0}, function() {
-        ln.removeClass("in-transition");
+    ln.addClass("shown").removeClass("hidden");
+    
+    var width = ln.outerWidth();
+    if (animate) {
+      ln.css({left: -width}).animate({left: 0}, {
+        duration: 200,
+        complete: function() {
+          ln.removeClass("in-transition");
+          isTransitioning = false;
+        }
       });
-    $(window).trigger('resize');
+    } else {
+      ln.css({left: 0})
+        .removeClass("in-transition");
+      isTransitioning = false;
+    }
   }
 
   // Initialize and bind events
   $(document).ready(function() {
-    checkWidth();  // Check on page load
-    $(window).on('resize', checkWidth);  // Changed from resize() to on('resize',...)
+    // Debounced resize handler
+    function debouncedResize() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(checkWidth, 250);
+    }
+    
+    // Initial setup
+    checkWidth();
+    
+    // Bind events with debouncing
+    $(window).off('resize').on('resize', debouncedResize);
 
-    $('.sidebar-toggle, .nav-shield').on('click', function() {
-      if (ln.is(":visible") || $('.nav-shield').is(".shown")) {
-        hideSidebar();
+    $('.sidebar-toggle, .nav-shield').off('click').on('click', function() {
+      if (ln.hasClass("shown")) {
+        hideSidebar(true);
       } else if(!ln.is(":empty")) {
-        showSidebar();
+        showSidebar(true);
       }
     });
 
-    $('.left-nav').on('click', 'a, button', function() {
+    $('.left-nav').off('click').on('click', 'a, button', function() {
       if ($(window).width() <= 768) {
-        hideSidebar();
+        hideSidebar(true);
       }
     });
   });
