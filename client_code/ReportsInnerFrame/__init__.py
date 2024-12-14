@@ -14,12 +14,8 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Configure content panel
-        self.content_panel.spacing_above = 'none'
-        self.content_panel.spacing_below = 'none'
-        self.content_panel.role = 'none'
-        
         # Basic initialization
+        self.content_panel.role = 'none'
         self.current_section = 'phone'
         
         # Configure navigation
@@ -27,14 +23,9 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             nav.background = 'transparent'
             nav.foreground = 'black'
             nav.role = 'none'
-            nav.spacing_above = 'none'
-            nav.spacing_below = 'none'
         
         # Initialize with phone view
-        component = PhoneReports()
-        component.spacing_above = 'none'
-        component.spacing_below = 'none'
-        self.content_panel.add_component(component)
+        self.content_panel.add_component(PhoneReports())
         self.phone_nav.background = app.theme_colors['Primary Container']
         self.phone_nav.foreground = 'white'
 
@@ -42,10 +33,6 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         if self.current_section != section:
             self.current_section = section
             self.content_panel.clear()
-            
-            # Configure component
-            component.spacing_above = 'none'
-            component.spacing_below = 'none'
             self.content_panel.add_component(component)
             
             # Reset all nav buttons

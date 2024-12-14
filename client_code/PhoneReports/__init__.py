@@ -13,15 +13,6 @@ class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Configure plot
-        self.call_info_plot.spacing_above = 'none'
-        self.call_info_plot.spacing_below = 'none'
-        
-        # Configure repeating panel if it exists
-        if hasattr(self, 'repeating_panel_1'):
-            self.repeating_panel_1.spacing_above = 'none'
-            self.repeating_panel_1.spacing_below = 'none'
-        
         # Set default date range for calls
         self.end_date_picker.date = date.today()
         self.start_date_picker.date = date.today() - timedelta(days=7)
@@ -125,12 +116,17 @@ class PhoneReports(PhoneReportsTemplate):
                 for user_id, data in grouped_data.items()
             ]
 
-            # Update plot with simplified layout
+            # Update plot with fixed dimensions
             self.call_info_plot.layout = {
+                'width': None,  # Let Plotly handle width
+                'height': 400,  # Fixed height
                 'autosize': True,
-                'margin': {'l': 50, 'r': 50, 't': 50, 'b': 50},
                 'showlegend': True,
-                'height': 400  # Fixed height in pixels
+                'margin': {'l': 50, 'r': 50, 't': 50, 'b': 50},
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'xaxis': {'fixedrange': True},
+                'yaxis': {'fixedrange': True}
             }
 
         except Exception as e:

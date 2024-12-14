@@ -16,17 +16,13 @@ class Frame(FrameTemplate):
         self.init_components(**properties)
         
         try:
-            # Configure content panel with Anvil properties
-            self.content_panel.spacing_above = 'none'
-            self.content_panel.spacing_below = 'none'
-            self.content_panel.background = 'white'
+            # Minimal configuration
+            self.content_panel.role = 'none'
             
-            # Configure refresh button
+            # Simple button setup
             self.refresh_button = Button(
                 text="Refresh",
-                role="primary-color",
-                spacing_above='none',
-                spacing_below='none'
+                role="primary-color"
             )
             self.refresh_button.set_event_handler("click", self.refresh_button_click)
             self.add_component(self.refresh_button, slot="top-right")
@@ -58,10 +54,6 @@ class Frame(FrameTemplate):
         if getattr(self, 'current_page', None) != page_name:
             self.current_page = page_name
             self.content_panel.clear()
-            
-            # Set component properties
-            component.spacing_above = 'none'
-            component.spacing_below = 'none'
             self.content_panel.add_component(component)
             
             # Reset all navigation backgrounds
