@@ -31,32 +31,26 @@ class Frame(FrameTemplate):
             alert(f"Error initializing Frame: {e}")
 
     def refresh_button_click(self, **event_args):
-        """Handle refresh button click to fetch call reports and email stats."""
+        """Handle refresh button click - only triggers database refresh APIs."""
         try:
-            print("Refreshing data...")
-
-            # Fetch call reports
-            call_reports_result = anvil.server.call('fetch_call_reports')
-            if call_reports_result:
-                print("Call reports refreshed successfully.")
-            else:
-                print("No new call report data found.")
-
-            # Fetch email stats
-            email_stats = anvil.server.call('fetch_user_email_stats')
-            print("Email Stats:")
-            for stat in email_stats:
-                print(stat)
-
-            return {
-                "success": True,
-                "email_stats": email_stats,
-                "call_reports_refreshed": call_reports_result
-            }
-
+            # Show loading indicator to user
+            Notification("Refreshing data...").show()
+            
+            # Call APIs sequentially and capture results
+            call_reports_refreshed = anvil.server.call('fetch_call_reports')
+            email_stats_refreshed = anvil.server.call('fetch_user_email_stats')
+            
+            # Log results without affecting UI
+            print("Refresh results:")
+            print(f"- Call reports: {'Updated' if call_reports_refreshed else 'No new data'}")
+            print(f"- Email stats: {'Updated' if email_stats_refreshed else 'No new data'}")
+            
+            # Notify user of completion
+            Notification("Data refresh complete.").show()
+            
         except Exception as e:
-            print(f"Error refreshing data: {e}")
-            return {"error": str(e)}
+            print(f"Error during data refresh: {e}")
+            alert("Failed to refresh data. Please try again.")
 
     def sales_page_link_click(self, **event_args):
         try:
