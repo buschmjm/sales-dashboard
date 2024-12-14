@@ -13,19 +13,14 @@ class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Configure plot with CSS dimensions
-        self.call_info_plot.tag.style = """
-            height: 500px;
-            width: 100%;
-        """
+        # Configure plot
+        self.call_info_plot.spacing_above = 'none'
+        self.call_info_plot.spacing_below = 'none'
         
-        # Set panel dimensions with CSS if it exists
+        # Configure repeating panel if it exists
         if hasattr(self, 'repeating_panel_1'):
-            self.repeating_panel_1.tag.style = """
-                height: 200px;
-                width: 100%;
-                overflow-y: auto;
-            """
+            self.repeating_panel_1.spacing_above = 'none'
+            self.repeating_panel_1.spacing_below = 'none'
         
         # Set default date range for calls
         self.end_date_picker.date = date.today()
@@ -130,12 +125,12 @@ class PhoneReports(PhoneReportsTemplate):
                 for user_id, data in grouped_data.items()
             ]
 
-            # Update plot layout with fixed dimensions
+            # Update plot with simplified layout
             self.call_info_plot.layout = {
                 'autosize': True,
                 'margin': {'l': 50, 'r': 50, 't': 50, 'b': 50},
-                'plot_bgcolor': 'rgba(0,0,0,0)',
-                'paper_bgcolor': 'rgba(0,0,0,0)'
+                'showlegend': True,
+                'height': 400  # Fixed height in pixels
             }
 
         except Exception as e:

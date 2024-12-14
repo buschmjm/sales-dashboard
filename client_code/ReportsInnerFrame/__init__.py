@@ -14,47 +14,38 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Set content panel dimensions using CSS
-        self.content_panel.tag.style = """
-            height: 800px;
-            width: 100%;
-            overflow-y: auto;
-        """
+        # Configure content panel
+        self.content_panel.spacing_above = 'none'
+        self.content_panel.spacing_below = 'none'
         self.content_panel.role = 'none'
         
         # Basic initialization
         self.current_section = 'phone'
         
-        # Set up navigation styling
+        # Configure navigation
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = 'transparent'
             nav.foreground = 'black'
             nav.role = 'none'
-            nav.width = '100'
+            nav.spacing_above = 'none'
+            nav.spacing_below = 'none'
         
         # Initialize with phone view
         component = PhoneReports()
-        component.tag.style = """
-            height: 800px;
-            width: 100%;
-            overflow-y: auto;
-        """
+        component.spacing_above = 'none'
+        component.spacing_below = 'none'
         self.content_panel.add_component(component)
         self.phone_nav.background = app.theme_colors['Primary Container']
         self.phone_nav.foreground = 'white'
 
     def _switch_section(self, section, component):
-        """Handle section switching"""
         if self.current_section != section:
             self.current_section = section
             self.content_panel.clear()
             
-            # Set component dimensions using CSS
-            component.tag.style = """
-                height: 800px;
-                width: 100%;
-                overflow-y: auto;
-            """
+            # Configure component
+            component.spacing_above = 'none'
+            component.spacing_below = 'none'
             self.content_panel.add_component(component)
             
             # Reset all nav buttons
