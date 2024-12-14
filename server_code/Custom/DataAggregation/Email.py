@@ -73,7 +73,7 @@ def get_email_stats(start_date, end_date):
         print(f"Database columns: {table_columns}")
         
         # Add one day to end_date to include the end date in results
-        end_date = end_date + timedelta(days(1))
+        end_date = end_date + timedelta(days=1)  # Fixed syntax error here
         print(f"Adjusted date range: {start_date} to {end_date}")
         
         # Get sample record to verify structure
@@ -90,6 +90,9 @@ def get_email_stats(start_date, end_date):
                 q.less_than(end_date)
             )
         )
+        
+        # Debug query parameters
+        print(f"Query parameters - Start: {start_date}, End: {end_date}")
         
         # Debug raw results
         results_list = [dict(r) for r in results]
