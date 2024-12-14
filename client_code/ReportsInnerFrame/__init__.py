@@ -14,9 +14,20 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Configure panels for sticky navigation
+        # Configure panels using Anvil properties
         self.content_panel.role = 'none'
-        self.nav_panel.add_class('sticky-nav')
+        self.nav_panel.role = 'navigation'
+        self.nav_panel.background = 'white'
+        self.nav_panel.border = '0 0 1px 0 solid rgba(0,0,0,0.1)'
+        
+        # Ensure nav panel stays on top
+        self.nav_panel.layout_properties = {
+            'sticky': 'top',
+            'z-index': 100
+        }
+        
+        # Add padding below nav panel
+        self.content_panel.padding_top = 8
         
         # Initialize navigation buttons
         nav_buttons = [self.phone_nav, self.email_nav, self.b2b_nav]
