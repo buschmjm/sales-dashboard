@@ -94,7 +94,7 @@ components:
       type: Label
     - data_bindings: []
       layout_properties: {grid_position: 'PZLTAT,KIWCUC ILYHHN,BEJDPJ'}
-      name: data_column_selector_email
+      name: email_metric_selector
       properties: {}
       type: DropDown
     - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,WYFBNC AIYNMQ,AGLRYH'}
@@ -102,7 +102,7 @@ components:
       properties: {align: right, text: Start Date}
       type: Label
     - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,WYFBNC THCPML,ZTBMWA'}
-      name: start_date_picker_email
+      name: email_start_date
       properties: {align: right}
       type: DatePicker
     - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,YGEOUV ZIGYWM,SJWKTD'}
@@ -110,7 +110,7 @@ components:
       properties: {align: right, text: End Date}
       type: Label
     - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,YGEOUV DOFOMB,EGYJHW'}
-      name: end_date_picker_email
+      name: email_end_date
       properties: {align: right}
       type: DatePicker
     - layout_properties: {grid_position: 'PZLTAT,FKRDSY OTVUDP,VVMVPD'}
