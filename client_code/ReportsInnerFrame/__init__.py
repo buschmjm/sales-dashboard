@@ -14,30 +14,22 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         
-        # Set up sticky navigation styling using Anvil properties
-        self.nav_panel.role = 'navigation'
+        # Simplify navigation panel setup
         self.nav_panel.background = 'white'
-        self.nav_panel.spacing_above = 'none'
-        self.nav_panel.spacing_below = 'none'
-        self.nav_panel.border = '0 0 1px 0 solid #eee'  # Add subtle bottom border
+        self.nav_panel.border = '0 0 1px 0 solid #eee'
         
-        # Add padding to content panel to prevent overlap
-        self.content_panel.spacing_above = 'small'
+        # Configure content panel
+        self.content_panel.padding = ('12px', 0, 0, 0)
         
-        # Load PhoneReports by default
-        self.content_panel.add_component(PhoneReports())
-        
-        # Add hover effects to navigation buttons
-        for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
+        # Initialize navigation buttons with simpler styling
+        nav_buttons = [self.phone_nav, self.email_nav, self.b2b_nav]
+        for nav in nav_buttons:
             nav.background = "transparent"
-            nav.hover_background = app.theme_colors['Surface Variant']
             nav.foreground = "black"
-            nav.spacing_above = 'none'
-            nav.spacing_below = 'none'
-        
-        # Set initial active state for phone
-        self.phone_nav.background = app.theme_colors['Primary Container']
-        self.phone_nav.foreground = "white"
+            
+        # Add initial component after button setup
+        self._update_nav_highlights('phone')  # This will set the correct button state
+        self.content_panel.add_component(PhoneReports())
 
     def phone_nav_click(self, **event_args):
         """Handle phone reports navigation"""
@@ -62,13 +54,19 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         return app.theme_colors['Surface Variant']
 
     def _update_nav_highlights(self, active_nav):
-        """Helper to update navigation highlighting"""
-        # Reset all to default state
-        for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
-            nav.background = "transparent"
-            nav.foreground = "black"
+        """Simplified navigation highlight update"""
+        nav_map = {
+            'phone': self.phone_nav,
+            'email': self.email_nav,
+            'b2b': self.b2b_nav
+        }
         
-        # Set active state
-        active_button = getattr(self, f"{active_nav}_nav")
-        active_button.background = app.theme_colors['Primary Container']
-        active_button.foreground = "white"
+        # Reset all buttons
+        for button in nav_map.values():
+            button.background = "transparent"
+            button.foreground = "black"
+        
+        # Set active button
+        if active_nav in nav_map:
+            nav_map[active_nav].background = app.theme_colors['Primary Container']
+            nav_map[active_nav].foreground = "white"
