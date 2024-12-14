@@ -1,44 +1,24 @@
 components:
-- name: nav_panel
+- components:
+  - event_bindings: {click: phone_nav_click}
+    name: phone_nav
+    properties: {align: center, background: 'theme:Secondary Container', foreground: 'theme:On Secondary Container', role: filled, text: Phone}
+    type: Button
+  - event_bindings: {click: email_nav_click}
+    name: email_nav
+    properties: {align: center, background: 'theme:Secondary Container', foreground: 'theme:On Secondary Container', role: filled, text: Email}
+    type: Button
+  - event_bindings: {click: b2b_nav_click}
+    name: b2b_nav
+    properties: {align: center, background: 'theme:Secondary Container', foreground: 'theme:On Secondary Container', role: filled, text: B2B}
+    type: Button
+  name: nav_panel
+  properties: {col_spacing: none, role: card}
   type: ColumnPanel
-  properties:
-    role: card
-    col_spacing: none
-  components:
-  - name: phone_nav
-    type: Button
-    properties:
-      text: Phone
-      role: filled
-      align: center
-      background: theme:Secondary Container
-      foreground: theme:On Secondary Container
-    event_bindings: {click: phone_nav_click}
-  - name: email_nav
-    type: Button
-    properties:
-      text: Email
-      role: filled
-      align: center
-      background: theme:Secondary Container
-      foreground: theme:On Secondary Container
-    event_bindings: {click: email_nav_click}
-  - name: b2b_nav
-    type: Button
-    properties:
-      text: B2B
-      role: filled
-      align: center
-      background: theme:Secondary Container
-      foreground: theme:On Secondary Container
-    event_bindings: {click: b2b_nav_click}
 - name: content_panel
+  properties: {role: none}
   type: ColumnPanel
-  properties:
-    role: none
 container:
+  properties: {col_spacing: none, role: none}
   type: ColumnPanel
-  properties:
-    col_spacing: none
-    role: none
 is_package: true
