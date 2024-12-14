@@ -11,19 +11,21 @@ from datetime import datetime, timedelta, date
 
 class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
-        # Set fixed dimensions
-        properties['height'] = '800'
-        properties['width'] = '100%'
         self.init_components(**properties)
         
-        # Configure plot with absolute dimensions
-        self.call_info_plot.height = '500'
-        self.call_info_plot.width = '100%'
+        # Configure plot with CSS dimensions
+        self.call_info_plot.tag.style = """
+            height: 500px;
+            width: 100%;
+        """
         
-        # Set panel dimensions
+        # Set panel dimensions with CSS if it exists
         if hasattr(self, 'repeating_panel_1'):
-            self.repeating_panel_1.height = '200'
-            self.repeating_panel_1.width = '100%'
+            self.repeating_panel_1.tag.style = """
+                height: 200px;
+                width: 100%;
+                overflow-y: auto;
+            """
         
         # Set default date range for calls
         self.end_date_picker.date = date.today()
@@ -128,13 +130,13 @@ class PhoneReports(PhoneReportsTemplate):
                 for user_id, data in grouped_data.items()
             ]
 
-            # Set fixed layout dimensions
-            self.call_info_plot.layout.update({
-                'height': 500,
-                'width': None,  # Allow width to be responsive
+            # Update plot layout with fixed dimensions
+            self.call_info_plot.layout = {
                 'autosize': True,
-                'margin': {'l': 50, 'r': 50, 't': 50, 'b': 50}
-            })
+                'margin': {'l': 50, 'r': 50, 't': 50, 'b': 50},
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'paper_bgcolor': 'rgba(0,0,0,0)'
+            }
 
         except Exception as e:
             print(f"Error updating plot: {e}")
