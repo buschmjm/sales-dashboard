@@ -1,4 +1,5 @@
 import anvil.server
+import anvil.tables as tables
 from anvil.tables import app_tables
 import anvil.tables.query as q
 from datetime import datetime
@@ -21,10 +22,10 @@ def get_call_data(queryStart, queryEnd):
                 return cached_data
 
         # Optimize query with specific column selection and indexing
-        queryData = app_tables.call_statistics.search(
+        queryData = list(app_tables.call_statistics.search(
             tables.order_by('reportDate', ascending=True),
-            reportDate=q.between(queryStart, queryEnd)
-        )
+            reportDate=q.between(queryStart, queryEnd, min_inclusive=True, max_inclusive=True)
+        ))
 
         # Early return for empty data
         if not queryData:
@@ -36,23 +37,15 @@ def get_call_data(queryStart, queryEnd):
 
         # Batch process rows efficiently
         user_values = []
-        batch_size = 100
-        current_batch = []
-
         for row in queryData:
-            current_batch.append([row[col] for col in column_names])
-            
-            if len(current_batch) >= batch_size:
-                user_values.extend(current_batch)
-                current_batch = []
-        
-        if current_batch:
-            user_values.extend(current_batch)
+            user_values.append([row[col] for col in column_names])
 
         result = {"columns": column_names, "values": user_values}
         
         # Cache the results
         _call_data_cache[cache_key] = (result, current_time)
+        
+        print(f"Call data fetched successfully: {len(user_values)} rows")
         return result
 
     except Exception as e:
