@@ -105,32 +105,16 @@ class Reports(ReportsTemplate):
     def refresh_email_data(self):
         """Fetch and display email data based on current date range."""
         try:
-            # Ensure dates are datetime.date objects and in correct order
             start_date = self.email_start_date.date
             end_date = self.email_end_date.date
             
-            # Ensure we're querying for complete days
-            if isinstance(end_date, date):
-                # Include the full end date
-                end_date = end_date
-
-            print(f"Requesting data for date range: {start_date} to {end_date}")
-            
-            # Force immediate data refresh from Outlook
-            anvil.server.call('fetch_user_email_stats')
-            
-            # Then get the statistics
+            # Get statistics without forcing refresh every time
             data = anvil.server.call('get_email_stats', start_date, end_date)
-            print("Email data received:", data)
-            
-            if data['users'] == ['No Data']:
-                alert("No email data found for the selected date range. Try adjusting the dates.")
-            
             self._update_email_plot(data)
             
         except Exception as e:
-            alert(f"Error refreshing email data: {e}")
-            print(f"Error refreshing email data: {e}")
+            alert("Failed to refresh email data")
+            print(f"Error: {e}")
 
     def _update_plot(self, y_column):
         """Helper function to update the plot."""
@@ -184,58 +168,51 @@ class Reports(ReportsTemplate):
     def _update_email_plot(self, data):
         """Update the email statistics plot with a grouped bar chart."""
         try:
-            print("Email plot update - Input data:", data)
-            
             if not data or 'users' not in data or 'metrics' not in data:
-                raise ValueError("Invalid data structure received from server")
+                self._show_empty_plot()
+                return
             
             users = data['users']
-            metrics = data['metrics']
-            
             if users == ['No Data']:
-                self.email_numbers_plot.data = [{
-                    'name': 'No Data',
-                    'type': 'bar',
-                    'x': ['No email data available'],
-                    'y': [0]
-                }]
-                self.email_numbers_plot.layout.update({
-                    'title': 'No Email Statistics Available for Selected Date Range',
-                    'xaxis': {'title': 'Users'},
-                    'yaxis': {'title': 'Number of Emails'},
-                    'showlegend': False
-                })
+                self._show_empty_plot()
                 return
 
-            # Get selected metric with fallback
+            # Get selected metric and update plot efficiently
             metric = self.email_metric_selector.selected_value or 'total'
-            metric_name = next((name for name, val in self.email_metric_selector.items if val == metric), metric)
+            metric_name = {'total': 'Total', 'inbound': 'Received', 'outbound': 'Sent'}[metric]
             
-            # Create single bar chart
+            # Create plot with minimal operations
             self.email_numbers_plot.data = [{
                 'type': 'bar',
                 'x': users,
-                'y': metrics[metric],
-                'name': metric_name
+                'y': data['metrics'][metric],
+                'name': f'{metric_name} Emails'
             }]
 
-            # Update layout
+            # Update only necessary layout properties
             self.email_numbers_plot.layout.update({
-                'barmode': 'group',
-                'title': f'Email Statistics by User - {metric_name}',
-                'xaxis': {
-                    'title': 'Users',
-                    'tickangle': 45
-                },
-                'yaxis': {'title': 'Number of Emails'},
-                'showlegend': True,
-                'height': 600  # Make plot taller to accommodate user names
+                'title': f'{metric_name} Emails ({self.email_start_date.date} - {self.email_end_date.date})',
+                'xaxis': {'tickangle': 45},
+                'height': 600
             })
 
         except Exception as e:
-            alert(f"Error updating email plot: {str(e)}")
-            print(f"Error updating email plot: {str(e)}")
-            print(f"Data structure: {data}")
+            self._show_empty_plot()
+
+    def _show_empty_plot(self, error=None):
+        """Helper method to show empty plot state."""
+        message = 'No Email Statistics Available' if not error else f'Error: {error}'
+        self.email_numbers_plot.data = [{
+            'type': 'bar',
+            'x': ['No Data'],
+            'y': [0]
+        }]
+        self.email_numbers_plot.layout.update({
+            'title': message,
+            'xaxis': {'title': 'Users'},
+            'yaxis': {'title': 'Number of Emails'},
+            'showlegend': False
+        })
 
     def _update_repeating_panel(self):
         """Update the repeating_panel_1 with consolidated filtered data."""
@@ -272,32 +249,15 @@ class Reports(ReportsTemplate):
             print(f"Error updating repeating panel: {e}")
 
     def filter_button_click(self, **event_args):
-        """Handle filter button click to update the plot, table, and fetch email stats."""
-        y_column = self.data_column_selector.selected_value
-    
-        if not y_column:
+        """Handle filter button click to update the plot and table."""
+        if not self.data_column_selector.selected_value:
             alert("Please select a column.")
             return
     
-        # Update plot and table
-        self._update_plot(y_column)
+        self._update_plot(self.data_column_selector.selected_value)
         self._update_repeating_panel()
-    
-        # Fetch email stats from the server with date range
-        try:
-            email_stats = anvil.server.call('get_email_stats', 
-                                          self.email_start_date.date,
-                                          self.email_end_date.date)
-            print("Email Stats:")
-            print(f"Users: {email_stats.get('users', [])}")
-            print(f"Metrics:")
-            for metric, values in email_stats.get('metrics', {}).items():
-                print(f"  {metric}: {values}")
-        except Exception as e:
-            print(f"Error fetching email stats: {e}")
 
     def filter_button_email_click(self, **event_args):
         """Handle email filter button click."""
-        # Always refresh data when filter is clicked
         self.refresh_email_data()
 

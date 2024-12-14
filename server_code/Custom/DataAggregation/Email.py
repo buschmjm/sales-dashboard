@@ -68,122 +68,47 @@ def update_outlook_statistics_db(stats_data):
 def get_email_stats(start_date, end_date):
     """Fetch and aggregate email statistics for the specified date range."""
     try:
-        # Convert date parameters to datetime.date if they're datetime
-        if isinstance(start_date, datetime):
-            start_date = start_date.date()
-        if isinstance(end_date, datetime):
-            end_date = end_date.date()
+        # Convert date parameters efficiently
+        if isinstance(start_date, (datetime, str)):
+            start_date = start_date.date() if isinstance(start_date, datetime) else datetime.strptime(start_date, '%Y-%m-%d').date()
+        if isinstance(end_date, (datetime, str)):
+            end_date = end_date.date() if isinstance(end_date, datetime) else datetime.strptime(end_date, '%Y-%m-%d').date()
             
-        # Convert string dates if needed
-        if isinstance(start_date, str):
-            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-        if isinstance(end_date, str):
-            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-            
-        print(f"Using dates - Start: {start_date} ({type(start_date)})")
-        print(f"            End: {end_date} ({type(end_date)})")
-            
-        # Query with explicit date comparison
+        # Single query with optimized filtering
         results = app_tables.outlook_statistics.search(
-            tables.order_by('reportDate', ascending=True),
+            tables.order_by('reportDate'),
             reportDate=q.all_of(
                 q.greater_than_or_equal_to(start_date),
                 q.less_than(end_date + timedelta(days=1))
             )
         )
         
-        # Debug database structure
-        table_columns = [col['name'] for col in app_tables.outlook_statistics.list_columns()]
-        print(f"Database columns: {table_columns}")
+        # Process results efficiently
+        if not list(results):
+            return {'users': ['No Data'], 'metrics': {'total': [0], 'inbound': [0], 'outbound': [0]}}
         
-        # Ensure dates are datetime.date objects and handle timezone
-        if isinstance(start_date, str):
-            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-        if isinstance(end_date, str):
-            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-            
-        # Add one day to end_date to include the end date in results
-        end_date = end_date + timedelta(days=1)
-        
-        print(f"Processing date range - Start: {start_date} ({type(start_date)})")
-        print(f"                        End: {end_date} ({type(end_date)})")
-        
-        # Get sample record to verify date format
-        sample = app_tables.outlook_statistics.search()
-        for record in sample:
-            print(f"Sample record date format: {record['reportDate']} ({type(record['reportDate'])})")
-            break
-            
-        # Query with explicit date comparison
-        results = app_tables.outlook_statistics.search(
-            tables.order_by('reportDate', ascending=True),
-            reportDate=q.all_of(
-                q.greater_than_or_equal_to(start_date),
-                q.less_than(end_date)
-            )
-        )
-        
-        # Debug raw results
-        results_list = [dict(r) for r in results]
-        if results_list:
-            dates = [r['reportDate'] for r in results_list]
-            print(f"Found records with dates: {dates}")
-        
-        # Debug query parameters
-        print(f"Query parameters - Start: {start_date}, End: {end_date}")
-        
-        # Debug raw results
-        results_list = [dict(r) for r in results]
-        print(f"Found {len(results_list)} records")
-        if results_list:
-            print("First result:", results_list[0])
-            print("Date range of results:", min(r['reportDate'] for r in results_list),
-                  "to", max(r['reportDate'] for r in results_list))
-        
-        # Debug all records in date range
-        for record in results_list:
-            print(f"Record: Date={record.get('reportDate')}, User={record.get('userName')}, "
-                  f"Total={record.get('total')}, In={record.get('inbound')}, Out={record.get('outbound')}")
-            
-        if not results_list:
-            print("No email statistics found for the specified date range")
-            return {
-                'users': ['No Data'],
-                'metrics': {
-                    'total': [0],
-                    'inbound': [0],
-                    'outbound': [0]
-                }
-            }
-        
-        # Aggregate data by user
+        # Single-pass aggregation
         user_totals = {}
-        for row in results_list:
+        for row in results:
             user_name = row['userName']
             if user_name not in user_totals:
-                user_totals[user_name] = {
-                    'total': 0,
-                    'inbound': 0,
-                    'outbound': 0
-                }
+                user_totals[user_name] = {'total': 0, 'inbound': 0, 'outbound': 0}
             
-            # Sum up the values for each metric
-            user_totals[user_name]['total'] += row['total']
-            user_totals[user_name]['inbound'] += row['inbound']
-            user_totals[user_name]['outbound'] += row['outbound']
+            totals = user_totals[user_name]
+            totals['total'] += row['total']
+            totals['inbound'] += row['inbound']
+            totals['outbound'] += row['outbound']
         
-        response = {
-            'users': list(user_totals.keys()),
+        # Prepare response in single pass
+        users = list(user_totals.keys())
+        return {
+            'users': users,
             'metrics': {
-                'total': [user_totals[user]['total'] for user in user_totals],
-                'inbound': [user_totals[user]['inbound'] for user in user_totals],
-                'outbound': [user_totals[user]['outbound'] for user in user_totals]
+                metric: [user_totals[user][metric] for user in users]
+                for metric in ['total', 'inbound', 'outbound']
             }
         }
         
-        print(f"Returning aggregated stats for {len(response['users'])} users")
-        return response
-        
     except Exception as e:
-        print(f"Error in get_email_stats: {str(e)}")
-        raise
+        print(f"Error: {e}")
+        return {'users': ['No Data'], 'metrics': {'total': [0], 'inbound': [0], 'outbound': [0]}}
