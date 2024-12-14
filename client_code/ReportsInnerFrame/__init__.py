@@ -16,7 +16,12 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         
         # Load PhoneReports by default
         self.content_panel.add_component(PhoneReports())
-        self.phone_nav.background = app.theme_colors['Primary Container']
+        self._update_nav_highlights('phone')
+        
+        # Add hover effects to navigation buttons
+        for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
+            nav.background = "transparent"
+            nav.hover_background = self._get_hover_color()
 
     def phone_nav_click(self, **event_args):
         """Handle phone reports navigation"""
@@ -36,8 +41,21 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         self.content_panel.add_component(B2bReports())
         self._update_nav_highlights('b2b')
 
+    def _get_hover_color(self):
+        """Returns a slightly lighter version of Primary Container for hover effects"""
+        return app.theme_colors['Surface Variant']
+
     def _update_nav_highlights(self, active_nav):
         """Helper to update navigation highlighting"""
-        self.phone_nav.foreground = app.theme_colors['Secondary'] if active_nav == 'phone' else 'On Secondary Container'
-        self.email_nav.foreground = app.theme_colors['Secondary'] if active_nav == 'email' else 'On Secondary Container'
-        self.b2b_nav.foreground = app.theme_colors['Secondary'] if active_nav == 'b2b' else 'On Secondary Container'
+        # Reset all backgrounds first
+        self.phone_nav.background = "transparent"
+        self.email_nav.background = "transparent"
+        self.b2b_nav.background = "transparent"
+        
+        # Set active background
+        if active_nav == 'phone':
+            self.phone_nav.background = app.theme_colors['Primary Container']
+        elif active_nav == 'email':
+            self.email_nav.background = app.theme_colors['Primary Container']
+        elif active_nav == 'b2b':
+            self.b2b_nav.background = app.theme_colors['Primary Container']

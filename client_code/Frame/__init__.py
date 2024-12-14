@@ -25,6 +25,11 @@ class Frame(FrameTemplate):
 
             Plot.templates.default = "rally"
 
+            # Add hover effects to navigation links
+            for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
+                nav.background = "transparent"
+                nav.hover_background = app.theme_colors['Surface Variant']
+
             print("Loading Sales page...")
             self.content_panel.add_component(Sales())
             self.sales_page_link.background = app.theme_colors['Primary Container']
