@@ -99,13 +99,13 @@ class Reports(ReportsTemplate):
         """Fetch and display email data based on current date range."""
         try:
             # Fetch email data from the server for the selected date range
-            data = app_tables.outlook_statistics.search(
-                tables.order_by('reportDate', ascending=True),
-                reportDate=q.between(
-                    self.email_start_date.date,
-                    self.email_end_date.date
-                )
-            )
+            data = anvil.server.call('get_email_stats', 
+                                   self.email_start_date.date,
+                                   self.email_end_date.date)
+            
+            # Store data as instance attributes for email data
+            self.email_columns = data["columns"]
+            self.email_values = data["values"]
             
             self._update_email_plot(data)
             
@@ -168,8 +168,14 @@ class Reports(ReportsTemplate):
             # Group data by user
             grouped_data = {}
             
-            for row in data:
-                user_name = row['userName']
+            user_name_index = data["columns"].index('userName')
+            date_index = data["columns"].index('reportDate')
+            total_index = data["columns"].index('total')
+            inbound_index = data["columns"].index('inbound')
+            outbound_index = data["columns"].index('outbound')
+            
+            for row in data["values"]:
+                user_name = row[user_name_index]
                 if user_name not in grouped_data:
                     grouped_data[user_name] = {
                         'x': [],
@@ -179,10 +185,10 @@ class Reports(ReportsTemplate):
                         'outbound': []
                     }
                 
-                grouped_data[user_name]['x'].append(row['reportDate'].strftime('%Y-%m-%d'))
-                grouped_data[user_name]['total'].append(row['total'])
-                grouped_data[user_name]['inbound'].append(row['inbound'])
-                grouped_data[user_name]['outbound'].append(row['outbound'])
+                grouped_data[user_name]['x'].append(row[date_index].strftime('%Y-%m-%d'))
+                grouped_data[user_name]['total'].append(row[total_index])
+                grouped_data[user_name]['inbound'].append(row[inbound_index])
+                grouped_data[user_name]['outbound'].append(row[outbound_index])
 
             # Get selected metric
             metric = self.email_metric_selector.selected_value

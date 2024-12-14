@@ -46,3 +46,31 @@ def update_outlook_statistics_db(stats_data):
                 total=total_emails,
                 reportDate=today
             )
+
+@anvil.server.callable
+def get_email_stats(start_date, end_date):
+    """Fetch email statistics for the specified date range and return in client-friendly format."""
+    # Query the database for email statistics
+    results = app_tables.outlook_statistics.search(
+        tables.order_by('reportDate', ascending=True),
+        reportDate=q.between(start_date, end_date)
+    )
+    
+    # Format the data similar to call statistics
+    columns = ['userId', 'userName', 'reportDate', 'total', 'inbound', 'outbound']
+    values = []
+    
+    for row in results:
+        values.append([
+            row['userId'],
+            row['userName'],
+            row['reportDate'],
+            row['total'],
+            row['inbound'],
+            row['outbound']
+        ])
+    
+    return {
+        "columns": columns,
+        "values": values
+    }
