@@ -68,6 +68,30 @@ def update_outlook_statistics_db(stats_data):
 def get_email_stats(start_date, end_date):
     """Fetch and aggregate email statistics for the specified date range."""
     try:
+        # Convert date parameters to datetime.date if they're datetime
+        if isinstance(start_date, datetime):
+            start_date = start_date.date()
+        if isinstance(end_date, datetime):
+            end_date = end_date.date()
+            
+        # Convert string dates if needed
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            
+        print(f"Using dates - Start: {start_date} ({type(start_date)})")
+        print(f"            End: {end_date} ({type(end_date)})")
+            
+        # Query with explicit date comparison
+        results = app_tables.outlook_statistics.search(
+            tables.order_by('reportDate', ascending=True),
+            reportDate=q.all_of(
+                q.greater_than_or_equal_to(start_date),
+                q.less_than(end_date + timedelta(days=1))
+            )
+        )
+        
         # Debug database structure
         table_columns = [col['name'] for col in app_tables.outlook_statistics.list_columns()]
         print(f"Database columns: {table_columns}")

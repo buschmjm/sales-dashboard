@@ -185,7 +185,6 @@ class Reports(ReportsTemplate):
         """Update the email statistics plot with a grouped bar chart."""
         try:
             print("Email plot update - Input data:", data)
-            print("Current metric selection:", self.email_metric_selector.selected_value)
             
             if not data or 'users' not in data or 'metrics' not in data:
                 raise ValueError("Invalid data structure received from server")
@@ -193,12 +192,7 @@ class Reports(ReportsTemplate):
             users = data['users']
             metrics = data['metrics']
             
-            print(f"Users found: {users}")
-            print(f"Available metrics: {list(metrics.keys())}")
-            print(f"Metric values: {metrics}")
-            
             if users == ['No Data']:
-                # Show empty state
                 self.email_numbers_plot.data = [{
                     'name': 'No Data',
                     'type': 'bar',
@@ -213,29 +207,29 @@ class Reports(ReportsTemplate):
                 })
                 return
 
-            # Get selected metric
-            metric = self.email_metric_selector.selected_value
-            if not metric:
-                metric = 'total'
+            # Get selected metric with fallback
+            metric = self.email_metric_selector.selected_value or 'total'
+            metric_name = next((name for name, val in self.email_metric_selector.items if val == metric), metric)
             
-            print(f"Creating plot with metric '{metric}' for users:", users)
-            print(f"Values being plotted:", metrics[metric])
-
-            # Create bar chart based on selected metric
+            # Create single bar chart
             self.email_numbers_plot.data = [{
-                'name': dict(self.email_metric_selector.items)[metric],
                 'type': 'bar',
                 'x': users,
-                'y': metrics[metric]
+                'y': metrics[metric],
+                'name': metric_name
             }]
 
             # Update layout
             self.email_numbers_plot.layout.update({
                 'barmode': 'group',
-                'title': f'Email Statistics by User - {dict(self.email_metric_selector.items)[metric]}',
-                'xaxis': {'title': 'Users'},
+                'title': f'Email Statistics by User - {metric_name}',
+                'xaxis': {
+                    'title': 'Users',
+                    'tickangle': 45
+                },
                 'yaxis': {'title': 'Number of Emails'},
-                'showlegend': True
+                'showlegend': True,
+                'height': 600  # Make plot taller to accommodate user names
             })
 
         except Exception as e:
