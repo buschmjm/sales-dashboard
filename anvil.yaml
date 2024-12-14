@@ -156,7 +156,7 @@ scheduled_tasks:
     every: minute
     n: 30
 - job_id: BXVVZEWT
-  task_name: fetch_call_reports_scheduled
+  task_name: fetch_user_email_stats_scheduled
   time_spec:
     at: {minute: 0}
     every: hour
