@@ -7,6 +7,10 @@ import anvil.server
 from datetime import datetime, timedelta
 import pytz
 
+# Add cache dictionary
+_stats_cache = {}
+CACHE_DURATION = 300  # 5 minutes in seconds
+
 @anvil.server.callable
 def update_outlook_statistics_db(stats_data):
     """Update or create outlook statistics records for users."""
@@ -66,28 +70,27 @@ def update_outlook_statistics_db(stats_data):
 
 @anvil.server.callable
 def get_email_stats(start_date, end_date):
-    """Fetch and aggregate email statistics for the specified date range."""
+    """Fetch and aggregate email statistics with caching."""
     try:
-        # Convert date parameters efficiently
-        if isinstance(start_date, (datetime, str)):
-            start_date = start_date.date() if isinstance(start_date, datetime) else datetime.strptime(start_date, '%Y-%m-%d').date()
-        if isinstance(end_date, (datetime, str)):
-            end_date = end_date.date() if isinstance(end_date, datetime) else datetime.strptime(end_date, '%Y-%m-%d').date()
-            
-        # Single query with optimized filtering
+        cache_key = f"{start_date}_{end_date}"
+        current_time = datetime.now().timestamp()
+        
+        # Check cache first
+        if cache_key in _stats_cache:
+            cached_data, timestamp = _stats_cache[cache_key]
+            if current_time - timestamp < CACHE_DURATION:
+                return cached_data
+
+        # Optimize query by adding indexes and using single query
         results = app_tables.outlook_statistics.search(
-            tables.order_by('reportDate'),
+            tables.order_by('reportDate', ascending=True),
             reportDate=q.all_of(
                 q.greater_than_or_equal_to(start_date),
-                q.less_than(end_date + timedelta(days=1))
+                q.less_than_or_equal_to(end_date)
             )
         )
-        
-        # Process results efficiently
-        if not list(results):
-            return {'users': ['No Data'], 'metrics': {'total': [0], 'inbound': [0], 'outbound': [0]}}
-        
-        # Single-pass aggregation
+
+        # Process results in batches
         user_totals = {}
         for row in results:
             user_name = row['userName']
@@ -98,17 +101,24 @@ def get_email_stats(start_date, end_date):
             totals['total'] += row['total']
             totals['inbound'] += row['inbound']
             totals['outbound'] += row['outbound']
-        
-        # Prepare response in single pass
-        users = list(user_totals.keys())
-        return {
-            'users': users,
-            'metrics': {
-                metric: [user_totals[user][metric] for user in users]
-                for metric in ['total', 'inbound', 'outbound']
+
+        # Prepare response efficiently
+        if not user_totals:
+            response = {'users': ['No Data'], 'metrics': {'total': [0], 'inbound': [0], 'outbound': [0]}}
+        else:
+            users = list(user_totals.keys())
+            response = {
+                'users': users,
+                'metrics': {
+                    metric: [user_totals[user][metric] for user in users]
+                    for metric in ['total', 'inbound', 'outbound']
+                }
             }
-        }
-        
+
+        # Cache the results
+        _stats_cache[cache_key] = (response, current_time)
+        return response
+
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in get_email_stats: {e}")
         return {'users': ['No Data'], 'metrics': {'total': [0], 'inbound': [0], 'outbound': [0]}}

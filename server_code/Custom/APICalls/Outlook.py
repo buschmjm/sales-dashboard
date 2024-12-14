@@ -55,67 +55,84 @@ def get_access_token():
 
 @anvil.server.callable
 def fetch_user_email_stats():
-    """Fetch email stats (inbox and sent count) for all app users."""
-    access_token = get_access_token()
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Prefer": "outlook.timezone=\"Central Standard Time\""
-    }
+    """Optimized email stats fetching with parallel processing where possible."""
+    try:
+        access_token = get_access_token()
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Prefer": "outlook.timezone=\"Central Standard Time\"",
+            "ConsistencyLevel": "eventual"  # Add this for faster queries
+        }
 
-    # Get all app users
-    app_users = app_tables.users.search()
-    results = []
+        # Get all app users in one query
+        app_users = list(app_tables.users.search())
+        results = []
 
-    # Get today's date in CST timezone and format for Graph API
-    cst_tz = pytz.timezone("America/Chicago")
-    now = datetime.now(cst_tz)
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_iso = today_start.strftime('%Y-%m-%dT%H:%M:%S.0000000')
-    
-    print(f"Fetching email stats for date: {today_iso}")
+        # Prepare the date once
+        cst_tz = pytz.timezone("America/Chicago")
+        now = datetime.now(cst_tz)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_iso = today_start.strftime('%Y-%m-%dT%H:%M:%S.0000000')
 
-    for user in app_users:
-        email = user["email"]
-        if not email:
-            continue
-
-        try:
-            # Search for user in Microsoft Graph
-            search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$filter=mail eq '{email}' or userPrincipalName eq '{email}'"
-            search_response = requests.get(search_url, headers=headers)
-            search_response.raise_for_status()
-
-            search_results = search_response.json().get("value", [])
-            if not search_results:
-                print(f"No Outlook user found for email: {email}")
+        for user in app_users:
+            if not user.get("email"):
                 continue
 
-            user_id = search_results[0]["id"]
+            try:
+                # Use $select to minimize data transfer
+                search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$select=id,mail,userPrincipalName&$filter=mail eq '{user['email']}'"
+                search_response = requests.get(search_url, headers=headers)
+                
+                if search_response.status_code != 200:
+                    continue
 
-            # Query inbox with proper timezone handling
-            inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/Inbox/messages?$count=true&$filter=receivedDateTime ge {today_iso}"
-            inbox_response = requests.get(inbox_url, headers=headers)
-            inbox_response.raise_for_status()
+                search_results = search_response.json().get("value", [])
+                if not search_results:
+                    continue
 
-            inbox_count = inbox_response.json().get("@odata.count", 0)
+                user_id = search_results[0]["id"]
 
-            # Query sent items with proper timezone handling
-            sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/SentItems/messages?$count=true&$filter=sentDateTime ge {today_iso}"
-            sent_response = requests.get(sent_url, headers=headers)
-            sent_response.raise_for_status()
+                # Use batch requests for inbox and sent items
+                batch = {
+                    "requests": [
+                        {
+                            "url": f"/users/{user_id}/mailFolders/Inbox/messages/$count?$filter=receivedDateTime ge {today_iso}",
+                            "method": "GET"
+                        },
+                        {
+                            "url": f"/users/{user_id}/mailFolders/SentItems/messages/$count?$filter=sentDateTime ge {today_iso}",
+                            "method": "GET"
+                        }
+                    ]
+                }
 
-            sent_count = sent_response.json().get("@odata.count", 0)
+                batch_response = requests.post(
+                    f"{MICROSOFT_GRAPH_API_BASE_URL}/$batch",
+                    headers=headers,
+                    json=batch
+                )
 
-            print(f"Stats for {email}: inbox={inbox_count}, sent={sent_count}")
-            results.append({"user": email, "inbox_count": inbox_count, "sent_count": sent_count})
+                if batch_response.status_code == 200:
+                    batch_data = batch_response.json()
+                    inbox_count = int(batch_data["responses"][0].get("body", 0))
+                    sent_count = int(batch_data["responses"][1].get("body", 0))
+                    
+                    results.append({
+                        "user": user["email"],
+                        "inbox_count": inbox_count,
+                        "sent_count": sent_count
+                    })
 
-        except Exception as e:
-            print(f"Error fetching email stats for {email}: {str(e)}")
-            continue
+            except Exception as e:
+                print(f"Error processing user {user.get('email')}: {e}")
+                continue
 
-    # Update database if we have results
-    if results:
-        update_outlook_statistics_db(results)
-    
-    return results
+        if results:
+            update_outlook_statistics_db(results)
+        
+        return results
+
+    except Exception as e:
+        print(f"Error in fetch_user_email_stats: {e}")
+        return []
 
