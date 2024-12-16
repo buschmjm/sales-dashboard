@@ -1,3 +1,52 @@
-components: []
+components:
+- components:
+  - layout_properties: {grid_position: 'SMYZXS,DHVCMH'}
+    name: label_1_copy
+    properties: {role: headline, text: B2B Reports}
+    type: Label
+  - components:
+    - layout_properties: {grid_position: 'PZLTAT,KIWCUC WVRSDA,EILYSH'}
+      name: label_4_copy
+      properties: {text: Data Type}
+      type: Label
+    - event_bindings: {change: b2b_metric_selector_change}
+      layout_properties: {grid_position: 'PZLTAT,KIWCUC ILYHHN,BEJDPJ'}
+      name: b2b_metric_selector
+      properties: {}
+      type: DropDown
+    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,WYFBNC AIYNMQ,AGLRYH'}
+      name: label_2_copy
+      properties: {align: right, text: Start Date}
+      type: Label
+    - event_bindings: {change: b2b_start_date_change}
+      layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,WYFBNC THCPML,ZTBMWA'}
+      name: b2b_start_date
+      properties: {align: right}
+      type: DatePicker
+    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,YGEOUV ZIGYWM,SJWKTD'}
+      name: label_3_copy
+      properties: {align: right, text: End Date}
+      type: Label
+    - event_bindings: {change: b2b_end_date_change}
+      layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,YGEOUV DOFOMB,EGYJHW'}
+      name: b2b_end_date
+      properties: {align: right}
+      type: DatePicker
+    - layout_properties: {grid_position: 'PZLTAT,FKRDSY OTVUDP,VVMVPD'}
+      name: spacer_1_copy
+      properties: {height: 32}
+      type: Spacer
+    layout_properties: {grid_position: 'JQNMEL,RCWWGT'}
+    name: card_2_copy
+    properties: {role: card}
+    type: ColumnPanel
+  - layout_properties: {grid_position: 'FRRBCE,YVSYIS'}
+    name: b2b_numbers_plot
+    properties: {}
+    type: Plot
+  layout_properties: {grid_position: 'ZKPVTM,ZOYERK'}
+  name: card_3
+  properties: {role: card}
+  type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

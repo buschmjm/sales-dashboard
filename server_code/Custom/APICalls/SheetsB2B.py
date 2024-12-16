@@ -8,7 +8,7 @@ import requests
 
 def fetch_google_sheet_data(sales_rep=None, complete=None):
     # Get the secret key from Anvil's Secrets Service
-    api_key = anvil.secrets.get_secret("GOOGLE_SHEETS_API_KEY")
+    api_key = anvil.secrets.get_secret("5Up3rS3cr3t_K3y!2024#@Xz")
     
     # API URL
     url = "https://script.google.com/macros/s/<YOUR_DEPLOYMENT_ID>/exec"
