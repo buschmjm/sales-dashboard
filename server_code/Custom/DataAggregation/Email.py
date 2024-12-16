@@ -15,53 +15,57 @@ CACHE_DURATION = 300  # 5 minutes in seconds
 def update_outlook_statistics_db(results):
     """Update the database with email statistics"""
     try:
-        if not results:
-            print("No results to update")
+        print("Starting outlook statistics update")  # Debug log
+        if not results or not isinstance(results, list):
+            print(f"Invalid results format: {type(results)}")
             return False
             
-        print(f"Starting database update with {len(results)} records")
         today = datetime.now().date()
-        updated_count = 0
+        updated = 0
         
-        for user_stats in results:
+        for result in results:
             try:
-                user_id = user_stats['user']
-                print(f"Processing stats for {user_id}")
-                
-                # Get existing record with proper error handling
-                try:
-                    existing = app_tables.outlook_statistics.get(
-                        userId=user_id,
-                        reportDate=today
-                    )
-                except Exception as db_error:
-                    print(f"Database lookup error: {db_error}")
+                print(f"Processing result: {result}")  # Debug log
+                if not isinstance(result, dict) or 'user' not in result:
+                    print(f"Invalid result format: {result}")
                     continue
                 
-                stats = {
-                    'userId': user_id,
-                    'userName': user_id.split('@')[0],
+                # Match exact column names from database
+                row_data = {
+                    'userId': result['user'],
+                    'userName': result['user'].split('@')[0] if '@' in result['user'] else result['user'],
                     'reportDate': today,
-                    'inbound': int(user_stats.get('inbox_count', 0)),
-                    'outbound': int(user_stats.get('sent_count', 0)),
-                    'total': int(user_stats.get('inbox_count', 0)) + int(user_stats.get('sent_count', 0))
+                    'inbound': int(result.get('inbox_count', 0)),
+                    'outbound': int(result.get('sent_count', 0)),
+                    'total': int(result.get('inbox_count', 0)) + int(result.get('sent_count', 0))
                 }
                 
-                if existing:
-                    existing.update(**stats)
-                    print(f"Updated existing record for {user_id}")
-                else:
-                    app_tables.outlook_statistics.add_row(**stats)
-                    print(f"Created new record for {user_id}")
+                try:
+                    # Use get() to find existing record
+                    existing = list(app_tables.outlook_statistics.search(
+                        userId=row_data['userId'],
+                        reportDate=row_data['reportDate']
+                    ))
                     
-                updated_count += 1
+                    if existing:
+                        print(f"Updating existing record for {row_data['userId']}")
+                        existing[0].update(**row_data)
+                    else:
+                        print(f"Adding new record for {row_data['userId']}")
+                        app_tables.outlook_statistics.add_row(**row_data)
                     
-            except Exception as e:
-                print(f"Error updating stats for {user_id}: {e}")
+                    updated += 1
+                    
+                except Exception as db_error:
+                    print(f"Database operation failed for {row_data['userId']}: {db_error}")
+                    continue
+                    
+            except Exception as row_error:
+                print(f"Error processing row: {row_error}")
                 continue
                 
-        print(f"Successfully updated {updated_count} records")
-        return updated_count > 0
+        print(f"Successfully updated {updated} records")
+        return updated > 0
         
     except Exception as e:
         print(f"Error in update_outlook_statistics_db: {e}")
