@@ -24,6 +24,29 @@ db_schema:
       type: string
     server: search
     title: API Keys
+  b2b:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: Timestamp
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: Sales Rep
+      type: string
+    - admin_ui: {order: 2, width: 200}
+      name: Email
+      type: bool
+    - admin_ui: {order: 3, width: 200}
+      name: Flyers
+      type: bool
+    - admin_ui: {order: 4, width: 200}
+      name: Business Cards
+      type: bool
+    - admin_ui: {order: 5, width: 200}
+      name: Complete
+      type: bool
+    server: full
+    title: B2B
   call_statistics:
     client: none
     columns:
