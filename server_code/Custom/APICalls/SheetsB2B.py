@@ -6,6 +6,7 @@ from anvil.tables import app_tables
 import anvil.server
 import requests
 import json
+from datetime import datetime
 
 def fetch_google_sheet_data(sales_rep=None, complete=None):
     # Get the secret key from Anvil's Secrets Service
@@ -54,6 +55,15 @@ def fetch_google_sheet_data(sales_rep=None, complete=None):
         print(f"Unexpected error: {str(e)}")
         raise
 
+def parse_timestamp(timestamp_str):
+    """Parse timestamp string from Google Sheets to datetime object"""
+    try:
+        # Assuming format like "9/11/2024 10:06:35"
+        return datetime.strptime(timestamp_str, "%m/%d/%Y %H:%M:%S")
+    except ValueError as e:
+        print(f"Error parsing timestamp {timestamp_str}: {e}")
+        return None
+
 @anvil.server.callable
 def process_and_store_sheet_data():
     # Fetch the data from Google Sheets
@@ -64,9 +74,14 @@ def process_and_store_sheet_data():
     
     # Reverse the data to start from the bottom
     for row in reversed(sheet_data):
+        # Parse timestamp
+        timestamp = parse_timestamp(row.get('Timestamp'))
+        if not timestamp:
+            continue
+            
         # Check if this record already exists
         existing_record = app_tables.b2b_data.get(
-            Timestamp=row.get('Timestamp'),
+            Timestamp=timestamp,
             Sales_Rep=row.get('Sales Rep')
         )
         
@@ -92,7 +107,7 @@ def process_and_store_sheet_data():
         
         # Add new record to database
         app_tables.b2b_data.add_row(
-            Timestamp=row.get('Timestamp'),
+            Timestamp=timestamp,  # Now using parsed datetime object
             Sales_Rep=row.get('Sales Rep'),
             Complete=row.get('Complete'),
             Email=marketing_fields['Email'],
