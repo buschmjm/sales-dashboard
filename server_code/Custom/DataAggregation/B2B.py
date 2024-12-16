@@ -22,7 +22,7 @@ def get_b2b_stats(start_date, end_date, metric):
     """Get B2B statistics for the given date range and metric"""
     try:
         # Get all rows within date range
-        rows = app_tables.b2b_data.search(
+        rows = app_tables.b2b.search(
             tables.order_by("Sales_Rep"),
             Timestamp=q.between(start_date, end_date)
         )
