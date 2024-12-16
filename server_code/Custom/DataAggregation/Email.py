@@ -16,33 +16,39 @@ def update_outlook_statistics_db(results):
     """Update the database with email statistics"""
     try:
         if not results:
+            print("No results to update")
             return False
             
         today = datetime.now().date()
+        updated = 0
         
         for result in results:
-            # Get existing record for today
-            existing = app_tables.outlook_statistics.search(
-                userId=result['user'],
+            user_id = result['user']
+            if not user_id:
+                continue
+                
+            # First try to find existing record
+            existing = app_tables.outlook_statistics.get(
+                userId=user_id,
                 reportDate=today
             )
             
             stats = {
-                'userId': result['user'],
-                'userName': result['user'].split('@')[0],  # Simple username from email
+                'userId': user_id,
+                'userName': result['user'].split('@')[0],
                 'reportDate': today,
-                'inbound': result.get('inbox_count', 0),
-                'outbound': result.get('sent_count', 0),
-                'total': result.get('inbox_count', 0) + result.get('sent_count', 0)
+                'inbound': int(result.get('inbox_count', 0)),
+                'outbound': int(result.get('sent_count', 0)),
+                'total': int(result.get('inbox_count', 0)) + int(result.get('sent_count', 0))
             }
             
-            # Update or create record
             if existing:
-                for row in existing:
-                    row.update(**stats)
+                existing.update(**stats)
             else:
                 app_tables.outlook_statistics.add_row(**stats)
+            updated += 1
                 
+        print(f"Successfully updated {updated} records")
         return True
         
     except Exception as e:
