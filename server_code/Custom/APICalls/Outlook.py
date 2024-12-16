@@ -58,6 +58,9 @@ def fetch_user_email_stats():
     """Optimized email stats fetching with parallel processing where possible."""
     try:
         access_token = get_access_token()
+        if not access_token:
+            raise Exception("Failed to get access token")
+            
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Prefer": "outlook.timezone=\"Central Standard Time\"",
@@ -127,10 +130,15 @@ def fetch_user_email_stats():
                 print(f"Error processing user {user.get('email')}: {e}")
                 continue
 
-        if results:
-            update_outlook_statistics_db(results)
-        
-        return results
+        if not results:  # If no results were collected
+            print("No email statistics collected")
+            return []
+            
+        # Update database with results
+        if update_outlook_statistics_db(results):
+            return results
+        else:
+            raise Exception("Failed to update database")
 
     except Exception as e:
         print(f"Error in fetch_user_email_stats: {e}")
