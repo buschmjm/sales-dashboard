@@ -46,10 +46,10 @@ def update_outlook_statistics_db(stats_data):
 def get_email_stats(start_date, end_date):
     """Get email statistics for the given date range"""
     try:
-        # Get all rows within date range
+        # Get all rows within date range using correct column name
         rows = app_tables.outlook_statistics.search(
             tables.order_by("user"),
-            date=q.between(start_date, end_date)
+            reportDate=q.between(start_date, end_date)  # Changed from 'date' to 'reportDate'
         )
         
         # Process statistics
