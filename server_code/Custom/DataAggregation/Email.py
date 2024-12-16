@@ -29,9 +29,14 @@ def update_outlook_statistics_db(results):
                 if not result or 'user' not in result:
                     print(f"Skipping invalid result: {result}")
                     continue
-                    
-                print(f"Processing user: {result['user']}")  # Debug log
                 
+                # Getting existing record with correct column names
+                existing = app_tables.outlook_statistics.get(
+                    userId=result['user'],
+                    reportDate=today
+                )
+                
+                # Prepare stats with correct column names
                 stats = {
                     'userId': result['user'],
                     'userName': result['user'].split('@')[0],
@@ -40,32 +45,27 @@ def update_outlook_statistics_db(results):
                     'outbound': int(result.get('sent_count', 0)),
                     'total': int(result.get('inbox_count', 0)) + int(result.get('sent_count', 0))
                 }
-                print(f"Prepared stats: {stats}")  # Debug log
                 
-                # Get existing record
-                existing = app_tables.outlook_statistics.get(
-                    userId=stats['userId'],
-                    reportDate=stats['reportDate']
-                )
+                print(f"Processing stats for {stats['userId']}")
                 
                 if existing:
-                    print(f"Updating existing record for {stats['userId']}")
+                    print(f"Updating existing record")
                     existing.update(**stats)
                 else:
-                    print(f"Creating new record for {stats['userId']}")
+                    print(f"Creating new record")
                     app_tables.outlook_statistics.add_row(**stats)
+                    
                 updated += 1
                 
-            except Exception as user_error:
-                print(f"Error processing user record: {user_error}")
+            except Exception as e:
+                print(f"Error processing individual result: {e}")
                 continue
                 
         print(f"Successfully updated {updated} records")
         return updated > 0
         
     except Exception as e:
-        print(f"Error in update_outlook_statistics_db: {str(e)}")
-        print(f"Full error details: {repr(e)}")
+        print(f"Error in update_outlook_statistics_db: {e}")
         return False
 
 @anvil.server.callable
@@ -74,7 +74,7 @@ def get_email_stats(start_date, end_date):
     try:
         print(f"Fetching email stats from {start_date} to {end_date}")  # Debug log
         
-        # Get all rows within date range
+        # Get data using correct column names
         rows = app_tables.outlook_statistics.search(
             tables.order_by("userId"),
             reportDate=q.between(start_date, end_date)
@@ -86,9 +86,10 @@ def get_email_stats(start_date, end_date):
         metrics = {'total': {}, 'inbound': {}, 'outbound': {}}
         
         for row in rows_list:
-            user = row['userId']
+            user = row['userId']  # Using correct column name
             users.add(user)
             
+            # Use the correct column names
             metrics['inbound'][user] = metrics['inbound'].get(user, 0) + row['inbound']
             metrics['outbound'][user] = metrics['outbound'].get(user, 0) + row['outbound']
             metrics['total'][user] = metrics['total'].get(user, 0) + row['total']
