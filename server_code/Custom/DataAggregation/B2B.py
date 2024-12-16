@@ -22,14 +22,15 @@ from datetime import datetime, time
 def get_b2b_stats(start_date, end_date, metric):
     """Get B2B statistics for the given date range and metric"""
     try:
-        # Convert dates to datetime objects
-        start_datetime = datetime.combine(start_date, time.min)  # Start of day
-        end_datetime = datetime.combine(end_date, time.max)    # End of day
+        # Convert dates to strings in the same format as stored in the database
+        start_str = datetime.combine(start_date, time.min).strftime("%m/%d/%Y %H:%M:%S")
+        end_str = datetime.combine(end_date, time.max).strftime("%m/%d/%Y %H:%M:%S")
         
-        # Get all rows within date range
+        # Get all rows within date range using string comparison
         rows = app_tables.b2b.search(
             tables.order_by("Sales_Rep"),
-            Timestamp=q.between(start_datetime, end_datetime)
+            Timestamp=q.greater_than_or_equal_to(start_str),
+            _Timestamp=q.less_than_or_equal_to(end_str)  # Using _Timestamp as an alias for the same column
         )
         
         # Count occurrences per sales rep
