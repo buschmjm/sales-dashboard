@@ -15,26 +15,31 @@ CACHE_DURATION = 300  # 5 minutes in seconds
 def update_outlook_statistics_db(results):
     """Update the database with email statistics"""
     try:
+        if not results:
+            return False
+            
         today = datetime.now().date()
         
-        for user_data in results:
+        for result in results:
             # Get existing record for today
-            existing = app_tables.outlook_statistics.get(
-                userId=user_data['user'],  # Changed from 'user' to 'userId'
+            existing = app_tables.outlook_statistics.search(
+                userId=result['user'],
                 reportDate=today
             )
             
             stats = {
-                'userId': user_data['user'],  # Changed from 'user' to 'userId'
-                'userName': user_data.get('user_name', user_data['user']),  # Added userName
+                'userId': result['user'],
+                'userName': result['user'].split('@')[0],  # Simple username from email
                 'reportDate': today,
-                'inbound': user_data.get('inbox_count', 0),  # Changed to match column name
-                'outbound': user_data.get('sent_count', 0),  # Changed to match column name
-                'total': user_data.get('inbox_count', 0) + user_data.get('sent_count', 0)  # Calculate total
+                'inbound': result.get('inbox_count', 0),
+                'outbound': result.get('sent_count', 0),
+                'total': result.get('inbox_count', 0) + result.get('sent_count', 0)
             }
             
+            # Update or create record
             if existing:
-                existing.update(**stats)
+                for row in existing:
+                    row.update(**stats)
             else:
                 app_tables.outlook_statistics.add_row(**stats)
                 
@@ -48,24 +53,21 @@ def update_outlook_statistics_db(results):
 def get_email_stats(start_date, end_date):
     """Get email statistics for the given date range"""
     try:
-        # Get all rows within date range
         rows = app_tables.outlook_statistics.search(
             tables.order_by("userId"),
             reportDate=q.between(start_date, end_date)
         )
         
-        # Process statistics
         users = set()
         metrics = {'total': {}, 'inbound': {}, 'outbound': {}}
         
         for row in rows:
-            user_id = row['userId']  # Changed from 'user' to 'userId'
-            users.add(user_id)
+            user = row['userId']
+            users.add(user)
             
-            # Use correct column names
-            metrics['inbound'][user_id] = metrics['inbound'].get(user_id, 0) + row['inbound']
-            metrics['outbound'][user_id] = metrics['outbound'].get(user_id, 0) + row['outbound']
-            metrics['total'][user_id] = metrics['total'].get(user_id, 0) + row['total']
+            metrics['inbound'][user] = metrics['inbound'].get(user, 0) + row['inbound']
+            metrics['outbound'][user] = metrics['outbound'].get(user, 0) + row['outbound']
+            metrics['total'][user] = metrics['total'].get(user, 0) + row['total']
         
         return {
             "users": sorted(list(users)) or ["No Data"],
