@@ -11,7 +11,7 @@ def fetch_google_sheet_data(sales_rep=None, complete=None):
     api_key = anvil.secrets.get_secret("5Up3rS3cr3t_K3y!2024#@Xz")
     
     # API URL
-    url = "https://script.google.com/macros/s/<YOUR_DEPLOYMENT_ID>/exec"
+    url = "https://script.google.com/macros/s/AKfycbzrm6ttNyYRxfibYUHYExxlWruT33m1gXdDRZFo4hLFap0zkmhutKKkHdpQNW27GdS4Yw/exec"
     
     # Query parameters
     params = {
