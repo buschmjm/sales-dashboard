@@ -82,25 +82,38 @@ class EmailReports(EmailReportsTemplate):
             metric = self.email_metric_selector.selected_value or 'total'
             metric_display_name = self.metric_display_names[metric]
 
-            # Update plot with new data - now using vertical orientation
-            plot_data = {
-                "type": "bar",
-                "x": list(data["metrics"][metric].keys()),    # Users on x-axis
-                "y": list(data["metrics"][metric].values()),  # Values on y-axis
-                "name": metric_display_name
-            }
+            # Create separate traces for each user
+            traces = []
+            for user in users:
+                traces.append({
+                    "type": "bar",
+                    "name": user,
+                    "x": [user],  # Single user per trace
+                    "y": [data["metrics"][metric].get(user, 0)],  # Value for that user
+                })
 
-            self.email_numbers_plot.data = [plot_data]
+            self.email_numbers_plot.data = traces
             self.email_numbers_plot.layout = {
                 "title": f"{metric_display_name} ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {
                     "title": None,
-                    "tickangle": -45  # Angle the labels for better readability
+                    "tickangle": -45,  # Angle the labels for better readability
+                    "showticklabels": True
                 },
                 "yaxis": {"title": "Number of Emails"},
                 "showlegend": True,
                 "barmode": 'group',
-                "margin": {"b": 100}  # Add bottom margin for angled labels
+                "margin": {"b": 100},  # Add bottom margin for angled labels
+                "legend": {
+                    "xanchor": "right",
+                    "x": 0.95,
+                    "yanchor": "top",
+                    "y": 0.95,
+                    "bgcolor": "rgba(255, 255, 255, 0.8)",
+                    "bordercolor": "rgba(0, 0, 0, 0.2)",
+                    "borderwidth": 1,
+                    "clickmode": "toggleothers"  # Makes legend items clickable
+                }
             }
 
         except Exception as e:
@@ -111,6 +124,7 @@ class EmailReports(EmailReportsTemplate):
         message = "No Email Statistics Available" if not error else f"Error: {error}"
         self.email_numbers_plot.data = [{
             "type": "bar",
+            "name": "No Data",
             "x": ["No Data"],
             "y": [0]
         }]
