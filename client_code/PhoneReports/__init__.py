@@ -75,20 +75,34 @@ class PhoneReports(PhoneReportsTemplate):
                     if row[col_index] is not None:
                         row[col_index] = int(row[col_index] // 60000)
 
-            # Update column selector
+            # Update column selector with formatted titles
             numeric_columns = [
                 col for i, col in enumerate(self.column_names)
                 if all(isinstance(row[i], (int, float)) for row in self.user_values)
             ]
             
             if numeric_columns:
-                self.data_column_selector.items = [(col, col) for col in numeric_columns]
+                # Create items list with formatted display names
+                formatted_items = [
+                    (self._format_title(col), col) for col in numeric_columns
+                ]
+                self.data_column_selector.items = formatted_items
+                
+                # Set selected value if none exists
                 y_column = self.data_column_selector.selected_value or numeric_columns[0]
                 self._update_plot(y_column)
                 self._update_repeating_panel()
                 
         except Exception as e:
             print(f"Error processing data: {e}")
+
+    def _format_title(self, column_name):
+        """Format column name for display in title"""
+        # Split on camelCase
+        words = ''.join(' ' + c if c.isupper() else c for c in column_name).strip()
+        # Split on underscores and clean up
+        words = ' ' .join(word.capitalize() for word in words.split('_'))
+        return words
 
     def _update_plot(self, y_column):
         try:
@@ -123,11 +137,15 @@ class PhoneReports(PhoneReportsTemplate):
                     'name': user_labels[user_id]
                 })
             
+            # Format the title with proper spacing and date range
+            formatted_title = self._format_title(y_column)
+            date_range = f"({self.start_date_picker.date} - {self.end_date_picker.date})"
+            
             self.call_info_plot.data = traces
             self.call_info_plot.layout.update({
-                'title': f"{y_column} Over Time",
+                'title': f"{formatted_title} {date_range}",
                 'xaxis': {'title': None},
-                'yaxis': {'title': y_column}
+                'yaxis': {'title': formatted_title}
             })
 
         except Exception as e:
