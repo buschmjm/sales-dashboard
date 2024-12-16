@@ -37,7 +37,8 @@ components:
     name: card_2_copy
     properties: {role: card}
     type: ColumnPanel
-  - layout_properties: {grid_position: 'FRRBCE,YVSYIS'}
+  - data_bindings: []
+    layout_properties: {grid_position: 'FRRBCE,YVSYIS'}
     name: email_numbers_plot
     properties: {}
     type: Plot
