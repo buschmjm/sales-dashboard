@@ -72,13 +72,19 @@ def fetch_user_email_stats():
 
         for user in users:
             try:
-                # Change from user.get('email') to user['email']
-                email = user['email'] if 'email' in user else None
-                if not email:
-                    print(f"Skipping user - no email found: {dict(user)}")
+                # Changed email check to properly access the field
+                if 'email' not in user or not user['email']:
+                    print(f"Skipping user - no email field or empty email: {dict(user)}")
                     continue
 
+                email = user['email']
                 print(f"\nProcessing user: {email}")
+                
+                # Skip disabled users
+                if 'enabled' in user and user['enabled'] is False:
+                    print(f"Skipping disabled user: {email}")
+                    continue
+                
                 user_stats = fetch_single_user_stats(access_token, user)
                 
                 if user_stats:
@@ -122,10 +128,8 @@ def fetch_user_email_stats():
 def fetch_single_user_stats(access_token, user):
     """Helper function to fetch stats for a single user"""
     try:
-        # Change from user.get('email') to user['email']
-        email = user['email'] if 'email' in user else None
-        if not email:
-            return None
+        email = user['email']
+        print(f"Fetching stats for email: {email}")  # Debug log
             
         headers = {
             "Authorization": f"Bearer {access_token}",
