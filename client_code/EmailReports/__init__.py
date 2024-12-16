@@ -67,6 +67,11 @@ class EmailReports(EmailReportsTemplate):
             alert("Failed to refresh email data")
             print(f"Error: {e}")
 
+    def _get_display_name(self, email):
+        """Get user's display name from users table, fallback to email if not found"""
+        user = app_tables.users.get(email=email)
+        return user['name'] if user and user.get('name') else email
+
     def _update_email_plot(self, data):
         """Update the email statistics plot with a vertical bar chart."""
         try:
@@ -82,14 +87,15 @@ class EmailReports(EmailReportsTemplate):
             metric = self.email_metric_selector.selected_value or 'total'
             metric_display_name = self.metric_display_names[metric]
 
-            # Create a trace for each user (matching phone report style)
+            # Create a trace for each user with proper display name
             traces = []
-            for user in users:
+            for email in users:
+                display_name = self._get_display_name(email)
                 traces.append({
                     "type": "bar",
-                    "name": user,
-                    "x": [user],
-                    "y": [data["metrics"][metric].get(user, 0)],
+                    "name": display_name,
+                    "x": [display_name],
+                    "y": [data["metrics"][metric].get(email, 0)],
                     "showlegend": True
                 })
 
@@ -117,9 +123,9 @@ class EmailReports(EmailReportsTemplate):
                     "y": 1,
                     "xanchor": "left",
                     "x": 1.02,
-                    "bgcolor": "rgba(255, 255, 255, 0.8)",
-                    "bordercolor": "rgba(0, 0, 0, 0.2)",
-                    "borderwidth": 1,
+                    "bgcolor": "transparent",  # Removed background color
+                    "bordercolor": "transparent",  # Removed border
+                    "borderwidth": 0,
                     "font": {"size": 10},
                     "clickmode": "toggleitem"  # Changed to match phone report behavior
                 },
@@ -145,5 +151,10 @@ class EmailReports(EmailReportsTemplate):
                 "b": 100,
                 "t": 50,
                 "pad": 4
+            },
+            "legend": {
+                "bgcolor": "transparent",
+                "bordercolor": "transparent",
+                "borderwidth": 0
             }
         })
