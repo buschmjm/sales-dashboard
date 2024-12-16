@@ -70,6 +70,10 @@ class EmailReports(EmailReportsTemplate):
     def _update_email_plot(self, data):
         """Update the email statistics plot with a grouped bar chart."""
         try:
+            # Clear existing plot data
+            self.email_numbers_plot.data = []
+            self.email_numbers_plot.layout = {}
+
             if not data or "users" not in data or "metrics" not in data:
                 self._show_empty_plot()
                 return
@@ -80,25 +84,34 @@ class EmailReports(EmailReportsTemplate):
                 return
 
             # Get selected metric and its display name
-            metric = self.email_metric_selector.selected_value or "total"
+            metric = self.email_metric_selector.selected_value
+            if not metric:
+                metric = 'total'  # Default fallback
+            
             metric_display_name = self.metric_display_names[metric]
 
-            # Basic plot update
-            self.email_numbers_plot.data = [{
+            # Create fresh plot data
+            plot_data = {
                 "type": "bar",
                 "x": users,
                 "y": data["metrics"][metric],
                 "name": metric_display_name
-            }]
+            }
 
+            # Update plot with new data
+            self.email_numbers_plot.data = [plot_data]
+            
+            # Set fresh layout
             self.email_numbers_plot.layout.update({
                 "title": f"{metric_display_name} ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {"title": None},
-                "yaxis": {"title": "Number of Emails"}
+                "yaxis": {"title": "Number of Emails"},
+                "showlegend": True,
+                "barmode": 'group'
             })
 
         except Exception as e:
-            self._show_empty_plot()
+            self._show_empty_plot(str(e))
 
     def _show_empty_plot(self, error=None):
         """Helper method to show empty plot state."""
