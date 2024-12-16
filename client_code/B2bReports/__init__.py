@@ -13,3 +13,15 @@ class B2bReports(B2bReportsTemplate):
     self.init_components(**properties)
 
     # Any code you write here will run before the form opens.
+
+  def b2b_metric_selector_change(self, **event_args):
+    """This method is called when an item is selected"""
+    pass
+
+  def b2b_start_date_change(self, **event_args):
+    """This method is called when the selected date changes"""
+    pass
+
+  def b2b_end_date_change(self, **event_args):
+    """This method is called when the selected date changes"""
+    pass
