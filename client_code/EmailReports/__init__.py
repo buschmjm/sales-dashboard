@@ -69,8 +69,15 @@ class EmailReports(EmailReportsTemplate):
 
     def _get_display_name(self, email):
         """Get user's display name from users table, fallback to email if not found"""
-        user = app_tables.users.get(email=email)
-        return user['name'] if user and user.get('name') else email
+        try:
+            user = app_tables.users.get(email=email)
+            if user is None:
+                return email
+            # Access the name directly from the row object
+            return user['name'] if user['name'] else email
+        except Exception as e:
+            print(f"Error getting display name for {email}: {e}")
+            return email
 
     def _update_email_plot(self, data):
         """Update the email statistics plot with a vertical bar chart."""
@@ -91,11 +98,12 @@ class EmailReports(EmailReportsTemplate):
             traces = []
             for email in users:
                 display_name = self._get_display_name(email)
+                value = data["metrics"][metric].get(email, 0)  # Get value before modifying email
                 traces.append({
                     "type": "bar",
                     "name": display_name,
                     "x": [display_name],
-                    "y": [data["metrics"][metric].get(email, 0)],
+                    "y": [value],
                     "showlegend": True
                 })
 
