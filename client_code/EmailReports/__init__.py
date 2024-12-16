@@ -82,38 +82,35 @@ class EmailReports(EmailReportsTemplate):
             metric = self.email_metric_selector.selected_value or 'total'
             metric_display_name = self.metric_display_names[metric]
 
-            # Create separate traces for each user
-            traces = []
-            for user in users:
-                traces.append({
-                    "type": "bar",
-                    "name": user,
-                    "x": [user],  # Single user per trace
-                    "y": [data["metrics"][metric].get(user, 0)],  # Value for that user
-                })
+            # Single trace with all users
+            plot_data = {
+                "type": "bar",
+                "x": users,
+                "y": [data["metrics"][metric].get(user, 0) for user in users],
+                "name": metric_display_name,
+                "showlegend": True
+            }
 
-            self.email_numbers_plot.data = traces
+            self.email_numbers_plot.data = [plot_data]
             self.email_numbers_plot.layout = {
-                "title": f"{metric_display_name} ({self.email_start_date.date} - {self.email_end_date.date})",
+                "title": f"Email Statistics ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {
                     "title": None,
-                    "tickangle": -45,  # Angle the labels for better readability
+                    "tickangle": -45,
                     "showticklabels": True
                 },
                 "yaxis": {"title": "Number of Emails"},
                 "showlegend": True,
-                "barmode": 'group',
-                "margin": {"b": 100, "t": 30, "r": 20},  # Adjusted margins
+                "barmode": 'stack',
+                "margin": {"b": 100, "t": 30, "r": 100},  # Added right margin for legend
                 "legend": {
-                    "orientation": "h",      # Horizontal legend
-                    "yanchor": "bottom",    # Anchor to bottom
-                    "y": 1.02,              # Place above plot
-                    "xanchor": "left",      # Anchor to left
-                    "x": 0,                 # Start from left
+                    "yanchor": "top",
+                    "y": 1,
+                    "xanchor": "left",
+                    "x": 1.02,  # Position legend to the right of the plot
                     "bgcolor": "rgba(255, 255, 255, 0.8)",
                     "bordercolor": "rgba(0, 0, 0, 0.2)",
-                    "borderwidth": 1,
-                    "clickmode": "toggleothers"  # Makes legend items clickable
+                    "borderwidth": 1
                 }
             }
 
@@ -125,13 +122,20 @@ class EmailReports(EmailReportsTemplate):
         message = "No Email Statistics Available" if not error else f"Error: {error}"
         self.email_numbers_plot.data = [{
             "type": "bar",
-            "name": "No Data",
             "x": ["No Data"],
-            "y": [0]
+            "y": [0],
+            "name": "No Data"
         }]
         self.email_numbers_plot.layout.update({
             "title": message,
             "xaxis": {"title": None},
             "yaxis": {"title": "Number of Emails"},
-            "showlegend": False,
+            "showlegend": True,
+            "margin": {"r": 100},  # Consistent margin
+            "legend": {
+                "yanchor": "top",
+                "y": 1,
+                "xanchor": "left",
+                "x": 1.02
+            }
         })
