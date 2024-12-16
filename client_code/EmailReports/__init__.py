@@ -68,7 +68,7 @@ class EmailReports(EmailReportsTemplate):
             print(f"Error: {e}")
 
     def _update_email_plot(self, data):
-        """Update the email statistics plot with a horizontal bar chart."""
+        """Update the email statistics plot with a vertical bar chart."""
         try:
             if not data or "users" not in data or "metrics" not in data:
                 self._show_empty_plot()
@@ -82,23 +82,25 @@ class EmailReports(EmailReportsTemplate):
             metric = self.email_metric_selector.selected_value or 'total'
             metric_display_name = self.metric_display_names[metric]
 
-            # Update plot with new data - note the horizontal orientation
+            # Update plot with new data - now using vertical orientation
             plot_data = {
                 "type": "bar",
-                "x": list(data["metrics"][metric].values()),  # Values become x-axis
-                "y": list(data["metrics"][metric].keys()),    # Users become y-axis
-                "name": metric_display_name,
-                "orientation": 'h'  # This makes the bars horizontal
+                "x": list(data["metrics"][metric].keys()),    # Users on x-axis
+                "y": list(data["metrics"][metric].values()),  # Values on y-axis
+                "name": metric_display_name
             }
 
             self.email_numbers_plot.data = [plot_data]
             self.email_numbers_plot.layout = {
                 "title": f"{metric_display_name} ({self.email_start_date.date} - {self.email_end_date.date})",
-                "xaxis": {"title": "Number of Emails"},  # Swapped axis titles
-                "yaxis": {"title": None},                # No title needed for users
+                "xaxis": {
+                    "title": None,
+                    "tickangle": -45  # Angle the labels for better readability
+                },
+                "yaxis": {"title": "Number of Emails"},
                 "showlegend": True,
                 "barmode": 'group',
-                "height": max(350, len(users) * 40)  # Dynamic height based on number of users
+                "margin": {"b": 100}  # Add bottom margin for angled labels
             }
 
         except Exception as e:
@@ -109,13 +111,12 @@ class EmailReports(EmailReportsTemplate):
         message = "No Email Statistics Available" if not error else f"Error: {error}"
         self.email_numbers_plot.data = [{
             "type": "bar",
-            "x": [0],
-            "y": ["No Data"],
-            "orientation": 'h'
+            "x": ["No Data"],
+            "y": [0]
         }]
         self.email_numbers_plot.layout.update({
             "title": message,
-            "xaxis": {"title": "Number of Emails"},
-            "yaxis": {"title": None},
+            "xaxis": {"title": None},
+            "yaxis": {"title": "Number of Emails"},
             "showlegend": False,
         })

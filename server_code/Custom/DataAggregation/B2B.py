@@ -27,9 +27,9 @@ def get_b2b_stats(start_date, end_date, metric):
         end_str = datetime.combine(end_date, time.max).strftime("%m/%d/%Y %H:%M:%S")
         
         # Get all rows within date range using string comparison with between
-        rows = app_tables.b2b_data.search(  # Changed from b2b to b2b_data
-            tables.order_by("Sales_Rep"),    # Make sure case matches your column name
-            Timestamp=q.between(start_str, end_str)  # Changed timestamp to Timestamp
+        rows = app_tables.b2b.search(  # Changed back to b2b
+            tables.order_by("Sales_Rep"),
+            Timestamp=q.between(start_str, end_str)
         )
         
         # Count occurrences per sales rep
