@@ -82,36 +82,49 @@ class EmailReports(EmailReportsTemplate):
             metric = self.email_metric_selector.selected_value or 'total'
             metric_display_name = self.metric_display_names[metric]
 
-            # Single trace with all users
-            plot_data = {
-                "type": "bar",
-                "x": users,
-                "y": [data["metrics"][metric].get(user, 0) for user in users],
-                "name": metric_display_name,
-                "showlegend": True
-            }
+            # Create a trace for each user (matching phone report style)
+            traces = []
+            for user in users:
+                traces.append({
+                    "type": "bar",
+                    "name": user,
+                    "x": [user],
+                    "y": [data["metrics"][metric].get(user, 0)],
+                    "showlegend": True
+                })
 
-            self.email_numbers_plot.data = [plot_data]
+            self.email_numbers_plot.data = traces
             self.email_numbers_plot.layout = {
                 "title": f"Email Statistics ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {
                     "title": None,
                     "tickangle": -45,
-                    "showticklabels": True
+                    "showticklabels": True,
+                    "type": "category"  # Ensures proper category spacing
                 },
                 "yaxis": {"title": "Number of Emails"},
                 "showlegend": True,
-                "barmode": 'stack',
-                "margin": {"b": 100, "t": 30, "r": 100},  # Added right margin for legend
+                "barmode": 'group',  # Changed from 'stack' to 'group' to match phone
+                "margin": {
+                    "l": 50,
+                    "r": 150,  # Increased right margin for legend
+                    "b": 100,
+                    "t": 50,
+                    "pad": 4
+                },
                 "legend": {
                     "yanchor": "top",
                     "y": 1,
                     "xanchor": "left",
-                    "x": 1.02,  # Position legend to the right of the plot
+                    "x": 1.02,
                     "bgcolor": "rgba(255, 255, 255, 0.8)",
                     "bordercolor": "rgba(0, 0, 0, 0.2)",
-                    "borderwidth": 1
-                }
+                    "borderwidth": 1,
+                    "font": {"size": 10},
+                    "clickmode": "toggleitem"  # Changed to match phone report behavior
+                },
+                "dragmode": False,  # Disable zooming/panning
+                "hovermode": "closest"
             }
 
         except Exception as e:
@@ -120,22 +133,17 @@ class EmailReports(EmailReportsTemplate):
     def _show_empty_plot(self, error=None):
         """Helper method to show empty plot state."""
         message = "No Email Statistics Available" if not error else f"Error: {error}"
-        self.email_numbers_plot.data = [{
-            "type": "bar",
-            "x": ["No Data"],
-            "y": [0],
-            "name": "No Data"
-        }]
+        self.email_numbers_plot.data = []  # Clear existing traces
         self.email_numbers_plot.layout.update({
             "title": message,
             "xaxis": {"title": None},
             "yaxis": {"title": "Number of Emails"},
-            "showlegend": True,
-            "margin": {"r": 100},  # Consistent margin
-            "legend": {
-                "yanchor": "top",
-                "y": 1,
-                "xanchor": "left",
-                "x": 1.02
+            "showlegend": False,
+            "margin": {
+                "l": 50,
+                "r": 150,
+                "b": 100,
+                "t": 50,
+                "pad": 4
             }
         })
