@@ -12,47 +12,34 @@ def fetch_google_sheet_data(sales_rep=None, complete=None):
     # Get the secret key from Anvil's Secrets Service
     api_key = anvil.secrets.get_secret("5Up3rS3cr3t_K3y!2024#@Xz")
     
-    # Update this URL with your actual deployed Apps Script web app URL
-    url = "https://script.google.com/macros/s/YOUR_ACTUAL_DEPLOYMENT_ID/exec"
+    print("Fetching data from Google Sheets...")  # Debug log
     
-    # Query parameters - always include the key
+    # Update this URL with your actual deployed Apps Script web app URL
+    url = "https://script.google.com/macros/s/AKfycbzrm6ttNyYRxfibYUHYExxlWruT33m1gXdDRZFo4hLFap0zkmhutKKkHdpQNW27GdS4Yw/exec"
+    
+    # Query parameters - always include the key and sheet name
     params = {
-        "key": api_key
+        "key": api_key,
+        "sheet": "Form Responses 1"  # Explicitly specify sheet name
     }
     
-    # Add filters if provided - match exact parameter names from Apps Script
+    # Add filters if provided
     if sales_rep:
         params["Sales Rep"] = sales_rep
-    if complete is not None:  # Changed to handle boolean values
+    if complete is not None:
         params["Complete"] = str(complete).lower()
     
     try:
-        # Make the GET request
+        print(f"Making API request with params: {params}")  # Debug log
         response = requests.get(url, params=params, timeout=30)
-        
-        # Raise an exception for bad status codes
         response.raise_for_status()
         
-        # Verify we got JSON response
-        content_type = response.headers.get('content-type', '')
-        if 'application/json' not in content_type.lower():
-            raise ValueError(f"Expected JSON response, got {content_type}")
-        
-        # Parse and validate the response
         data = response.json()
-        if not isinstance(data, list):
-            raise ValueError("Expected JSON array in response")
-            
+        print(f"Received {len(data)} records from sheet")  # Debug log
         return data
         
-    except requests.RequestException as e:
-        print(f"API request failed: {str(e)}")
-        raise Exception(f"Failed to fetch sheet data: {str(e)}")
-    except json.JSONDecodeError as e:
-        print(f"JSON parsing failed: {str(e)}")
-        raise Exception("Invalid response format from API")
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
+        print(f"Error fetching sheet data: {e}")
         raise
 
 def parse_timestamp(timestamp_str):
@@ -66,57 +53,68 @@ def parse_timestamp(timestamp_str):
 
 @anvil.server.callable
 def process_and_store_sheet_data():
-    # Fetch the data from Google Sheets
-    sheet_data = fetch_google_sheet_data()
-    
-    # Initialize counter for new records
-    new_records_count = 0
-    
-    # Reverse the data to start from the bottom
-    for row in reversed(sheet_data):
-        # Parse timestamp
-        timestamp = parse_timestamp(row.get('Timestamp'))
-        if not timestamp:
-            continue
-            
-        # Check if this record already exists
-        existing_record = app_tables.b2b.get(  # Changed from b2b_data to b2b
-            timestamp=timestamp,  # Changed from Timestamp to timestamp
-            sales_rep=row.get('Sales Rep')  # Changed from Sales_Rep to sales_rep
-        )
+    try:
+        # Fetch the data from Google Sheets
+        sheet_data = fetch_google_sheet_data()
+        print(f"Processing {len(sheet_data)} records from sheet")  # Debug log
         
-        # If record exists, stop processing
-        if existing_record:
-            if new_records_count == 0:
-                print("No new records found")
-            else:
-                print(f"Import complete. Added {new_records_count} new records")
-            return new_records_count
+        # Initialize counter for new records
+        new_records_count = 0
         
-        # Process new record
-        marketing_type = row.get('C1', '').strip()
-        marketing_fields = {
-            'Email': False,
-            'Flyers': False,
-            'Business Cards': False
-        }
+        # Process each row
+        for row in sheet_data:
+            try:
+                # Parse timestamp
+                timestamp_str = row.get('Timestamp')
+                if not timestamp_str:
+                    print(f"Skipping row - no timestamp: {row}")  # Debug log
+                    continue
+                    
+                timestamp = parse_timestamp(timestamp_str)
+                if not timestamp:
+                    continue
+                
+                # Get sales rep
+                sales_rep = row.get('Sales Rep')
+                if not sales_rep:
+                    print(f"Skipping row - no sales rep: {row}")  # Debug log
+                    continue
+                
+                # Check for existing record
+                existing = app_tables.b2b.get(
+                    timestamp=timestamp,
+                    sales_rep=sales_rep
+                )
+                
+                if existing:
+                    print(f"Record exists for {sales_rep} at {timestamp}")  # Debug log
+                    continue
+                
+                # Process marketing type
+                marketing_type = row.get('C1', '').strip().lower()
+                print(f"Processing marketing type: {marketing_type}")  # Debug log
+                
+                # Add new record
+                app_tables.b2b.add_row(
+                    timestamp=timestamp,
+                    sales_rep=sales_rep,
+                    complete=row.get('Complete', False),
+                    email='email' in marketing_type,
+                    flyers='flyer' in marketing_type,
+                    business_cards='business card' in marketing_type
+                )
+                
+                new_records_count += 1
+                print(f"Added new record for {sales_rep}")  # Debug log
+                
+            except Exception as row_error:
+                print(f"Error processing row: {row_error}")
+                continue
         
-        for field in marketing_fields:
-            if field.lower() in marketing_type.lower():
-                marketing_fields[field] = True
+        print(f"Import complete. Added {new_records_count} new records")
+        return new_records_count
         
-        # Add new record to database with correct column names
-        app_tables.b2b.add_row(
-            timestamp=timestamp,
-            sales_rep=row.get('Sales Rep'),
-            complete=row.get('Complete'),
-            email=marketing_fields['Email'],
-            flyers=marketing_fields['Flyers'],
-            business_cards=marketing_fields['Business Cards']
-        )
-        
-        new_records_count += 1
-    
-    # If we processed all records without finding duplicates
-    print(f"Import complete. Added {new_records_count} new records")
-    return new_records_count
+    except Exception as e:
+        print(f"Error in process_and_store_sheet_data: {e}")
+        return 0
+``` 
