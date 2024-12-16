@@ -103,12 +103,13 @@ class EmailReports(EmailReportsTemplate):
                 "yaxis": {"title": "Number of Emails"},
                 "showlegend": True,
                 "barmode": 'group',
-                "margin": {"b": 100},  # Add bottom margin for angled labels
+                "margin": {"b": 100, "t": 30, "r": 20},  # Adjusted margins
                 "legend": {
-                    "xanchor": "right",
-                    "x": 0.95,
-                    "yanchor": "top",
-                    "y": 0.95,
+                    "orientation": "h",      # Horizontal legend
+                    "yanchor": "bottom",    # Anchor to bottom
+                    "y": 1.02,              # Place above plot
+                    "xanchor": "left",      # Anchor to left
+                    "x": 0,                 # Start from left
                     "bgcolor": "rgba(255, 255, 255, 0.8)",
                     "bordercolor": "rgba(0, 0, 0, 0.2)",
                     "borderwidth": 1,
