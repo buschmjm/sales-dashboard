@@ -72,9 +72,10 @@ def fetch_user_email_stats():
 
         for user in users:
             try:
-                email = user.get('email')
+                # Change from user.get('email') to user['email']
+                email = user['email'] if 'email' in user else None
                 if not email:
-                    print(f"Skipping user - no email found: {user}")
+                    print(f"Skipping user - no email found: {dict(user)}")
                     continue
 
                 print(f"\nProcessing user: {email}")
@@ -88,7 +89,7 @@ def fetch_user_email_stats():
                     print(f"No stats returned for {email}")
                     
             except Exception as user_error:
-                print(f"Error processing user {user.get('email')}: {str(user_error)}")
+                print(f"Error processing user: {str(user_error)}")
                 print(f"Full user error details: {repr(user_error)}")
                 continue
 
@@ -121,7 +122,8 @@ def fetch_user_email_stats():
 def fetch_single_user_stats(access_token, user):
     """Helper function to fetch stats for a single user"""
     try:
-        email = user.get('email')
+        # Change from user.get('email') to user['email']
+        email = user['email'] if 'email' in user else None
         if not email:
             return None
             
