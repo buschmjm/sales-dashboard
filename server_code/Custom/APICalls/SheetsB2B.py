@@ -56,28 +56,25 @@ def process_and_store_sheet_data():
     try:
         # Fetch the data from Google Sheets
         sheet_data = fetch_google_sheet_data()
-        print(f"Processing {len(sheet_data)} records from sheet")  # Debug log
+        print(f"Processing {len(sheet_data)} records from sheet")
         
-        # Initialize counter for new records
         new_records_count = 0
         
         # Process each row
         for row in sheet_data:
             try:
-                # Parse timestamp
                 timestamp_str = row.get('Timestamp')
                 if not timestamp_str:
-                    print(f"Skipping row - no timestamp: {row}")  # Debug log
+                    print(f"Skipping row - no timestamp: {row}")
                     continue
                     
                 timestamp = parse_timestamp(timestamp_str)
                 if not timestamp:
                     continue
                 
-                # Get sales rep
                 sales_rep = row.get('Sales Rep')
                 if not sales_rep:
-                    print(f"Skipping row - no sales rep: {row}")  # Debug log
+                    print(f"Skipping row - no sales rep: {row}")
                     continue
                 
                 # Check for existing record
@@ -87,25 +84,25 @@ def process_and_store_sheet_data():
                 )
                 
                 if existing:
-                    print(f"Record exists for {sales_rep} at {timestamp}")  # Debug log
+                    print(f"Record exists for {sales_rep} at {timestamp}")
                     continue
                 
                 # Process marketing type
                 marketing_type = row.get('C1', '').strip().lower()
-                print(f"Processing marketing type: {marketing_type}")  # Debug log
+                print(f"Processing marketing type: {marketing_type}")
                 
                 # Add new record
                 app_tables.b2b.add_row(
                     timestamp=timestamp,
                     sales_rep=sales_rep,
-                    complete=row.get('Complete', False),
+                    complete=bool(row.get('Complete', False)),  # Ensure boolean
                     email='email' in marketing_type,
                     flyers='flyer' in marketing_type,
                     business_cards='business card' in marketing_type
                 )
                 
                 new_records_count += 1
-                print(f"Added new record for {sales_rep}")  # Debug log
+                print(f"Added new record for {sales_rep}")
                 
             except Exception as row_error:
                 print(f"Error processing row: {row_error}")
@@ -117,4 +114,3 @@ def process_and_store_sheet_data():
     except Exception as e:
         print(f"Error in process_and_store_sheet_data: {e}")
         return 0
-``` 
