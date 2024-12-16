@@ -106,13 +106,24 @@ class PhoneReports(PhoneReportsTemplate):
 
     def _update_plot(self, y_column):
         try:
+            # Clear existing plot data and layout
+            self.call_info_plot.data = []
+            self.call_info_plot.layout = {}
+
             if "reportDate" not in self.column_names or y_column not in self.column_names:
                 raise ValueError("Required columns missing")
+
+            # Reset and set column values
+            formatted_title = None
+            y_column_value = None
+            
+            y_column_value = y_column  # Set new value
+            formatted_title = self._format_title(y_column_value)  # Set new formatted title
 
             user_id_index = self.column_names.index('userId')
             user_name_index = self.column_names.index('userName')
             report_date_index = self.column_names.index('reportDate')
-            y_column_index = self.column_names.index(y_column)
+            y_column_index = self.column_names.index(y_column_value)
 
             grouped_data = {}
             user_labels = {}
@@ -126,7 +137,7 @@ class PhoneReports(PhoneReportsTemplate):
                 grouped_data[user_id]['x'].append(row[report_date_index].strftime('%Y-%m-%d'))
                 grouped_data[user_id]['y'].append(row[y_column_index])
 
-            # Basic plot update
+            # Create fresh traces
             traces = []
             for user_id, data in grouped_data.items():
                 traces.append({
@@ -137,19 +148,31 @@ class PhoneReports(PhoneReportsTemplate):
                     'name': user_labels[user_id]
                 })
             
-            # Format the title with proper spacing and date range
-            formatted_title = self._format_title(y_column)
+            # Set complete fresh layout
             date_range = f"({self.start_date_picker.date} - {self.end_date_picker.date})"
             
             self.call_info_plot.data = traces
-            self.call_info_plot.layout.update({
+            self.call_info_plot.layout = {  # Complete layout reset
                 'title': f"{formatted_title} {date_range}",
                 'xaxis': {'title': None},
-                'yaxis': {'title': formatted_title}
-            })
+                'yaxis': {'title': formatted_title},
+                'showlegend': True
+            }
 
         except Exception as e:
             print(f"Error updating plot: {e}")
+            self._show_empty_plot(str(e))
+
+    def _show_empty_plot(self, error=None):
+        """Helper method to show empty plot state."""
+        message = "No Call Statistics Available" if not error else f"Error: {error}"
+        self.call_info_plot.data = [{"type": "scatter", "x": ["No Data"], "y": [0]}]
+        self.call_info_plot.layout = {
+            "title": message,
+            "xaxis": {"title": "Time"},
+            "yaxis": {"title": "Value"},
+            "showlegend": False,
+        }
 
     def _update_repeating_panel(self):
         try:
