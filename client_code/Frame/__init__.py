@@ -74,12 +74,12 @@ class Frame(FrameTemplate):
             
             # Call APIs sequentially and capture results
             call_reports_refreshed = anvil.server.call('fetch_call_reports')
-            email_stats_refreshed = anvil.server.call('fetch_user_email_stats')
+            email_stats = anvil.server.call('fetch_user_email_stats')
             
             # Log results without affecting UI
             print("Refresh results:")
             print(f"- Call reports: {'Updated' if call_reports_refreshed else 'No new data'}")
-            print(f"- Email stats: {'Updated' if email_stats_refreshed else 'No new data'}")
+            print(f"- Email stats: {'Updated' if email_stats and len(email_stats) > 0 else 'No new data'}")
             
             # Notify user of completion
             Notification("Data refresh complete.").show()
