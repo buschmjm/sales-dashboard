@@ -28,22 +28,22 @@ db_schema:
     client: none
     columns:
     - admin_ui: {order: 0, width: 200}
-      name: Timestamp
+      name: timestamp
       type: string
     - admin_ui: {order: 1, width: 200}
-      name: Sales Rep
+      name: sales_rep
       type: string
     - admin_ui: {order: 2, width: 200}
-      name: Email
+      name: email
       type: bool
     - admin_ui: {order: 3, width: 200}
-      name: Flyers
+      name: flyers
       type: bool
     - admin_ui: {order: 4, width: 200}
-      name: Business Cards
+      name: business_cards
       type: bool
     - admin_ui: {order: 5, width: 200}
-      name: Complete
+      name: complete
       type: bool
     server: full
     title: B2B
