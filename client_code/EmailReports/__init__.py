@@ -70,10 +70,6 @@ class EmailReports(EmailReportsTemplate):
     def _update_email_plot(self, data):
         """Update the email statistics plot with a grouped bar chart."""
         try:
-            # Clear existing plot data
-            self.email_numbers_plot.data = []
-            self.email_numbers_plot.layout = {}
-
             if not data or "users" not in data or "metrics" not in data:
                 self._show_empty_plot()
                 return
@@ -83,14 +79,13 @@ class EmailReports(EmailReportsTemplate):
                 self._show_empty_plot()
                 return
 
-            # Get selected metric and its display name
-            metric = self.email_metric_selector.selected_value
-            if not metric:
-                metric = 'total'  # Default fallback
-            
-            metric_display_name = self.metric_display_names[metric]
+            # Reset and set metric values
+            metric = None  # Clear the metric
+            metric = self.email_metric_selector.selected_value or 'total'  # Set new value
+            metric_display_name = None  # Clear display name
+            metric_display_name = self.metric_display_names[metric]  # Set new display name
 
-            # Create fresh plot data
+            # Update plot with new data
             plot_data = {
                 "type": "bar",
                 "x": users,
@@ -98,17 +93,14 @@ class EmailReports(EmailReportsTemplate):
                 "name": metric_display_name
             }
 
-            # Update plot with new data
             self.email_numbers_plot.data = [plot_data]
-            
-            # Set fresh layout
-            self.email_numbers_plot.layout.update({
+            self.email_numbers_plot.layout = {  # Complete layout reset
                 "title": f"{metric_display_name} ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {"title": None},
                 "yaxis": {"title": "Number of Emails"},
                 "showlegend": True,
                 "barmode": 'group'
-            })
+            }
 
         except Exception as e:
             self._show_empty_plot(str(e))
