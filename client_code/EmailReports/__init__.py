@@ -26,11 +26,15 @@ class EmailReports(EmailReportsTemplate):
         self.email_end_date.date = date.today()
         self.email_start_date.date = date.today() - timedelta(days=7)
 
-        # Set up email metrics dropdown
+        # Set up email metrics dropdown with consistent naming
+        self.metric_display_names = {
+            'total': 'Total Emails',
+            'inbound': 'Emails Received',
+            'outbound': 'Emails Sent'
+        }
+        
         self.email_metric_selector.items = [
-            ('Total Emails', 'total'),
-            ('Emails Received', 'inbound'),
-            ('Emails Sent', 'outbound')
+            (name, key) for key, name in self.metric_display_names.items()
         ]
         self.email_metric_selector.selected_value = 'total'
 
@@ -75,22 +79,20 @@ class EmailReports(EmailReportsTemplate):
                 self._show_empty_plot()
                 return
 
-            # Get selected metric and update plot efficiently
+            # Get selected metric and its display name
             metric = self.email_metric_selector.selected_value or "total"
-            metric_name = {"total": "Total", "inbound": "Received", "outbound": "Sent"}[
-                metric
-            ]
+            metric_display_name = self.metric_display_names[metric]
 
             # Basic plot update
             self.email_numbers_plot.data = [{
                 "type": "bar",
                 "x": users,
                 "y": data["metrics"][metric],
-                "name": f"{metric_name} Emails"
+                "name": metric_display_name
             }]
 
             self.email_numbers_plot.layout.update({
-                "title": f"{metric_name} Emails ({self.email_start_date.date} - {self.email_end_date.date})",
+                "title": f"{metric_display_name} ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {"title": None},
                 "yaxis": {"title": "Number of Emails"}
             })
