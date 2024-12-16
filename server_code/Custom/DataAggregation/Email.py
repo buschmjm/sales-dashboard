@@ -19,40 +19,50 @@ def update_outlook_statistics_db(results):
             print("No results to update")
             return False
             
+        print(f"Processing {len(results)} email statistics records")  # Debug log
         today = datetime.now().date()
         updated = 0
         
         for result in results:
-            user_id = result['user']
-            if not user_id:
+            try:
+                user_id = result['user']
+                print(f"Processing user: {user_id}")  # Debug log
+                
+                # Debug log the data we're trying to save
+                stats = {
+                    'userId': user_id,
+                    'userName': result['user'].split('@')[0],
+                    'reportDate': today,
+                    'inbound': int(result.get('inbox_count', 0)),
+                    'outbound': int(result.get('sent_count', 0)),
+                    'total': int(result.get('inbox_count', 0)) + int(result.get('sent_count', 0))
+                }
+                print(f"Stats to save: {stats}")  # Debug log
+                
+                # Get existing record
+                existing = app_tables.outlook_statistics.get(
+                    userId=user_id,
+                    reportDate=today
+                )
+                
+                if existing:
+                    print(f"Updating existing record for {user_id}")
+                    existing.update(**stats)
+                else:
+                    print(f"Creating new record for {user_id}")
+                    app_tables.outlook_statistics.add_row(**stats)
+                updated += 1
+                
+            except Exception as e:
+                print(f"Error processing user {user_id}: {e}")
                 continue
                 
-            # First try to find existing record
-            existing = app_tables.outlook_statistics.get(
-                userId=user_id,
-                reportDate=today
-            )
-            
-            stats = {
-                'userId': user_id,
-                'userName': result['user'].split('@')[0],
-                'reportDate': today,
-                'inbound': int(result.get('inbox_count', 0)),
-                'outbound': int(result.get('sent_count', 0)),
-                'total': int(result.get('inbox_count', 0)) + int(result.get('sent_count', 0))
-            }
-            
-            if existing:
-                existing.update(**stats)
-            else:
-                app_tables.outlook_statistics.add_row(**stats)
-            updated += 1
-                
         print(f"Successfully updated {updated} records")
-        return True
+        return updated > 0
         
     except Exception as e:
         print(f"Error updating outlook statistics: {e}")
+        print(f"Full error details: {str(e)}")  # More detailed error logging
         return False
 
 @anvil.server.callable
