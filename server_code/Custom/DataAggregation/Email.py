@@ -15,54 +15,53 @@ CACHE_DURATION = 300  # 5 minutes in seconds
 def update_outlook_statistics_db(results):
     """Update the database with email statistics"""
     try:
-        print("Starting update_outlook_statistics_db")  # Debug log
         if not results:
             print("No results to update")
             return False
             
-        print(f"Processing {len(results)} email records")  # Debug log
+        print(f"Starting database update with {len(results)} records")
         today = datetime.now().date()
-        updated = 0
+        updated_count = 0
         
-        for result in results:
+        for user_stats in results:
             try:
-                if not result or 'user' not in result:
-                    print(f"Skipping invalid result: {result}")
+                user_id = user_stats['user']
+                print(f"Processing stats for {user_id}")
+                
+                # Get existing record with proper error handling
+                try:
+                    existing = app_tables.outlook_statistics.get(
+                        userId=user_id,
+                        reportDate=today
+                    )
+                except Exception as db_error:
+                    print(f"Database lookup error: {db_error}")
                     continue
                 
-                # Getting existing record with correct column names
-                existing = app_tables.outlook_statistics.get(
-                    userId=result['user'],
-                    reportDate=today
-                )
-                
-                # Prepare stats with correct column names
                 stats = {
-                    'userId': result['user'],
-                    'userName': result['user'].split('@')[0],
+                    'userId': user_id,
+                    'userName': user_id.split('@')[0],
                     'reportDate': today,
-                    'inbound': int(result.get('inbox_count', 0)),
-                    'outbound': int(result.get('sent_count', 0)),
-                    'total': int(result.get('inbox_count', 0)) + int(result.get('sent_count', 0))
+                    'inbound': int(user_stats.get('inbox_count', 0)),
+                    'outbound': int(user_stats.get('sent_count', 0)),
+                    'total': int(user_stats.get('inbox_count', 0)) + int(user_stats.get('sent_count', 0))
                 }
                 
-                print(f"Processing stats for {stats['userId']}")
-                
                 if existing:
-                    print(f"Updating existing record")
                     existing.update(**stats)
+                    print(f"Updated existing record for {user_id}")
                 else:
-                    print(f"Creating new record")
                     app_tables.outlook_statistics.add_row(**stats)
+                    print(f"Created new record for {user_id}")
                     
-                updated += 1
-                
+                updated_count += 1
+                    
             except Exception as e:
-                print(f"Error processing individual result: {e}")
+                print(f"Error updating stats for {user_id}: {e}")
                 continue
                 
-        print(f"Successfully updated {updated} records")
-        return updated > 0
+        print(f"Successfully updated {updated_count} records")
+        return updated_count > 0
         
     except Exception as e:
         print(f"Error in update_outlook_statistics_db: {e}")

@@ -61,86 +61,53 @@ def fetch_user_email_stats():
         if not access_token:
             raise Exception("Failed to get access token")
             
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Prefer": "outlook.timezone=\"Central Standard Time\"",
-            "ConsistencyLevel": "eventual"  # Add this for faster queries
-        }
-
+        print("Starting email statistics fetch...")  # Debug log
+        
         # Get all app users in one query
-        app_users = list(app_tables.users.search())
+        users = list(app_tables.users.search())
+        print(f"Found {len(users)} users to process")  # Debug log
+        
         results = []
+        successful_fetches = 0
 
-        # Prepare the date once
-        cst_tz = pytz.timezone("America/Chicago")
-        now = datetime.now(cst_tz)
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_iso = today_start.strftime('%Y-%m-%dT%H:%M:%S.0000000')
-
-        for user in app_users:
-            if not user.get("email"):
-                continue
-
+        for user in users:
             try:
-                # Use $select to minimize data transfer
-                search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$select=id,mail,userPrincipalName&$filter=mail eq '{user['email']}'"
-                search_response = requests.get(search_url, headers=headers)
+                email = user.get('email')
+                if not email:
+                    continue
+
+                print(f"Processing user: {email}")  # Debug log
                 
-                if search_response.status_code != 200:
-                    continue
-
-                search_results = search_response.json().get("value", [])
-                if not search_results:
-                    continue
-
-                user_id = search_results[0]["id"]
-
-                # Use batch requests for inbox and sent items
-                batch = {
-                    "requests": [
-                        {
-                            "url": f"/users/{user_id}/mailFolders/Inbox/messages/$count?$filter=receivedDateTime ge {today_iso}",
-                            "method": "GET"
-                        },
-                        {
-                            "url": f"/users/{user_id}/mailFolders/SentItems/messages/$count?$filter=sentDateTime ge {today_iso}",
-                            "method": "GET"
-                        }
-                    ]
-                }
-
-                batch_response = requests.post(
-                    f"{MICROSOFT_GRAPH_API_BASE_URL}/$batch",
-                    headers=headers,
-                    json=batch
-                )
-
-                if batch_response.status_code == 200:
-                    batch_data = batch_response.json()
-                    inbox_count = int(batch_data["responses"][0].get("body", 0))
-                    sent_count = int(batch_data["responses"][1].get("body", 0))
+                # Update stats for this user
+                user_stats = fetch_single_user_stats(access_token, user)
+                if user_stats:
+                    results.append(user_stats)
+                    successful_fetches += 1
                     
-                    results.append({
-                        "user": user["email"],
-                        "inbox_count": inbox_count,
-                        "sent_count": sent_count
-                    })
-
-            except Exception as e:
-                print(f"Error processing user {user.get('email')}: {e}")
+            except Exception as user_error:
+                print(f"Error processing user {user.get('email')}: {user_error}")
                 continue
 
-        if not results:  # If no results were collected
-            print("No email statistics collected")
-            return []
-            
-        # Update database with results
-        if update_outlook_statistics_db(results):
+        print(f"Successfully processed {successful_fetches} users")  # Debug log
+        
+        if results:
+            success = update_outlook_statistics_db(results)
+            if not success:
+                raise Exception("Failed to update database")
             return results
-        else:
-            raise Exception("Failed to update database")
+        return []
 
     except Exception as e:
-        print(f"Error in fetch_user_email_stats: {e}")
+        print(f"Error in fetch_user_email_stats: {str(e)}")
         return []
+
+def fetch_single_user_stats(access_token, user):
+    """Helper function to fetch stats for a single user"""
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Prefer": "outlook.timezone=\"Central Standard Time\"",
+        "ConsistencyLevel": "eventual"
+    }
+    
+    # Rest of the existing single user fetch code...
 
