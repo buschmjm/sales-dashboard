@@ -57,15 +57,15 @@ def get_access_token():
 def fetch_user_email_stats():
     """Optimized email stats fetching with parallel processing where possible."""
     try:
+        print("\n=== Starting Email Stats Fetch ===")
+        
         access_token = get_access_token()
         if not access_token:
             raise Exception("Failed to get access token")
             
-        print("Starting email statistics fetch...")  # Debug log
-        
-        # Get all app users in one query
+        print("Access token obtained successfully")
         users = list(app_tables.users.search())
-        print(f"Found {len(users)} users to process")  # Debug log
+        print(f"Found {len(users)} users to process")
         
         results = []
         successful_fetches = 0
@@ -74,31 +74,48 @@ def fetch_user_email_stats():
             try:
                 email = user.get('email')
                 if not email:
+                    print(f"Skipping user - no email found: {user}")
                     continue
 
-                print(f"Processing user: {email}")  # Debug log
-                
-                # Update stats for this user
+                print(f"\nProcessing user: {email}")
                 user_stats = fetch_single_user_stats(access_token, user)
+                
                 if user_stats:
+                    print(f"Got stats for {email}: {user_stats}")
                     results.append(user_stats)
                     successful_fetches += 1
+                else:
+                    print(f"No stats returned for {email}")
                     
             except Exception as user_error:
-                print(f"Error processing user {user.get('email')}: {user_error}")
+                print(f"Error processing user {user.get('email')}: {str(user_error)}")
+                print(f"Full user error details: {repr(user_error)}")
                 continue
 
-        print(f"Successfully processed {successful_fetches} users")  # Debug log
+        print(f"\nSuccessfully processed {successful_fetches} users")
+        print(f"Total results collected: {len(results)}")
         
         if results:
-            success = update_outlook_statistics_db(results)
-            if not success:
-                raise Exception("Failed to update database")
-            return results
+            print("\nAttempting to update database...")
+            try:
+                success = update_outlook_statistics_db(results)
+                if not success:
+                    raise Exception("Database update returned False")
+                print("Database update successful")
+                return results
+            except Exception as db_error:
+                print(f"Database update failed: {str(db_error)}")
+                print(f"Full database error details: {repr(db_error)}")
+                raise
         return []
 
     except Exception as e:
-        print(f"Error in fetch_user_email_stats: {str(e)}")
+        print("\n=== Email Stats Fetch Error ===")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        print(f"Full error details: {repr(e)}")
+        import traceback
+        print(f"Stack trace:\n{traceback.format_exc()}")
         return []
 
 def fetch_single_user_stats(access_token, user):

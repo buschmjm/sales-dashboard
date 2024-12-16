@@ -15,9 +15,11 @@ CACHE_DURATION = 300  # 5 minutes in seconds
 def update_outlook_statistics_db(results):
     """Update the database with email statistics"""
     try:
-        print("Starting outlook statistics update")  # Debug log
-        if not results or not isinstance(results, list):
-            print(f"Invalid results format: {type(results)}")
+        print("\n=== Starting Database Update ===")
+        print(f"Received results: {results}")
+        
+        if not results:
+            print("No results to update")
             return False
             
         today = datetime.now().date()
@@ -25,50 +27,67 @@ def update_outlook_statistics_db(results):
         
         for result in results:
             try:
-                print(f"Processing result: {result}")  # Debug log
-                if not isinstance(result, dict) or 'user' not in result:
-                    print(f"Invalid result format: {result}")
+                print(f"\nProcessing result: {result}")
+                
+                if not isinstance(result, dict):
+                    print(f"Invalid result type: {type(result)}")
+                    continue
+                    
+                if 'user' not in result:
+                    print(f"Missing user key in result: {result.keys()}")
                     continue
                 
-                # Match exact column names from database
-                row_data = {
+                print(f"Looking up existing record for {result['user']} on {today}")
+                try:
+                    existing = app_tables.outlook_statistics.get(
+                        userId=result['user'],
+                        reportDate=today
+                    )
+                    print(f"Lookup result: {'Found' if existing else 'Not found'}")
+                except Exception as lookup_error:
+                    print(f"Database lookup error: {str(lookup_error)}")
+                    print(f"Full lookup error details: {repr(lookup_error)}")
+                    raise
+                
+                stats = {
                     'userId': result['user'],
-                    'userName': result['user'].split('@')[0] if '@' in result['user'] else result['user'],
+                    'userName': result['user'].split('@')[0],
                     'reportDate': today,
                     'inbound': int(result.get('inbox_count', 0)),
                     'outbound': int(result.get('sent_count', 0)),
                     'total': int(result.get('inbox_count', 0)) + int(result.get('sent_count', 0))
                 }
                 
+                print(f"Prepared stats: {stats}")
+                
                 try:
-                    # Use get() to find existing record
-                    existing = list(app_tables.outlook_statistics.search(
-                        userId=row_data['userId'],
-                        reportDate=row_data['reportDate']
-                    ))
-                    
                     if existing:
-                        print(f"Updating existing record for {row_data['userId']}")
-                        existing[0].update(**row_data)
+                        existing.update(**stats)
+                        print("Updated existing record")
                     else:
-                        print(f"Adding new record for {row_data['userId']}")
-                        app_tables.outlook_statistics.add_row(**row_data)
-                    
+                        app_tables.outlook_statistics.add_row(**stats)
+                        print("Created new record")
                     updated += 1
-                    
                 except Exception as db_error:
-                    print(f"Database operation failed for {row_data['userId']}: {db_error}")
-                    continue
+                    print(f"Database operation failed: {str(db_error)}")
+                    print(f"Full database error details: {repr(db_error)}")
+                    raise
                     
             except Exception as row_error:
-                print(f"Error processing row: {row_error}")
+                print(f"Error processing row: {str(row_error)}")
+                print(f"Full row error details: {repr(row_error)}")
                 continue
                 
-        print(f"Successfully updated {updated} records")
+        print(f"\nUpdated {updated} of {len(results)} records")
         return updated > 0
         
     except Exception as e:
-        print(f"Error in update_outlook_statistics_db: {e}")
+        print("\n=== Database Update Error ===")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        print(f"Full error details: {repr(e)}")
+        import traceback
+        print(f"Stack trace:\n{traceback.format_exc()}")
         return False
 
 @anvil.server.callable
