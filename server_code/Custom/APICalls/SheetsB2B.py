@@ -80,9 +80,9 @@ def process_and_store_sheet_data():
             continue
             
         # Check if this record already exists
-        existing_record = app_tables.b2b_data.get(
-            Timestamp=timestamp,
-            Sales_Rep=row.get('Sales Rep')
+        existing_record = app_tables.b2b.get(  # Changed from b2b_data to b2b
+            timestamp=timestamp,  # Changed from Timestamp to timestamp
+            sales_rep=row.get('Sales Rep')  # Changed from Sales_Rep to sales_rep
         )
         
         # If record exists, stop processing
@@ -105,14 +105,14 @@ def process_and_store_sheet_data():
             if field.lower() in marketing_type.lower():
                 marketing_fields[field] = True
         
-        # Add new record to database
-        app_tables.b2b_data.add_row(
-            Timestamp=timestamp,  # Now using parsed datetime object
-            Sales_Rep=row.get('Sales Rep'),
-            Complete=row.get('Complete'),
-            Email=marketing_fields['Email'],
-            Flyers=marketing_fields['Flyers'],
-            Business_Cards=marketing_fields['Business Cards']
+        # Add new record to database with correct column names
+        app_tables.b2b.add_row(
+            timestamp=timestamp,
+            sales_rep=row.get('Sales Rep'),
+            complete=row.get('Complete'),
+            email=marketing_fields['Email'],
+            flyers=marketing_fields['Flyers'],
+            business_cards=marketing_fields['Business Cards']
         )
         
         new_records_count += 1
