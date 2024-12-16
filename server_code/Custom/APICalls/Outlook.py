@@ -103,11 +103,73 @@ def fetch_user_email_stats():
 
 def fetch_single_user_stats(access_token, user):
     """Helper function to fetch stats for a single user"""
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Prefer": "outlook.timezone=\"Central Standard Time\"",
-        "ConsistencyLevel": "eventual"
-    }
-    
-    # Rest of the existing single user fetch code...
+    try:
+        email = user.get('email')
+        if not email:
+            return None
+            
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Prefer": "outlook.timezone=\"Central Standard Time\"",
+            "ConsistencyLevel": "eventual"
+        }
+        
+        # Get the user's Microsoft Graph ID
+        search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$select=id,mail&$filter=mail eq '{email}'"
+        search_response = requests.get(search_url, headers=headers)
+        
+        if search_response.status_code != 200:
+            print(f"Failed to find user {email}: {search_response.status_code}")
+            return None
+            
+        search_results = search_response.json().get("value", [])
+        if not search_results:
+            print(f"No Microsoft account found for {email}")
+            return None
+            
+        user_id = search_results[0]["id"]
+        
+        # Get today's date in UTC
+        cst_tz = pytz.timezone("America/Chicago")
+        now = datetime.now(cst_tz)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_iso = today_start.strftime('%Y-%m-%dT%H:%M:%S.0000000')
+        
+        # Batch request for inbox and sent items counts
+        batch = {
+            "requests": [
+                {
+                    "url": f"/users/{user_id}/mailFolders/Inbox/messages/$count?$filter=receivedDateTime ge {today_iso}",
+                    "method": "GET"
+                },
+                {
+                    "url": f"/users/{user_id}/mailFolders/SentItems/messages/$count?$filter=sentDateTime ge {today_iso}",
+                    "method": "GET"
+                }
+            ]
+        }
+        
+        batch_response = requests.post(
+            f"{MICROSOFT_GRAPH_API_BASE_URL}/$batch",
+            headers=headers,
+            json=batch
+        )
+        
+        if batch_response.status_code != 200:
+            print(f"Batch request failed for {email}: {batch_response.status_code}")
+            return None
+            
+        batch_data = batch_response.json()
+        inbox_count = int(batch_data["responses"][0].get("body", 0))
+        sent_count = int(batch_data["responses"][1].get("body", 0))
+        
+        return {
+            "user": email,
+            "inbox_count": inbox_count,
+            "sent_count": sent_count
+        }
+        
+    except Exception as e:
+        print(f"Error fetching stats for {user.get('email')}: {e}")
+        return None
 
