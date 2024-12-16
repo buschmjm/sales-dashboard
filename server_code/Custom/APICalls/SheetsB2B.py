@@ -17,20 +17,27 @@ def fetch_google_sheet_data(sales_rep=None, complete=None):
     
     params = {
         "key": api_key
-        # Removed sheet parameter as we're using getActiveSheet() now
     }
     
     try:
-        print(f"Making API request with params: {params}")
-        response = requests.get(url, params=params, timeout=30)
-        response.raise_for_status()
+        print(f"Making API request to: {url}")  # Debug log
+        print(f"With parameters: {params}")      # Debug log
         
+        response = requests.get(url, params=params, timeout=30)
+        print(f"Response status code: {response.status_code}")  # Debug log
+        
+        if response.status_code != 200:
+            print(f"Error response: {response.text}")  # Debug log
+            raise Exception(f"API request failed with status {response.status_code}")
+            
         data = response.json()
+        print(f"Response data: {data[:2]}")  # Debug log first two records
         print(f"Received {len(data)} records from sheet")
         return data
         
     except Exception as e:
-        print(f"Error fetching sheet data: {e}")
+        print(f"Error fetching sheet data: {str(e)}")
+        print(f"Full error details: {repr(e)}")  # More detailed error info
         raise
 
 def parse_timestamp(timestamp_str):
@@ -46,7 +53,13 @@ def parse_timestamp(timestamp_str):
 def process_and_store_sheet_data():
     try:
         # Fetch the data from Google Sheets
+        print("Starting process_and_store_sheet_data")  # Debug log
         sheet_data = fetch_google_sheet_data()
+        
+        if not sheet_data:
+            print("No data received from sheet")
+            return 0
+            
         print(f"Processing {len(sheet_data)} records from sheet")
         
         new_records_count = 0
