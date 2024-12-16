@@ -162,6 +162,9 @@ scheduled_tasks:
     every: hour
     n: 1
 secrets:
+  b2b_sheets_secret:
+    type: secret
+    value: {WIRNAIMTTJXDAIUV: EH0VCqvDtsMvs2iJppy+x9xYFh6+U4M2AnEyQvX0G9MY0HC7k5wkPUH+RoIOk6gTamhb2WdcCi+v5/yZyJunzhJWsloNfYGG5lE9uZkX9Dv4EoCoCwrXh44KFnKtRS3ipT8UKUGBTEfTWT6wdIUYIK439k4rRuU=}
   client_secret:
     type: secret
     value: {WIRNAIMTTJXDAIUV: L5e/DoqfORJmy24amIdpaXIMc1QLPRgatWmOLVR1ujRfu+HQKyp9D9tn+h9iiRbq9WbhjD7KyhFcwZiE15vy716cGTM34Ic2bmd93hV4hzYUWlfJcCwda7s7lTJkwiw+Gt+UeqH83asBmaJcY2Rx4wNqsKBjG+8=}
