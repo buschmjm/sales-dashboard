@@ -7,7 +7,6 @@ import requests
 import time
 from datetime import datetime, timedelta
 import pytz
-import csv
 from io import StringIO
 from ..DataAggregation.Email import update_outlook_statistics_db
 
@@ -54,6 +53,30 @@ def get_access_token():
 
     return _access_token_cache["token"]
 
+def parse_csv_response(csv_text):
+    """Parse CSV text without using csv module"""
+    try:
+        lines = csv_text.strip().split('\n')
+        if not lines:
+            return []
+            
+        # First line contains headers
+        headers = [h.strip('"') for h in lines[0].split(',')]
+        results = []
+        
+        # Process each data line
+        for line in lines[1:]:
+            if not line.strip():
+                continue
+            values = [v.strip('"') for v in line.split(',')]
+            row = dict(zip(headers, values))
+            results.append(row)
+            
+        return results
+    except Exception as e:
+        print(f"Error parsing CSV: {str(e)}")
+        return []
+
 @anvil.server.callable
 def fetch_user_email_stats():
     """Fetch email activity reports using Microsoft Graph Reports API."""
@@ -66,13 +89,11 @@ def fetch_user_email_stats():
             
         print("Access token obtained successfully")
         
-        # Use the reports endpoint to get email activity
         headers = {
             "Authorization": f"Bearer {access_token}",
-            "Accept": "application/json"
+            "Accept": "text/csv"  # Explicitly request CSV format
         }
         
-        # Get today's email activity report (D1 for daily)
         url = f"{MICROSOFT_GRAPH_API_BASE_URL}/reports/getEmailActivityUserDetail(period='D1')"
         
         response = requests.get(url, headers=headers)
@@ -82,24 +103,25 @@ def fetch_user_email_stats():
             print(f"Response: {response.text}")
             return []
             
-        # Parse CSV response
-        csv_data = StringIO(response.text)
-        reader = csv.DictReader(csv_data)
+        # Parse the CSV response
+        rows = parse_csv_response(response.text)
         
         results = []
-        for row in reader:
+        for row in rows:
             try:
                 # Extract relevant fields from the report
                 user_stats = {
-                    "user": row['User Principal Name'],
+                    "user": row.get('User Principal Name', '').lower(),
                     "inbox_count": int(row.get('Receive Count', 0)),
                     "sent_count": int(row.get('Send Count', 0))
                 }
-                results.append(user_stats)
-                print(f"Processed stats for {user_stats['user']}")
                 
-            except Exception as e:
-                print(f"Error processing row: {str(e)}")
+                if user_stats["user"]:  # Only include if user email is present
+                    results.append(user_stats)
+                    print(f"Processed stats for {user_stats['user']}")
+                
+            except (KeyError, ValueError) as e:
+                print(f"Error processing row data: {str(e)}")
                 continue
         
         if results:
@@ -117,6 +139,4 @@ def fetch_user_email_stats():
         import traceback
         print(f"Stack trace:\n{traceback.format_exc()}")
         return []
-
-# Remove fetch_single_user_stats as it's no longer needed
 
