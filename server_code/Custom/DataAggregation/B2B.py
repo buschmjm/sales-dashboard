@@ -29,8 +29,8 @@ def get_b2b_stats(start_date, end_date, metric):
         start_dt = datetime.combine(start_date, time.min)
         end_dt = datetime.combine(end_date, time.max)
         
-        # Call the Google Sheet API endpoint
-        api_key = anvil.secrets.get_secret("5Up3rS3cr3t_K3y!2024#@Xz")
+        # Call the Google Sheet API endpoint with correct secret name
+        api_key = anvil.secrets.get_secret("b2b_sheets_secret")
         url = "https://script.google.com/macros/s/AKfycbzrm6ttNyYRxfibYUHYExxlWruT33m1gXdDRZFo4hLFap0zkmhutKKkHdpQNW27GdS4Yw/exec"
         
         response = requests.get(
