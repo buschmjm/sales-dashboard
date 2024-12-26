@@ -140,30 +140,17 @@ def fetch_user_email_stats():
             
         print("Access token obtained successfully")
         
-        # Get all users using Anvil's table search
-        users = list(app_tables.users.search())  # Convert to list first
+        # Simplified query to just get email addresses
+        rows = app_tables.users.search(tables.order_by("email"))
         valid_users = []
         
-        for user_row in users:
-            try:
-                # Access the email column directly from the row
-                email = user_row['email'] if 'email' in user_row else None
-                enabled = user_row['enabled'] if 'enabled' in user_row else True
+        for row in rows:
+            email = row['email']
+            if email and isinstance(email, str):
+                valid_users.append({"email": email.strip().lower()})
+                print(f"Found valid email: {email}")
                 
-                print(f"Processing user row with email: {email}, enabled: {enabled}")
-                
-                if email and isinstance(email, str) and enabled:
-                    valid_users.append({"email": email.strip().lower()})
-                    print(f"Added valid user: {email}")
-                else:
-                    print(f"Skipping invalid or disabled user: {email}")
-                    
-            except Exception as e:
-                print(f"Error accessing user data: {str(e)}")
-                print(f"User row data: {dict(user_row) if user_row else 'None'}")
-                continue
-        
-        print(f"Found {len(valid_users)} valid users to process")
+        print(f"Found {len(valid_users)} valid email addresses")
         
         results = []
         successful_fetches = 0
@@ -175,12 +162,11 @@ def fetch_user_email_stats():
                 
                 user_stats = get_today_messages_count(access_token, email)
                 if user_stats:
-                    print(f"Got stats for {email}: {user_stats}")
                     results.append(user_stats)
                     successful_fetches += 1
                     
             except Exception as user_error:
-                print(f"Error processing user {user.get('email', 'unknown')}: {str(user_error)}")
+                print(f"Error processing user {email}: {str(user_error)}")
                 continue
                 
         print(f"\nSuccessfully processed {successful_fetches} users")
