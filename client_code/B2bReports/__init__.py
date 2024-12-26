@@ -15,11 +15,15 @@ class B2bReports(B2bReportsTemplate):
     self.b2b_end_date.date = date.today()
     self.b2b_start_date.date = date.today() - timedelta(days=7)
     
-    # Replace metric selector with checkboxes for each promo type
-    self.promo_types = ['Email', 'Flyers', 'Business Cards']
-    self.selected_promos = set(self.promo_types)  # All selected by default
+    # Make sure all checkboxes start checked
+    self.b2b_metric_business_cards.checked = True
+    self.b2b_metric_flyers.checked = True
+    self.b2b_metric_emails.checked = True
     
-    # Set up color scheme for each promo type
+    # Initialize metrics cache
+    self._cache = {}
+    
+    # Set up color scheme
     self.promo_colors = {
         'Email': '#1f77b4',
         'Flyers': '#ff7f0e',
@@ -29,86 +33,115 @@ class B2bReports(B2bReportsTemplate):
     # Initial data refresh
     self.refresh_b2b_data()
 
-  def checkbox_change(self, **event_args):
-    """Handle checkbox state changes"""
-    checkbox = event_args['sender']
-    promo_type = checkbox.tag
-    
-    if checkbox.checked:
-        self.selected_promos.add(promo_type)
-    else:
-        self.selected_promos.remove(promo_type)
-    
-    self.refresh_b2b_data()
+  def get_selected_metrics(self):
+    """Get currently selected metrics"""
+    metrics = []
+    if self.b2b_metric_emails.checked:
+        metrics.append('Email')
+    if self.b2b_metric_flyers.checked:
+        metrics.append('Flyers')
+    if self.b2b_metric_business_cards.checked:
+        metrics.append('Business Cards')
+    return metrics
 
-  def b2b_start_date_change(self, **event_args):
-    """This method is called when the selected date changes"""
-    self.refresh_b2b_data()
-
-  def b2b_end_date_change(self, **event_args):
-    """This method is called when the selected date changes"""
-    self.refresh_b2b_data()
+  def is_cache_valid(self, start_date, end_date):
+    """Check if cached data is still valid"""
+    if not self._cache['data'] or not self._cache['last_fetch']:
+        return False
     
+    cache_age = datetime.now() - self._cache['last_fetch']
+    if cache_age.seconds > 300:  # Cache expires after 5 minutes
+        return False
+        
+    return (self._cache['date_range'] == (start_date, end_date))
+
+  def fetch_b2b_data(self, start_date, end_date):
+    """Fetch B2B data and update cache"""
+    if self.is_cache_valid(start_date, end_date):
+        print("Using cached data")
+        return self._cache['data']
+        
+    print("Fetching fresh data")
+    all_data = {}
+    for metric in ['Email', 'Flyers', 'Business Cards']:
+        data = anvil.server.call('get_b2b_stats', start_date, end_date, metric)
+        if data and "users" in data and "metrics" in data:
+            all_data[metric] = data
+            
+    # Update cache
+    self._cache.update({
+        'data': all_data,
+        'last_fetch': datetime.now(),
+        'date_range': (start_date, end_date)
+    })
+    
+    return all_data
+
   def refresh_b2b_data(self):
-    """Fetch and display B2B data for selected promo types"""
+    """Refresh plot with current selections"""
     try:
-      if not self.selected_promos:
+      selected_metrics = self.get_selected_metrics()
+      if not selected_metrics:
         self._show_empty_plot(error="Please select at least one promotional type")
         return
-        
-      start_date = self.b2b_start_date.date
-      end_date = self.b2b_end_date.date
       
+      # Gather data for each selected metric
       all_data = {}
-      for promo_type in self.selected_promos:
-        data = anvil.server.call('get_b2b_stats', start_date, end_date, promo_type)
+      for metric in selected_metrics:
+        data = anvil.server.call('get_b2b_stats', 
+                                self.b2b_start_date.date, 
+                                self.b2b_end_date.date,
+                                metric)
         if data and "users" in data and "metrics" in data:
-          all_data[promo_type] = data
+          all_data[metric] = data
       
       if not all_data:
         self._show_empty_plot()
         return
-        
-      # Get unique sales reps across all data
-      sales_reps = sorted(set().union(*[set(data["users"]) for data in all_data.values()]))
-      if "No Data" in sales_reps:
-        sales_reps.remove("No Data")
       
-      if not sales_reps:
+      # Get unique sales reps across all metrics
+      all_reps = set()
+      for data in all_data.values():
+        if data["users"] != ["No Data"]:
+          all_reps.update(data["users"])
+      
+      if not all_reps:
         self._show_empty_plot()
         return
-        
+      
+      sales_reps = sorted(all_reps)
       self._update_stacked_plot(sales_reps, all_data)
       
     except Exception as e:
       alert("Failed to refresh B2B data")
       print(f"Error: {e}")
-      
-  def _update_stacked_plot(self, sales_reps, all_data):
-    """Update the plot with stacked bar chart"""
+
+  def _update_stacked_plot(self, sales_reps, data):
+    """Update the stacked bar plot"""
     plot_data = []
     
-    for promo_type in self.selected_promos:
-      metrics = all_data.get(promo_type, {}).get("metrics", {})
-      values = [metrics.get(rep, 0) for rep in sales_reps]
-      
-      plot_data.append({
-        "type": "bar",
-        "name": promo_type,
-        "x": sales_reps,
-        "y": values,
-        "marker": {"color": self.promo_colors[promo_type]}
-      })
+    for metric in self.get_selected_metrics():
+        if metric in data:
+            metrics = data[metric].get("metrics", {})
+            values = [metrics.get(rep, 0) for rep in sales_reps]
+            
+            plot_data.append({
+                "type": "bar",
+                "name": metric,
+                "x": sales_reps,
+                "y": values,
+                "marker": {"color": self.promo_colors[metric]}
+            })
     
     self.b2b_plot.data = plot_data
     self.b2b_plot.layout = {
-      "title": f"B2B Marketing Stats ({self.b2b_start_date.date} - {self.b2b_end_date.date})",
-      "xaxis": {"title": "Sales Representatives"},
-      "yaxis": {"title": "Number of Sales"},
-      "showlegend": True,
-      "barmode": 'stack'
+        "title": f"B2B Marketing Stats ({self.b2b_start_date.date} - {self.b2b_end_date.date})",
+        "xaxis": {"title": "Sales Representatives"},
+        "yaxis": {"title": "Number of Sales"},
+        "showlegend": True,
+        "barmode": 'stack'
     }
-    
+
   def _show_empty_plot(self, error=None):
     """Display empty plot with optional error message"""
     message = error if error else "No B2B Statistics Available"
@@ -120,14 +153,12 @@ class B2bReports(B2bReportsTemplate):
       "showlegend": False
     })
     
+  # Checkbox event handlers
   def b2b_metric_business_cards_change(self, **event_args):
-    """This method is called when this checkbox is checked or unchecked"""
-    pass
+    self.refresh_b2b_data()
 
   def b2b_metric_flyers_change(self, **event_args):
-    """This method is called when this checkbox is checked or unchecked"""
-    pass
+    self.refresh_b2b_data()
 
   def b2b_metric_emails_change(self, **event_args):
-    """This method is called when this checkbox is checked or unchecked"""
-    pass
+    self.refresh_b2b_data()
