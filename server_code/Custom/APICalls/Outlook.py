@@ -72,16 +72,16 @@ def fetch_user_email_stats():
 
         for user in users:
             try:
-                # Changed email check to properly access the field
-                if 'email' not in user or not user['email']:
-                    print(f"Skipping user - no email field or empty email: {dict(user)}")
+                # Modified email check to properly validate email field
+                email = user.get('email')
+                if not email:  # This will catch None, empty string, or missing field
+                    print(f"Skipping user - invalid email: {dict(user)}")
                     continue
 
-                email = user['email']
                 print(f"\nProcessing user: {email}")
                 
-                # Skip disabled users
-                if 'enabled' in user and user['enabled'] is False:
+                # Skip disabled users - but only if the enabled field exists and is False
+                if user.get('enabled') is False:
                     print(f"Skipping disabled user: {email}")
                     continue
                 
