@@ -72,20 +72,29 @@ def fetch_user_email_stats():
 
         for user in users:
             try:
-                # Modified email check to properly validate email field
-                email = user.get('email')
-                if not email:  # This will catch None, empty string, or missing field
-                    print(f"Skipping user - invalid email: {dict(user)}")
+                # Modified email check to handle Anvil table rows
+                try:
+                    email = user['email']  # Direct attribute access
+                    if not email:  # Check if email is empty or None
+                        print(f"Skipping user - empty email for user: {user['name']}")
+                        continue
+                except Exception as e:
+                    print(f"Error accessing email for user: {e}")
                     continue
 
                 print(f"\nProcessing user: {email}")
                 
-                # Skip disabled users - but only if the enabled field exists and is False
-                if user.get('enabled') is False:
-                    print(f"Skipping disabled user: {email}")
-                    continue
+                # Handle enabled check properly
+                try:
+                    enabled = user['enabled']
+                    if enabled is False:  # Only skip if explicitly False
+                        print(f"Skipping disabled user: {email}")
+                        continue
+                except Exception:
+                    # If enabled field doesn't exist or has error, continue processing
+                    pass
                 
-                user_stats = fetch_single_user_stats(access_token, user)
+                user_stats = fetch_single_user_stats(access_token, {'email': email})
                 
                 if user_stats:
                     print(f"Got stats for {email}: {user_stats}")
@@ -128,7 +137,7 @@ def fetch_user_email_stats():
 def fetch_single_user_stats(access_token, user):
     """Helper function to fetch stats for a single user"""
     try:
-        email = user['email']
+        email = user['email']  # Direct access since we're passing a simple dict now
         print(f"Fetching stats for email: {email}")  # Debug log
             
         headers = {
