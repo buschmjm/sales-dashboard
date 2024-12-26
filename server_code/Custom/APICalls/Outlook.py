@@ -1,13 +1,14 @@
 import anvil.secrets
 import anvil.users
 import anvil.tables as tables
-import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.server
 import requests
 import time
 from datetime import datetime, timedelta
 import pytz
+import csv
+from io import StringIO
 from ..DataAggregation.Email import update_outlook_statistics_db
 
 # This is a server module. It runs on the Anvil server,
@@ -55,7 +56,7 @@ def get_access_token():
 
 @anvil.server.callable
 def fetch_user_email_stats():
-    """Optimized email stats fetching with parallel processing where possible."""
+    """Fetch email activity reports using Microsoft Graph Reports API."""
     try:
         print("\n=== Starting Email Stats Fetch ===")
         
@@ -64,144 +65,58 @@ def fetch_user_email_stats():
             raise Exception("Failed to get access token")
             
         print("Access token obtained successfully")
-        users = list(app_tables.users.search())
-        print(f"Found {len(users)} users to process")
+        
+        # Use the reports endpoint to get email activity
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json"
+        }
+        
+        # Get today's email activity report (D1 for daily)
+        url = f"{MICROSOFT_GRAPH_API_BASE_URL}/reports/getEmailActivityUserDetail(period='D1')"
+        
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code != 200:
+            print(f"Failed to fetch email stats: {response.status_code}")
+            print(f"Response: {response.text}")
+            return []
+            
+        # Parse CSV response
+        csv_data = StringIO(response.text)
+        reader = csv.DictReader(csv_data)
         
         results = []
-        successful_fetches = 0
-
-        for user in users:
+        for row in reader:
             try:
-                # Modified email check to handle Anvil table rows
-                try:
-                    email = user['email']  # Direct attribute access
-                    if not email:  # Check if email is empty or None
-                        print(f"Skipping user - empty email for user: {user['name']}")
-                        continue
-                except Exception as e:
-                    print(f"Error accessing email for user: {e}")
-                    continue
-
-                print(f"\nProcessing user: {email}")
+                # Extract relevant fields from the report
+                user_stats = {
+                    "user": row['User Principal Name'],
+                    "inbox_count": int(row.get('Receive Count', 0)),
+                    "sent_count": int(row.get('Send Count', 0))
+                }
+                results.append(user_stats)
+                print(f"Processed stats for {user_stats['user']}")
                 
-                # Handle enabled check properly
-                try:
-                    enabled = user['enabled']
-                    if enabled is False:  # Only skip if explicitly False
-                        print(f"Skipping disabled user: {email}")
-                        continue
-                except Exception:
-                    # If enabled field doesn't exist or has error, continue processing
-                    pass
-                
-                user_stats = fetch_single_user_stats(access_token, {'email': email})
-                
-                if user_stats:
-                    print(f"Got stats for {email}: {user_stats}")
-                    results.append(user_stats)
-                    successful_fetches += 1
-                else:
-                    print(f"No stats returned for {email}")
-                    
-            except Exception as user_error:
-                print(f"Error processing user: {str(user_error)}")
-                print(f"Full user error details: {repr(user_error)}")
+            except Exception as e:
+                print(f"Error processing row: {str(e)}")
                 continue
-
-        print(f"\nSuccessfully processed {successful_fetches} users")
-        print(f"Total results collected: {len(results)}")
         
         if results:
-            print("\nAttempting to update database...")
-            try:
-                success = update_outlook_statistics_db(results)
-                if not success:
-                    raise Exception("Database update returned False")
-                print("Database update successful")
-                return results
-            except Exception as db_error:
-                print(f"Database update failed: {str(db_error)}")
-                print(f"Full database error details: {repr(db_error)}")
-                raise
+            print(f"\nProcessed {len(results)} user statistics")
+            success = update_outlook_statistics_db(results)
+            if not success:
+                print("Warning: Database update returned False")
+            return results
+            
+        print("No results found in the report")
         return []
-
+        
     except Exception as e:
-        print("\n=== Email Stats Fetch Error ===")
-        print(f"Error type: {type(e).__name__}")
-        print(f"Error message: {str(e)}")
-        print(f"Full error details: {repr(e)}")
+        print(f"Error fetching email stats: {str(e)}")
         import traceback
         print(f"Stack trace:\n{traceback.format_exc()}")
         return []
 
-def fetch_single_user_stats(access_token, user):
-    """Helper function to fetch stats for a single user"""
-    try:
-        email = user['email']  # Direct access since we're passing a simple dict now
-        print(f"Fetching stats for email: {email}")  # Debug log
-            
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Prefer": "outlook.timezone=\"Central Standard Time\"",
-            "ConsistencyLevel": "eventual"
-        }
-        
-        # Get the user's Microsoft Graph ID
-        search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$select=id,mail&$filter=mail eq '{email}'"
-        search_response = requests.get(search_url, headers=headers)
-        
-        if search_response.status_code != 200:
-            print(f"Failed to find user {email}: {search_response.status_code}")
-            return None
-            
-        search_results = search_response.json().get("value", [])
-        if not search_results:
-            print(f"No Microsoft account found for {email}")
-            return None
-            
-        user_id = search_results[0]["id"]
-        
-        # Get today's date in UTC
-        cst_tz = pytz.timezone("America/Chicago")
-        now = datetime.now(cst_tz)
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_iso = today_start.strftime('%Y-%m-%dT%H:%M:%S.0000000')
-        
-        # Batch request for inbox and sent items counts
-        batch = {
-            "requests": [
-                {
-                    "url": f"/users/{user_id}/mailFolders/Inbox/messages/$count?$filter=receivedDateTime ge {today_iso}",
-                    "method": "GET"
-                },
-                {
-                    "url": f"/users/{user_id}/mailFolders/SentItems/messages/$count?$filter=sentDateTime ge {today_iso}",
-                    "method": "GET"
-                }
-            ]
-        }
-        
-        batch_response = requests.post(
-            f"{MICROSOFT_GRAPH_API_BASE_URL}/$batch",
-            headers=headers,
-            json=batch
-        )
-        
-        if batch_response.status_code != 200:
-            print(f"Batch request failed for {email}: {batch_response.status_code}")
-            return None
-            
-        batch_data = batch_response.json()
-        inbox_count = int(batch_data["responses"][0].get("body", 0))
-        sent_count = int(batch_data["responses"][1].get("body", 0))
-        
-        return {
-            "user": email,
-            "inbox_count": inbox_count,
-            "sent_count": sent_count
-        }
-        
-    except Exception as e:
-        print(f"Error fetching stats for {user.get('email')}: {e}")
-        return None
+# Remove fetch_single_user_stats as it's no longer needed
 
