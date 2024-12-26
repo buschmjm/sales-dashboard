@@ -140,17 +140,27 @@ def fetch_user_email_stats():
             
         print("Access token obtained successfully")
         
-        # Get all users that have an email field
-        users = app_tables.users.search()
+        # Get all users using Anvil's table search
+        users = list(app_tables.users.search())  # Convert to list first
         valid_users = []
         
-        for user in users:
+        for user_row in users:
             try:
-                email = user.get('email', '')  # Use get() method with default value
-                if email and isinstance(email, str):
+                # Access the email column directly from the row
+                email = user_row['email'] if 'email' in user_row else None
+                enabled = user_row['enabled'] if 'enabled' in user_row else True
+                
+                print(f"Processing user row with email: {email}, enabled: {enabled}")
+                
+                if email and isinstance(email, str) and enabled:
                     valid_users.append({"email": email.strip().lower()})
+                    print(f"Added valid user: {email}")
+                else:
+                    print(f"Skipping invalid or disabled user: {email}")
+                    
             except Exception as e:
                 print(f"Error accessing user data: {str(e)}")
+                print(f"User row data: {dict(user_row) if user_row else 'None'}")
                 continue
         
         print(f"Found {len(valid_users)} valid users to process")
@@ -170,8 +180,7 @@ def fetch_user_email_stats():
                     successful_fetches += 1
                     
             except Exception as user_error:
-                print(f"Error processing user {email}: {str(user_error)}")
-                print(f"Full error details: {repr(user_error)}")
+                print(f"Error processing user {user.get('email', 'unknown')}: {str(user_error)}")
                 continue
                 
         print(f"\nSuccessfully processed {successful_fetches} users")
@@ -185,7 +194,6 @@ def fetch_user_email_stats():
         
     except Exception as e:
         print(f"Error fetching email stats: {str(e)}")
-        print(f"Full error details: {repr(e)}")
         import traceback
         print(f"Stack trace:\n{traceback.format_exc()}")
         return []
