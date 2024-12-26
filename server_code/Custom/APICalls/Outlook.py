@@ -60,23 +60,22 @@ def get_access_token():
 def get_today_messages_count(access_token, user_email):
     """Get count of today's messages for a specific user"""
     try:
-        # Get user's Microsoft Graph ID first
+        print(f"\nGetting message count for: {user_email}")
+        
         headers = {
             "Authorization": f"Bearer {access_token}",
             "ConsistencyLevel": "eventual"
         }
         
-        # Convert timezone to user's local time (CST)
-        cst = pytz.timezone('America/Chicago')
-        today = datetime.now(cst).replace(hour=0, minute=0, second=0, microsecond=0)
-        today_str = today.isoformat()
-        
-        # Get user ID
+        # Get user ID first
         search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$select=id,mail&$filter=mail eq '{user_email}'"
+        print(f"Searching for user ID with URL: {search_url}")
+        
         search_response = requests.get(search_url, headers=headers)
+        print(f"Search response status: {search_response.status_code}")
         
         if search_response.status_code != 200:
-            print(f"Failed to find user {user_email}: {search_response.status_code}")
+            print(f"User search failed: {search_response.text}")
             return None
             
         user_data = search_response.json().get("value", [])
@@ -85,20 +84,33 @@ def get_today_messages_count(access_token, user_email):
             return None
             
         user_id = user_data[0]["id"]
+        print(f"Found user ID: {user_id}")
         
-        # Get inbox count
-        inbox_filter = f"receivedDateTime ge {today_str}"
-        inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/inbox/messages/$count?$filter={inbox_filter}"
+        # Get message counts for today
+        cst = pytz.timezone('America/Chicago')
+        today = datetime.now(cst).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_str = today.isoformat()
+        
+        # Build filter queries
+        inbox_url = (f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/inbox/messages?"
+                    f"$filter=receivedDateTime ge {today_str}&$count=true&$top=1")
+        sent_url = (f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/sentitems/messages?"
+                    f"$filter=sentDateTime ge {today_str}&$count=true&$top=1")
+        
+        # Add prefer header for count
+        headers["Prefer"] = "outlook.timezone=\"Central Standard Time\""
+        
+        print("Fetching inbox count...")
         inbox_response = requests.get(inbox_url, headers=headers)
-        
-        # Get sent items count
-        sent_filter = f"sentDateTime ge {today_str}"
-        sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/sentitems/messages/$count?$filter={sent_filter}"
+        print("Fetching sent items count...")
         sent_response = requests.get(sent_url, headers=headers)
         
         if inbox_response.status_code == 200 and sent_response.status_code == 200:
-            inbox_count = int(inbox_response.text)
-            sent_count = int(sent_response.text)
+            inbox_data = inbox_response.json()
+            sent_data = sent_response.json()
+            
+            inbox_count = inbox_data.get('@odata.count', 0)
+            sent_count = sent_data.get('@odata.count', 0)
             
             return {
                 "user": user_email,
@@ -106,13 +118,14 @@ def get_today_messages_count(access_token, user_email):
                 "sent_count": sent_count
             }
         else:
-            print(f"Failed to get counts for {user_email}")
-            print(f"Inbox status: {inbox_response.status_code}")
-            print(f"Sent status: {sent_response.status_code}")
+            print(f"Failed to get counts. Inbox: {inbox_response.status_code}, Sent: {sent_response.status_code}")
+            print(f"Inbox response: {inbox_response.text}")
+            print(f"Sent response: {sent_response.text}")
             return None
             
     except Exception as e:
         print(f"Error getting message counts for {user_email}: {str(e)}")
+        print(f"Full error details: {repr(e)}")
         return None
 
 @anvil.server.callable
@@ -126,33 +139,39 @@ def fetch_user_email_stats():
             raise Exception("Failed to get access token")
             
         print("Access token obtained successfully")
-        users = list(app_tables.users.search())
-        print(f"Found {len(users)} users to process")
+        
+        # Get all users that have an email field
+        users = app_tables.users.search()
+        valid_users = []
+        
+        for user in users:
+            try:
+                email = user.get('email', '')  # Use get() method with default value
+                if email and isinstance(email, str):
+                    valid_users.append({"email": email.strip().lower()})
+            except Exception as e:
+                print(f"Error accessing user data: {str(e)}")
+                continue
+        
+        print(f"Found {len(valid_users)} valid users to process")
         
         results = []
         successful_fetches = 0
 
-        for user in users:
+        for user in valid_users:
             try:
                 email = user['email']
-                if not email:
-                    continue
-                    
-                # Skip disabled users
-                if not user.get('enabled', True):
-                    print(f"Skipping disabled user: {email}")
-                    continue
-                    
                 print(f"\nProcessing user: {email}")
-                user_stats = get_today_messages_count(access_token, email)
                 
+                user_stats = get_today_messages_count(access_token, email)
                 if user_stats:
                     print(f"Got stats for {email}: {user_stats}")
                     results.append(user_stats)
                     successful_fetches += 1
                     
             except Exception as user_error:
-                print(f"Error processing user: {str(user_error)}")
+                print(f"Error processing user {email}: {str(user_error)}")
+                print(f"Full error details: {repr(user_error)}")
                 continue
                 
         print(f"\nSuccessfully processed {successful_fetches} users")
@@ -166,6 +185,7 @@ def fetch_user_email_stats():
         
     except Exception as e:
         print(f"Error fetching email stats: {str(e)}")
+        print(f"Full error details: {repr(e)}")
         import traceback
         print(f"Stack trace:\n{traceback.format_exc()}")
         return []
