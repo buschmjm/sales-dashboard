@@ -162,3 +162,13 @@ class B2bReports(B2bReportsTemplate):
 
   def b2b_metric_emails_change(self, **event_args):
     self.refresh_b2b_data()
+
+  def b2b_start_date_change(self, **event_args):
+    """Handle start date changes"""
+    self._cache = {}  # Invalidate cache when date changes
+    self.refresh_b2b_data()
+
+  def b2b_end_date_change(self, **event_args):
+    """Handle end date changes"""
+    self._cache = {}  # Invalidate cache when date changes
+    self.refresh_b2b_data()
