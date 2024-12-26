@@ -119,3 +119,15 @@ class B2bReports(B2bReportsTemplate):
       "yaxis": {"title": "Number of Sales"},
       "showlegend": False
     })
+    
+  def b2b_metric_business_cards_change(self, **event_args):
+    """This method is called when this checkbox is checked or unchecked"""
+    pass
+
+  def b2b_metric_flyers_change(self, **event_args):
+    """This method is called when this checkbox is checked or unchecked"""
+    pass
+
+  def b2b_metric_emails_change(self, **event_args):
+    """This method is called when this checkbox is checked or unchecked"""
+    pass
