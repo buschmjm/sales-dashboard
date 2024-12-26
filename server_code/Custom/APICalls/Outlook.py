@@ -27,6 +27,10 @@ _access_token_cache = {
     "expires_at": 0
 }
 
+# Add these constants at the top with the other constants
+SUPPORTED_PERIODS = ['D7', 'D30', 'D90', 'D180']
+DEFAULT_PERIOD = 'D7'  # Use 7 days as default period
+
 def get_access_token():
     """Fetch an access token from Microsoft OAuth endpoint, with caching."""
     global _access_token_cache
@@ -53,33 +57,67 @@ def get_access_token():
 
     return _access_token_cache["token"]
 
-def parse_csv_response(csv_text):
-    """Parse CSV text without using csv module"""
+def get_today_messages_count(access_token, user_email):
+    """Get count of today's messages for a specific user"""
     try:
-        lines = csv_text.strip().split('\n')
-        if not lines:
-            return []
-            
-        # First line contains headers
-        headers = [h.strip('"') for h in lines[0].split(',')]
-        results = []
+        # Get user's Microsoft Graph ID first
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "ConsistencyLevel": "eventual"
+        }
         
-        # Process each data line
-        for line in lines[1:]:
-            if not line.strip():
-                continue
-            values = [v.strip('"') for v in line.split(',')]
-            row = dict(zip(headers, values))
-            results.append(row)
+        # Convert timezone to user's local time (CST)
+        cst = pytz.timezone('America/Chicago')
+        today = datetime.now(cst).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_str = today.isoformat()
+        
+        # Get user ID
+        search_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users?$select=id,mail&$filter=mail eq '{user_email}'"
+        search_response = requests.get(search_url, headers=headers)
+        
+        if search_response.status_code != 200:
+            print(f"Failed to find user {user_email}: {search_response.status_code}")
+            return None
             
-        return results
+        user_data = search_response.json().get("value", [])
+        if not user_data:
+            print(f"No Microsoft account found for {user_email}")
+            return None
+            
+        user_id = user_data[0]["id"]
+        
+        # Get inbox count
+        inbox_filter = f"receivedDateTime ge {today_str}"
+        inbox_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/inbox/messages/$count?$filter={inbox_filter}"
+        inbox_response = requests.get(inbox_url, headers=headers)
+        
+        # Get sent items count
+        sent_filter = f"sentDateTime ge {today_str}"
+        sent_url = f"{MICROSOFT_GRAPH_API_BASE_URL}/users/{user_id}/mailFolders/sentitems/messages/$count?$filter={sent_filter}"
+        sent_response = requests.get(sent_url, headers=headers)
+        
+        if inbox_response.status_code == 200 and sent_response.status_code == 200:
+            inbox_count = int(inbox_response.text)
+            sent_count = int(sent_response.text)
+            
+            return {
+                "user": user_email,
+                "inbox_count": inbox_count,
+                "sent_count": sent_count
+            }
+        else:
+            print(f"Failed to get counts for {user_email}")
+            print(f"Inbox status: {inbox_response.status_code}")
+            print(f"Sent status: {sent_response.status_code}")
+            return None
+            
     except Exception as e:
-        print(f"Error parsing CSV: {str(e)}")
-        return []
+        print(f"Error getting message counts for {user_email}: {str(e)}")
+        return None
 
 @anvil.server.callable
 def fetch_user_email_stats():
-    """Fetch email activity reports using Microsoft Graph Reports API."""
+    """Fetch email statistics for all users"""
     try:
         print("\n=== Starting Email Stats Fetch ===")
         
@@ -88,55 +126,49 @@ def fetch_user_email_stats():
             raise Exception("Failed to get access token")
             
         print("Access token obtained successfully")
-        
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Accept": "text/csv"  # Explicitly request CSV format
-        }
-        
-        url = f"{MICROSOFT_GRAPH_API_BASE_URL}/reports/getEmailActivityUserDetail(period='D1')"
-        
-        response = requests.get(url, headers=headers)
-        
-        if response.status_code != 200:
-            print(f"Failed to fetch email stats: {response.status_code}")
-            print(f"Response: {response.text}")
-            return []
-            
-        # Parse the CSV response
-        rows = parse_csv_response(response.text)
+        users = list(app_tables.users.search())
+        print(f"Found {len(users)} users to process")
         
         results = []
-        for row in rows:
+        successful_fetches = 0
+
+        for user in users:
             try:
-                # Extract relevant fields from the report
-                user_stats = {
-                    "user": row.get('User Principal Name', '').lower(),
-                    "inbox_count": int(row.get('Receive Count', 0)),
-                    "sent_count": int(row.get('Send Count', 0))
-                }
+                email = user['email']
+                if not email:
+                    continue
+                    
+                # Skip disabled users
+                if not user.get('enabled', True):
+                    print(f"Skipping disabled user: {email}")
+                    continue
+                    
+                print(f"\nProcessing user: {email}")
+                user_stats = get_today_messages_count(access_token, email)
                 
-                if user_stats["user"]:  # Only include if user email is present
+                if user_stats:
+                    print(f"Got stats for {email}: {user_stats}")
                     results.append(user_stats)
-                    print(f"Processed stats for {user_stats['user']}")
-                
-            except (KeyError, ValueError) as e:
-                print(f"Error processing row data: {str(e)}")
+                    successful_fetches += 1
+                    
+            except Exception as user_error:
+                print(f"Error processing user: {str(user_error)}")
                 continue
+                
+        print(f"\nSuccessfully processed {successful_fetches} users")
         
         if results:
-            print(f"\nProcessed {len(results)} user statistics")
             success = update_outlook_statistics_db(results)
             if not success:
                 print("Warning: Database update returned False")
-            return results
-            
-        print("No results found in the report")
-        return []
+        
+        return results
         
     except Exception as e:
         print(f"Error fetching email stats: {str(e)}")
         import traceback
         print(f"Stack trace:\n{traceback.format_exc()}")
         return []
+
+# Remove parse_csv_response function as it's no longer needed
 
