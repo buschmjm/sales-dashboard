@@ -30,6 +30,9 @@ class Frame(FrameTemplate):
             }
         }
         
+        # Initialize theme state before components
+        self.current_theme = 'light'
+        
         self.init_components(**properties)
         
         try:
@@ -47,9 +50,8 @@ class Frame(FrameTemplate):
             Plot.templates.default = "rally"
             self._setup_navigation()
             
-            # Initialize theme state
-            self.current_theme = 'light'
-            self._apply_theme('light')
+            # Apply initial theme
+            self._apply_theme(self.current_theme)
             
         except Exception as e:
             print(f"Error initializing Frame: {e}")
