@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from .. import theme_utils
+from ..theme_manager import ThemeManager
 
 class Sales(SalesTemplate):
   def __init__(self, **properties):
@@ -15,7 +15,6 @@ class Sales(SalesTemplate):
 
   def refresh_theme(self):
     """Update component colors based on current theme"""
-    from . import Frame
-    colors = Frame.Frame._current_theme
+    colors = ThemeManager.get_theme()
     self.background = colors['Background']
     # Update other components as needed
