@@ -125,28 +125,26 @@ class Frame(FrameTemplate):
     def _apply_theme(self, theme):
         """Apply the selected theme to the application"""
         try:
-            # Use Anvil's built-in functionality to modify the DOM
-            document = anvil.js.window.document
-            document.documentElement.setAttribute('data-theme', theme)
+            # Set theme using Anvil component properties
+            self.background = 'var(--background-color)' if theme == 'light' else 'var(--background-color-dark)'
             
             # Store current theme
             self.current_theme = theme
             
             # Update button states using theme variables
             if theme == 'light':
-                self.light_mode.background = 'var(--primary-color)'
-                self.light_mode.foreground = 'var(--background-color)'
-                self.dark_mode.background = 'transparent'
-                self.dark_mode.foreground = 'var(--text-color)'
+                self.light_mode.role = 'primary-color'
+                self.dark_mode.role = 'outline'
             else:
-                self.dark_mode.background = 'var(--primary-color)'
-                self.dark_mode.foreground = 'var(--background-color)'
-                self.light_mode.background = 'transparent'
-                self.light_mode.foreground = 'var(--text-color)'
+                self.dark_mode.role = 'primary-color'
+                self.light_mode.role = 'outline'
             
-            # Update content panel and other elements
-            self.content_panel.background = 'var(--background-color)'
-            self.content_panel.foreground = 'var(--text-color)'
+            # Update container backgrounds
+            self.content_panel.background = 'var(--background-color)' if theme == 'light' else 'var(--background-color-dark)'
+            
+            # Update text colors on all components that need it
+            for link in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
+                link.foreground = 'var(--text-color)' if theme == 'light' else 'var(--text-color-dark)'
             
             # Save user preference
             anvil.server.call('save_user_theme_preference', theme)
@@ -154,4 +152,4 @@ class Frame(FrameTemplate):
         except Exception as e:
             print(f"Error applying theme: {str(e)}")
             print(f"Full error details: {repr(e)}")
-            
+
