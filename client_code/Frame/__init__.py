@@ -9,14 +9,19 @@ from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
 from .. import theme_service
-from .. import theme_utils
+from . import theme_utils
 
 anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
+    _current_theme = None
+    
     def __init__(self, **properties):
-        self.init_components(**properties)
+        # Initialize theme before components
         self.is_dark_mode = False
+        Frame._current_theme = theme_utils.theme.get_colors(self.is_dark_mode)
+        
+        self.init_components(**properties)
         self._update_theme_buttons()
         self._apply_theme()
 
@@ -122,16 +127,22 @@ class Frame(FrameTemplate):
         alert("Sign out functionality not implemented yet.")
 
     def dark_mode_click(self, **event_args):
-        """Switch to dark theme"""
         self.is_dark_mode = True
+        Frame._current_theme = theme_utils.theme.get_colors(self.is_dark_mode)
         self._update_theme_buttons()
         self._apply_theme()
+        # Force content to refresh
+        if self.content_panel.get_components():
+            self.content_panel.get_components()[0].refresh_theme()
 
     def light_mode_click(self, **event_args):
-        """Switch to light theme"""
         self.is_dark_mode = False
+        Frame._current_theme = theme_utils.theme.get_colors(self.is_dark_mode)
         self._update_theme_buttons()
         self._apply_theme()
+        # Force content to refresh
+        if self.content_panel.get_components():
+            self.content_panel.get_components()[0].refresh_theme()
 
     def _update_theme_buttons(self):
         """Update the visual state of theme buttons"""
@@ -148,12 +159,12 @@ class Frame(FrameTemplate):
         self.dark_mode.foreground = button_colors['Text'] if self.is_dark_mode else button_colors['Text Inactive']
 
     def _apply_theme(self):
-        """Apply the current theme to all components"""
-        colors = theme_utils.theme.get_colors(self.is_dark_mode)
-        
+        """Apply theme to all main containers"""
+        colors = Frame._current_theme
         self.content_panel.background = colors['Background']
         self.sidebar_panel.background = colors['Surface']
         
+        # Update navigation links
         for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
             nav.foreground = colors['Text']
 

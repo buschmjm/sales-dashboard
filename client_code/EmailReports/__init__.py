@@ -1,6 +1,7 @@
 # Reports Client-Side Code
 from ._anvil_designer import EmailReportsTemplate
 from anvil import *
+from .. import theme_utils
 import plotly.graph_objects as go
 import anvil.server
 import anvil.users
@@ -14,13 +15,7 @@ from .. import theme_service
 class EmailReports(EmailReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
-        colors = theme_utils.theme.get_colors(self._get_theme_mode())
-        
-        # Update component colors
-        self.background = colors['Background']
-        if hasattr(self, 'email_metric_selector'):
-            self.email_metric_selector.foreground = colors['Text']
-            self.email_metric_selector.background = colors['Surface Variant']
+        self.refresh_theme()
         
         # Set table role and styling
         if hasattr(self, 'repeating_panel_1'):
@@ -52,6 +47,16 @@ class EmailReports(EmailReportsTemplate):
         self.email_end_date.set_event_handler('change', self.email_date_change)
 
         self.refresh_email_data()
+
+    def refresh_theme(self):
+        """Update component colors based on current theme"""
+        from .. import Frame
+        colors = Frame.Frame._current_theme
+        self.background = colors['Background']
+        if hasattr(self, 'email_metric_selector'):
+            self.email_metric_selector.foreground = colors['Text']
+            self.email_metric_selector.background = colors['Surface Variant']
+        self._update_email_plot()
 
     def _get_theme_mode(self):
         """Get current theme colors safely"""
@@ -92,10 +97,10 @@ class EmailReports(EmailReportsTemplate):
             print(f"Error getting display name for {email}: {e}")
             return email
 
-    def _update_email_plot(self, data):
+    def _update_email_plot(self, data=None):
         """Update the email statistics plot with a vertical bar chart."""
         try:
-            if not data or "users" not in data or "metrics" not in data:
+            if data is None or not data or "users" not in data or "metrics" not in data:
                 self._show_empty_plot()
                 return
 
