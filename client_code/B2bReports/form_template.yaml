@@ -5,47 +5,24 @@ components:
     properties: {role: headline, text: B2B Reports}
     type: Label
   - components:
-    - layout_properties: {grid_position: 'PZLTAT,KIWCUC LIIAIC,HMMQKR'}
-      name: label_4_copy
-      properties: {text: Promotional Material Type}
-      type: Label
-    - event_bindings: {change: b2b_metric_business_cards_change}
-      layout_properties: {grid_position: 'PZLTAT,KIWCUC RBIHIH,WORDOA'}
-      name: b2b_metric_business_cards
-      properties: {text: Business Cards}
-      type: CheckBox
-    - event_bindings: {change: b2b_metric_flyers_change}
-      layout_properties: {grid_position: 'PZLTAT,KIWCUC HGTSSR,ZMZDHI'}
-      name: b2b_metric_flyers
-      properties: {text: Flyers}
-      type: CheckBox
-    - event_bindings: {change: b2b_metric_emails_change}
-      layout_properties: {grid_position: 'PZLTAT,KIWCUC DWWGJP,HHTHTF'}
-      name: b2b_metric_emails
-      properties: {text: Emails}
-      type: CheckBox
-    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,WYFBNC'}
+    - layout_properties: {grid_position: 'SMFZOM,WYFBNC'}
       name: label_2_copy
       properties: {align: right, text: Start Date}
       type: Label
-    - layout_properties: {grid_position: 'PZLTAT,AYBSUQ SMFZOM,YGEOUV'}
+    - layout_properties: {grid_position: 'SMFZOM,YGEOUV'}
       name: label_3_copy
       properties: {align: right, text: End Date}
       type: Label
     - event_bindings: {change: b2b_start_date_change}
-      layout_properties: {grid_position: 'PZLTAT,AYBSUQ UITUOJ,KKFTSD'}
+      layout_properties: {grid_position: 'UITUOJ,KKFTSD'}
       name: b2b_start_date
       properties: {align: right}
       type: DatePicker
     - event_bindings: {change: b2b_end_date_change}
-      layout_properties: {grid_position: 'PZLTAT,AYBSUQ UITUOJ,SWVPEB'}
+      layout_properties: {grid_position: 'UITUOJ,SWVPEB'}
       name: b2b_end_date
       properties: {align: right}
       type: DatePicker
-    - layout_properties: {grid_position: 'PZLTAT,FKRDSY'}
-      name: spacer_1_copy
-      properties: {height: 165.4713134765625}
-      type: Spacer
     layout_properties: {grid_position: 'JQNMEL,RCWWGT'}
     name: card_2_copy
     properties: {role: card}
