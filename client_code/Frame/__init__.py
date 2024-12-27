@@ -30,6 +30,28 @@ class Frame(FrameTemplate):
             Plot.templates.default = "rally"
             self._setup_navigation()
             
+            # Define theme colors
+            self.light_theme = {
+              'Primary Container': '#007AFF',
+              'Background': '#FFFFFF',
+              'Surface': '#F5F5F5',
+              'Text': '#000000',
+              'Secondary Text': '#666666'
+            }
+            
+            self.dark_theme = {
+              'Primary Container': '#0A84FF',
+              'Background': '#000000',
+              'Surface': '#1C1C1E',
+              'Text': '#FFFFFF',
+              'Secondary Text': '#EBEBF5'
+            }
+            
+            # Set initial theme
+            app.theme_colors = self.light_theme
+            self._update_theme_buttons()
+            self._apply_theme()
+            
         except Exception as e:
             print(f"Error initializing Frame: {e}")
             alert(f"Error initializing Frame: {e}")
@@ -110,10 +132,36 @@ class Frame(FrameTemplate):
         alert("Sign out functionality not implemented yet.")
 
     def dark_mode_click(self, **event_args):
-      """This method is called when the button is clicked"""
-      pass
+        """Switch to dark theme"""
+        app.theme_colors = self.dark_theme
+        self._update_theme_buttons()
+        self._apply_theme()
 
     def light_mode_click(self, **event_args):
-      """This method is called when the button is clicked"""
-      pass
+        """Switch to light theme"""
+        app.theme_colors = self.light_theme
+        self._update_theme_buttons()
+        self._apply_theme()
+
+    def _update_theme_buttons(self):
+        """Update the visual state of theme buttons"""
+        is_light = app.theme_colors == self.light_theme
+        
+        # Light mode button
+        self.light_mode.background = self.light_theme['Primary Container'] if is_light else 'transparent'
+        self.light_mode.foreground = '#FFFFFF' if is_light else '#000000'
+        
+        # Dark mode button
+        self.dark_mode.background = self.dark_theme['Primary Container'] if not is_light else 'transparent'
+        self.dark_mode.foreground = '#FFFFFF' if not is_light else '#000000'
+
+    def _apply_theme(self):
+        """Apply the current theme to all components"""
+        # Update main container backgrounds
+        self.content_panel.background = app.theme_colors['Background']
+        self.sidebar_panel.background = app.theme_colors['Surface']
+        
+        # Update text colors for navigation links
+        for nav in [self.home_link, self.sales_link, self.reports_link, self.admin_link]:
+            nav.foreground = app.theme_colors['Text']
 

@@ -138,7 +138,10 @@ class EmailReports(EmailReportsTemplate):
                     "clickmode": "toggleitem"  # Changed to match phone report behavior
                 },
                 "dragmode": False,  # Disable zooming/panning
-                "hovermode": "closest"
+                "hovermode": "closest",
+                'paper_bgcolor': app.theme_colors['Background'],
+                'plot_bgcolor': app.theme_colors['Background'],
+                'font': {'color': app.theme_colors['Text']},
             }
 
         except Exception as e:

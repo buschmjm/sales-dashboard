@@ -42,7 +42,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             # Reset all nav buttons
             for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
                 nav.background = 'transparent'
-                nav.foreground = 'black'
+                nav.foreground = app.theme_colors['Text']
             
             # Set active button
             active_nav = getattr(self, f"{section}_nav")

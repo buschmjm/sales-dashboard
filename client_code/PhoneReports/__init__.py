@@ -156,7 +156,10 @@ class PhoneReports(PhoneReportsTemplate):
                 'title': f"{formatted_title} {date_range}",
                 'xaxis': {'title': None},
                 'yaxis': {'title': formatted_title},
-                'showlegend': True
+                'showlegend': True,
+                'paper_bgcolor': app.theme_colors['Background'],
+                'plot_bgcolor': app.theme_colors['Background'],
+                'font': {'color': app.theme_colors['Text']},
             }
 
         except Exception as e:
