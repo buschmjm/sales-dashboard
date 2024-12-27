@@ -8,5 +8,5 @@ class Sales(SalesTemplate):
         self.refresh_theme()
 
     def refresh_theme(self):
-        colors = AppTheme.get_colors()
+        colors = AppTheme.get_colors()  # No argument needed
         self.background = colors['Background']

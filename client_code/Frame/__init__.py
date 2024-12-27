@@ -39,7 +39,7 @@ class Frame(FrameTemplate):
             alert(f"Error initializing Frame: {e}")
 
     def _apply_theme(self):
-        colors = Theme.get_colors(self.is_dark_mode)
+        colors = AppTheme.get_colors()  # No argument needed
         self.content_panel.background = colors['Background']
         self.sidebar_panel.background = colors['Surface']
         
@@ -47,7 +47,7 @@ class Frame(FrameTemplate):
             nav.foreground = colors['Text']
 
     def _update_theme_buttons(self):
-        colors = AppTheme.get_colors(self.is_dark_mode)
+        colors = AppTheme.get_colors()  # No argument needed
         button_colors = colors['Button']
         
         self.light_mode.background = button_colors['Active'] if not self.is_dark_mode else 'transparent'
@@ -58,7 +58,7 @@ class Frame(FrameTemplate):
 
     def light_mode_click(self, **event_args):
         self.is_dark_mode = False
-        Theme.set_dark_mode(False)
+        AppTheme.set_dark_mode(False)  # This handles the theme update
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
@@ -68,7 +68,7 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         self.is_dark_mode = True
-        Theme.set_dark_mode(True)
+        AppTheme.set_dark_mode(True)  # This handles the theme update
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
