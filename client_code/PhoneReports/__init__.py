@@ -1,7 +1,7 @@
 # Reports Client-Side Code
 from ._anvil_designer import PhoneReportsTemplate
 from anvil import *
-from ..theme_manager import ThemeManager
+from ..theme import Theme
 import plotly.graph_objects as go
 import anvil.server
 import anvil.users
@@ -40,7 +40,7 @@ class PhoneReports(PhoneReportsTemplate):
         self.refresh_data()
     
     def refresh_theme(self):
-        colors = ThemeManager.get_theme()
+        colors = Theme.get_colors()
         self.background = colors['Background']
         if hasattr(self, 'data_column_selector'):
             self.data_column_selector.foreground = colors['Text']
