@@ -125,13 +125,17 @@ class Frame(FrameTemplate):
     def _apply_theme(self, theme):
         """Apply the selected theme to the application"""
         try:
-            # Update root element's data-theme attribute via JavaScript
-            js_code = f"""
-            (function() {{
-                document.documentElement.setAttribute('data-theme', '{theme}');
-            }})();
+            # Use Anvil's js.call_js to execute JavaScript
+            js = """
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                return true;
+            }
             """
-            anvil.js.window.eval(js_code)
+            # First call to define the function
+            anvil.js.call_js(js)
+            # Second call to execute the function
+            anvil.js.call_js('setTheme', theme)
             
             # Store current theme
             self.current_theme = theme
@@ -158,4 +162,5 @@ class Frame(FrameTemplate):
         except Exception as e:
             print(f"Error applying theme: {str(e)}")
             print(f"Full error details: {repr(e)}")
+            raise # Re-raise the exception for better debugging
 
