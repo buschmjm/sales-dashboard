@@ -8,7 +8,7 @@ from anvil.tables import app_tables
 from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
-from . import theme
+from ..utils.theme import Theme
 
 anvil.users.login_with_form()
 
@@ -39,7 +39,7 @@ class Frame(FrameTemplate):
             alert(f"Error initializing Frame: {e}")
 
     def _apply_theme(self):
-        colors = theme.AppTheme.get_theme()
+        colors = Theme.get_colors()
         self.content_panel.background = colors['Background']
         self.sidebar_panel.background = colors['Surface']
         
@@ -58,7 +58,7 @@ class Frame(FrameTemplate):
 
     def light_mode_click(self, **event_args):
         self.is_dark_mode = False
-        theme.AppTheme.set_dark_mode(False)
+        Theme.set_dark_mode(False)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
@@ -68,7 +68,7 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         self.is_dark_mode = True
-        theme.AppTheme.set_dark_mode(True)
+        Theme.set_dark_mode(True)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
