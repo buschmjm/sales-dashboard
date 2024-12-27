@@ -5,6 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+import anvil.js
 from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
@@ -124,8 +125,13 @@ class Frame(FrameTemplate):
     def _apply_theme(self, theme):
         """Apply the selected theme to the application"""
         try:
-            # Update root element's data-theme attribute
-            anvil.js.call('eval', f'document.documentElement.setAttribute("data-theme", "{theme}")')
+            # Update root element's data-theme attribute via JavaScript
+            js_code = f"""
+            (function() {{
+                document.documentElement.setAttribute('data-theme', '{theme}');
+            }})();
+            """
+            anvil.js.window.eval(js_code)
             
             # Store current theme
             self.current_theme = theme
@@ -150,5 +156,6 @@ class Frame(FrameTemplate):
             anvil.server.call('save_user_theme_preference', theme)
             
         except Exception as e:
-            print(f"Error applying theme: {e}")
+            print(f"Error applying theme: {str(e)}")
+            print(f"Full error details: {repr(e)}")
 
