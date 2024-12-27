@@ -1,12 +1,17 @@
 components:
 - components:
+  - data_bindings: []
+    layout_properties: {grid_position: 'DOXUWS,GBVMFC'}
+    name: label_5
+    properties: {align: center, bold: true, font: '', font_size: 22, text: Statistics Versus Average}
+    type: Label
   - components:
-    - layout_properties: {grid_position: 'TUEXFC,XMJESJ'}
+    - layout_properties: {grid_position: 'NFXUSU,VASAZM'}
       name: label_4
-      properties: {}
+      properties: {align: center, text: Calls Time}
       type: Label
     - layout_properties: {grid_position: 'RCKVGV,JAJVFC'}
-      name: plot_2
+      name: calls_time_plot
       properties: {height: '300'}
       type: Plot
     layout_properties: {grid_position: 'SZOFEH,XPYWQU LXHJIT,AKQRSJ'}
@@ -16,10 +21,10 @@ components:
   - components:
     - layout_properties: {grid_position: 'JOIXVA,YLXTLS'}
       name: label_2
-      properties: {}
+      properties: {align: center, text: Emails Sent}
       type: Label
     - layout_properties: {grid_position: 'TRYLIM,GAHUHX'}
-      name: plot_4
+      name: emails_sent_plot
       properties: {height: '300'}
       type: Plot
     layout_properties: {grid_position: 'SZOFEH,XPYWQU VCMYAG,KCUODO'}
@@ -29,10 +34,10 @@ components:
   - components:
     - layout_properties: {grid_position: 'YTGNXP,IBGHTG'}
       name: label_3
-      properties: {}
+      properties: {align: center, text: Calls Volume}
       type: Label
     - layout_properties: {grid_position: 'LBNDLO,ZXRSAU'}
-      name: plot_1
+      name: call_volume_plot
       properties: {height: '300'}
       type: Plot
     layout_properties: {grid_position: 'SZOFEH,ATSVFH EDALJV,ZUZYEN'}
@@ -42,21 +47,60 @@ components:
   - components:
     - layout_properties: {grid_position: 'HFUSOB,CXWIDS'}
       name: label_1
-      properties: {}
+      properties: {align: center, text: Emails Received}
       type: Label
     - layout_properties: {grid_position: 'UNFZAW,MAEKGJ'}
-      name: plot_3
+      name: emails_received_plot
       properties: {height: '300'}
       type: Plot
     layout_properties: {grid_position: 'SZOFEH,ATSVFH VKBPCG,GUMZFQ'}
     name: card_3
     properties: {role: card}
     type: ColumnPanel
+  - components:
+    - layout_properties: {grid_position: 'UNFZAW,MAEKGJ'}
+      name: business_cards_plot
+      properties: {height: '300'}
+      type: Plot
+    - layout_properties: {grid_position: 'ORUPDO,XEYCMF'}
+      name: label_1_copy
+      properties: {align: center, text: B2B Business Cards}
+      type: Label
+    layout_properties: {grid_position: 'VQBTEG,XOSDSF'}
+    name: card_3_copy
+    properties: {role: card}
+    type: ColumnPanel
+  - components:
+    - layout_properties: {grid_position: 'UNFZAW,MAEKGJ'}
+      name: flyers_plot
+      properties: {height: '300'}
+      type: Plot
+    - layout_properties: {grid_position: 'OZDFYL,ZINSVC'}
+      name: label_1_copy_copy
+      properties: {align: center, text: B2 Flyers}
+      type: Label
+    layout_properties: {grid_position: 'VQBTEG,YYQTFB'}
+    name: card_3_copy_copy
+    properties: {role: card}
+    type: ColumnPanel
+  - components:
+    - layout_properties: {grid_position: 'UNFZAW,MAEKGJ'}
+      name: b2b_emails_plot
+      properties: {height: '300'}
+      type: Plot
+    - layout_properties: {grid_position: 'ATOKNY,AFLERU'}
+      name: label_1_copy_copy_copy
+      properties: {align: center, text: B2B Emails}
+      type: Label
+    layout_properties: {grid_position: 'VQBTEG,XEGVVQ'}
+    name: card_3_copy_copy_copy
+    properties: {role: card}
+    type: ColumnPanel
   layout_properties:
     col_widths: {}
     grid_position: ODOKZJ,JPHMQN
   name: column_panel_1
-  properties: {background: '', border: '', col_spacing: medium, col_widths: '{"XJDGPO":30}', foreground: '', role: null, spacing_above: none, spacing_below: none, tooltip: '', visible: true, wrap_on: mobile}
+  properties: {background: '', border: '', col_spacing: medium, col_widths: '{}', foreground: '', role: null, spacing_above: none, spacing_below: none, tooltip: '', visible: true, wrap_on: mobile}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true
