@@ -13,6 +13,28 @@ anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
     def __init__(self, **properties):
+        # Define theme colors before initialization
+        self.light_theme = {
+          'Primary Container': '#007AFF',
+          'Background': '#FFFFFF',
+          'Surface': '#F5F5F5',
+          'Text': '#000000',
+          'Secondary Text': '#666666'
+        }
+        
+        self.dark_theme = {
+          'Primary Container': '#0A84FF',
+          'Background': '#000000',
+          'Surface': '#1C1C1E',
+          'Text': '#FFFFFF',
+          'Secondary Text': '#EBEBF5'
+        }
+        
+        # Initialize current_theme before init_components
+        self.current_theme = dict(self.light_theme)
+        app.add_property('theme_colors', self.current_theme)
+        
+        # Now initialize components
         self.init_components(**properties)
         
         try:
@@ -29,29 +51,6 @@ class Frame(FrameTemplate):
 
             Plot.templates.default = "rally"
             self._setup_navigation()
-            
-            # Define theme colors
-            self.light_theme = {
-              'Primary Container': '#007AFF',
-              'Background': '#FFFFFF',
-              'Surface': '#F5F5F5',
-              'Text': '#000000',
-              'Secondary Text': '#666666'
-            }
-            
-            self.dark_theme = {
-              'Primary Container': '#0A84FF',
-              'Background': '#000000',
-              'Surface': '#1C1C1E',
-              'Text': '#FFFFFF',
-              'Secondary Text': '#EBEBF5'
-            }
-            
-            # Set initial theme as instance variable
-            self.current_theme = dict(self.light_theme)
-            
-            # Create theme property
-            app.add_property('theme_colors', self.current_theme)
             
             self._update_theme_buttons()
             self._apply_theme()
