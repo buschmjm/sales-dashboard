@@ -3,7 +3,15 @@ class ThemeColors:
     def get_colors(is_dark=False):
         if is_dark:
             return {
-                # Primary colors
+                # Button colors
+                'Button': {
+                    'Default': '#1EB980',
+                    'Active': '#005235',
+                    'Hover': '#73FBBC',
+                    'Text': '#FFFFFF',
+                    'Text Active': '#73FBBC',
+                    'Text Inactive': '#E1E3DF'
+                },
                 'Primary': '#1EB980',
                 'Primary Container': '#005235',
                 'On Primary': '#003824',
@@ -57,6 +65,14 @@ class ThemeColors:
                 'Nav Button Active Text': '#73FBBC'
             }
         return {
+            'Button': {
+                'Default': '#007AFF',
+                'Active': '#005235',
+                'Hover': '#73FBBC',
+                'Text': '#FFFFFF',
+                'Text Active': '#000000',
+                'Text Inactive': '#000000'
+            },
             'Primary Container': '#007AFF',
             'Background': '#FFFFFF',
             'Surface': '#F5F5F5',
