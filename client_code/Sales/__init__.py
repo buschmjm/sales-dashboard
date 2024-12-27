@@ -1,11 +1,6 @@
 from ._anvil_designer import SalesTemplate
 from anvil import *
-import anvil.server
-import anvil.users
-import anvil.tables as tables
-import anvil.tables.query as q
-from anvil.tables import app_tables
-from ..theme_manager import ThemeManager
+from ..theme import Theme
 
 class Sales(SalesTemplate):
     def __init__(self, **properties):
@@ -13,5 +8,5 @@ class Sales(SalesTemplate):
         self.refresh_theme()
 
     def refresh_theme(self):
-        colors = ThemeManager.get_theme()
+        colors = Theme.get_colors()
         self.background = colors['Background']

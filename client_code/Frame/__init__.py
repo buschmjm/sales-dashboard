@@ -11,6 +11,7 @@ from ..ReportsInnerFrame import ReportsInnerFrame
 from .. import theme_service
 from . import theme_utils
 from ..theme_manager import ThemeManager
+from ..theme import Theme
 
 anvil.users.login_with_form()
 
@@ -41,7 +42,7 @@ class Frame(FrameTemplate):
             alert(f"Error initializing Frame: {e}")
 
     def _apply_theme(self):
-        colors = ThemeManager.get_theme()
+        colors = Theme.get_colors()
         self.content_panel.background = colors['Background']
         self.sidebar_panel.background = colors['Surface']
         
@@ -49,7 +50,7 @@ class Frame(FrameTemplate):
             nav.foreground = colors['Text']
 
     def _update_theme_buttons(self):
-        colors = ThemeManager.get_theme()
+        colors = Theme.get_colors()
         button_colors = colors['Button']
         
         # Light mode button
@@ -62,7 +63,7 @@ class Frame(FrameTemplate):
 
     def light_mode_click(self, **event_args):
         self.is_dark_mode = False
-        ThemeManager.set_theme(False)
+        Theme.set_dark_mode(False)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
@@ -70,7 +71,7 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         self.is_dark_mode = True
-        ThemeManager.set_theme(True)
+        Theme.set_dark_mode(True)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
