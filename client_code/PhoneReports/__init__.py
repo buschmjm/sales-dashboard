@@ -8,6 +8,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import datetime, timedelta, date
+from .. import theme_service
 
 class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
@@ -157,9 +158,9 @@ class PhoneReports(PhoneReportsTemplate):
                 'xaxis': {'title': None},
                 'yaxis': {'title': formatted_title},
                 'showlegend': True,
-                'paper_bgcolor': app.theme_colors['Background'],
-                'plot_bgcolor': app.theme_colors['Background'],
-                'font': {'color': app.theme_colors['Text']},
+                'paper_bgcolor': theme_service.theme.get_color('Background'),
+                'plot_bgcolor': theme_service.theme.get_color('Background'),
+                'font': {'color': theme_service.theme.get_color('Text')},
             }
 
         except Exception as e:

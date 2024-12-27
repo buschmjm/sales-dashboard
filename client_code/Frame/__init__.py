@@ -8,37 +8,16 @@ from anvil.tables import app_tables
 from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
+from .. import theme_service
 
 anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
-    # Class-level theme definitions
-    light_theme = {
-      'Primary Container': '#007AFF',
-      'Background': '#FFFFFF',
-      'Surface': '#F5F5F5',
-      'Text': '#000000',
-      'Secondary Text': '#666666'
-    }
-    
-    dark_theme = {
-      'Primary Container': '#0A84FF',
-      'Background': '#000000',
-      'Surface': '#1C1C1E',
-      'Text': '#FFFFFF',
-      'Secondary Text': '#EBEBF5'
-    }
-    
-    # Class-level current theme reference
-    current_theme = dict(light_theme)
-
     def __init__(self, **properties):
-        # Make theme globally accessible
-        app.theme_colors = self.current_theme
-        
-        # Initialize components
         self.init_components(**properties)
-        
+        self._update_theme_buttons()
+        self._apply_theme()
+
         try:
             # Minimal configuration
             self.content_panel.role = 'none'
@@ -53,9 +32,6 @@ class Frame(FrameTemplate):
 
             Plot.templates.default = "rally"
             self._setup_navigation()
-            
-            self._update_theme_buttons()
-            self._apply_theme()
             
         except Exception as e:
             print(f"Error initializing Frame: {e}")
@@ -74,7 +50,7 @@ class Frame(FrameTemplate):
             link.foreground = 'black'
         
         # Set initial active state
-        self.sales_page_link.background = self.current_theme['Primary Container']
+        self.sales_page_link.background = theme_service.theme.get_color('Primary Container')
         self.sales_page_link.foreground = 'white'
 
     def _switch_page(self, page_name, component):
@@ -90,7 +66,7 @@ class Frame(FrameTemplate):
             
             # Set active link
             active_link = getattr(self, f"{page_name}_page_link")
-            active_link.background = self.current_theme['Primary Container']
+            active_link.background = theme_service.theme.get_color('Primary Container')
             active_link.foreground = 'white'
 
     def refresh_button_click(self, **event_args):
@@ -138,37 +114,33 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         """Switch to dark theme"""
-        self.current_theme.clear()
-        self.current_theme.update(self.dark_theme)
+        theme_service.theme.set_theme(True)
         self._update_theme_buttons()
         self._apply_theme()
 
     def light_mode_click(self, **event_args):
         """Switch to light theme"""
-        self.current_theme.clear()
-        self.current_theme.update(self.light_theme)
+        theme_service.theme.set_theme(False)
         self._update_theme_buttons()
         self._apply_theme()
 
     def _update_theme_buttons(self):
         """Update the visual state of theme buttons"""
-        is_light = self.current_theme == self.light_theme
+        is_light = theme_service.theme.current_theme == theme_service.theme.light_theme
         
         # Light mode button
-        self.light_mode.background = self.light_theme['Primary Container'] if is_light else 'transparent'
+        self.light_mode.background = theme_service.theme.get_color('Primary Container') if is_light else 'transparent'
         self.light_mode.foreground = '#FFFFFF' if is_light else '#000000'
         
         # Dark mode button
-        self.dark_mode.background = self.dark_theme['Primary Container'] if not is_light else 'transparent'
+        self.dark_mode.background = theme_service.theme.get_color('Primary Container') if not is_light else 'transparent'
         self.dark_mode.foreground = '#FFFFFF' if not is_light else '#000000'
 
     def _apply_theme(self):
         """Apply the current theme to all components"""
-        # Update main container backgrounds
-        self.content_panel.background = self.current_theme['Background']
-        self.sidebar_panel.background = self.current_theme['Surface']
+        self.content_panel.background = theme_service.theme.get_color('Background')
+        self.sidebar_panel.background = theme_service.theme.get_color('Surface')
         
-        # Update text colors for navigation links
         for nav in [self.home_link, self.sales_link, self.reports_link, self.admin_link]:
-            nav.foreground = self.current_theme['Text']
+            nav.foreground = theme_service.theme.get_color('Text')
 
