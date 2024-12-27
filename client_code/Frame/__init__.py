@@ -128,10 +128,21 @@ class Frame(FrameTemplate):
             # Store current theme
             self.current_theme = theme
             
-            # Update navigation panel colors
-            nav_panel_bg = '#ffffff' if theme == 'light' else '#121212'
-            nav_text = '#000000' if theme == 'light' else '#ffffff'
-            primary_color = '#2196F3' if theme == 'light' else '#90caf9'
+            # Set theme colors based on theme
+            colors = {
+                'light': {
+                    'background': '#ffffff',
+                    'text': '#000000',
+                    'primary': '#2196F3'
+                },
+                'dark': {
+                    'background': '#121212',
+                    'text': '#ffffff',
+                    'primary': '#90caf9'
+                }
+            }
+            
+            current_colors = colors[theme]
             
             # Update button states
             if theme == 'light':
@@ -142,20 +153,20 @@ class Frame(FrameTemplate):
                 self.light_mode.role = 'outline'
             
             # Update panel colors
-            self.content_panel.background = nav_panel_bg
-            self.content_panel.foreground = nav_text
+            self.content_panel.background = current_colors['background']
+            self.content_panel.foreground = current_colors['text']
             
             # Update navigation links
             for link in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
                 if link == getattr(self, f"{self.current_page}_page_link"):
-                    link.background = primary_color
-                    link.foreground = nav_panel_bg
+                    link.background = current_colors['primary']
+                    link.foreground = current_colors['background']
                 else:
                     link.background = 'transparent'
-                    link.foreground = nav_text
+                    link.foreground = current_colors['text']
             
-            # Save theme preference
-            self.call_server('save_user_theme_preference', theme)
+            # Save theme preference using anvil.server.call
+            anvil.server.call('save_user_theme_preference', theme)
             
         except Exception as e:
             print(f"Error applying theme: {str(e)}")
