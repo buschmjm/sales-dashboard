@@ -28,11 +28,27 @@ class Frame(FrameTemplate):
             self.add_component(self.refresh_button, slot="top-right")
 
             Plot.templates.default = "rally"
+            
+            # Check admin status and setup navigation accordingly
+            self.is_admin = self._check_admin_status()
+            if not self.is_admin:
+                self.admin_page_link.visible = False
+                
             self._setup_navigation()
             
         except Exception as e:
             print(f"Error initializing Frame: {e}")
             alert(f"Error initializing Frame: {e}")
+
+    def _check_admin_status(self):
+        """Check if current user has admin privileges"""
+        try:
+            current_user = anvil.users.get_user()
+            user_row = app_tables.users.get(email=current_user['email'])
+            return user_row['Admin'] if user_row else False
+        except Exception as e:
+            print(f"Error checking admin status: {e}")
+            return False
 
     def _setup_navigation(self):
         """Initialize navigation state and styling"""
@@ -51,6 +67,12 @@ class Frame(FrameTemplate):
         self.sales_page_link.foreground = 'white'
 
     def _switch_page(self, page_name, component):
+        # Don't allow non-admins to access admin page
+        if page_name == 'admin' and not self.is_admin:
+            self._switch_page('sales', Sales())
+            alert("You don't have permission to access the admin page.")
+            return
+            
         if getattr(self, 'current_page', None) != page_name:
             self.current_page = page_name
             self.content_panel.clear()
