@@ -108,3 +108,12 @@ class Frame(FrameTemplate):
 
     def signout_link_click(self, **event_args):
         alert("Sign out functionality not implemented yet.")
+
+    def dark_mode_click(self, **event_args):
+      """This method is called when the button is clicked"""
+      pass
+
+    def light_mode_click(self, **event_args):
+      """This method is called when the button is clicked"""
+      pass
+
