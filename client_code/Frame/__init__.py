@@ -8,7 +8,7 @@ from anvil.tables import app_tables
 from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
-from . import theme_service
+from . import theme
 
 anvil.users.login_with_form()
 
@@ -39,7 +39,7 @@ class Frame(FrameTemplate):
             alert(f"Error initializing Frame: {e}")
 
     def _apply_theme(self):
-        colors = AppTheme.get_colors()  # No argument needed
+        colors = theme.AppTheme.get_theme()
         self.content_panel.background = colors['Background']
         self.sidebar_panel.background = colors['Surface']
         
@@ -47,7 +47,7 @@ class Frame(FrameTemplate):
             nav.foreground = colors['Text']
 
     def _update_theme_buttons(self):
-        colors = AppTheme.get_colors()  # No argument needed
+        colors = theme.AppTheme.get_theme()
         button_colors = colors['Button']
         
         self.light_mode.background = button_colors['Active'] if not self.is_dark_mode else 'transparent'
@@ -58,7 +58,7 @@ class Frame(FrameTemplate):
 
     def light_mode_click(self, **event_args):
         self.is_dark_mode = False
-        AppTheme.set_dark_mode(False)  # This handles the theme update
+        theme.AppTheme.set_dark_mode(False)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
@@ -68,7 +68,7 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         self.is_dark_mode = True
-        AppTheme.set_dark_mode(True)  # This handles the theme update
+        theme.AppTheme.set_dark_mode(True)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():

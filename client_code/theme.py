@@ -1,9 +1,23 @@
-class Theme:
+class AppTheme:
     _instance = None
-    _is_dark = False
-    
-    def __init__(self):
-        self._light_theme = {
+    _current_theme = None
+
+    @classmethod
+    def get_theme(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+            cls._current_theme = cls._get_light_theme()
+        return cls._current_theme
+
+    @classmethod
+    def set_dark_mode(cls, is_dark):
+        if cls._instance is None:
+            cls._instance = cls()
+        cls._current_theme = cls._get_dark_theme() if is_dark else cls._get_light_theme()
+
+    @staticmethod
+    def _get_light_theme():
+        return {
             'Button': {
                 'Default': '#1EB980',
                 'Active': '#005235',
@@ -24,8 +38,10 @@ class Theme:
                 'Grid': '#E1E3DF'
             }
         }
-        
-        self._dark_theme = {
+
+    @staticmethod
+    def _get_dark_theme():
+        return {
             'Button': {
                 'Default': '#1EB980',
                 'Active': '#005235',
@@ -46,20 +62,3 @@ class Theme:
                 'Grid': '#404943'
             }
         }
-    
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-    
-    @classmethod
-    def get_colors(cls):
-        instance = cls.get_instance()
-        return instance._dark_theme if cls._is_dark else instance._light_theme
-    
-    @classmethod
-    def set_dark_mode(cls, is_dark):
-        cls._is_dark = is_dark
-
-theme = Theme.get_instance()
