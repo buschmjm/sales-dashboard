@@ -19,7 +19,8 @@ unique_ids:
     PhoneReports.RowTemplate4: '1734030447975653794061702.1216'
     ReportsInnerFrame: '1734186037623301505268747.54877'
     Sales: '1685452827810810401583930.4839'
-  modules: {}
+  modules:
+    theme_service: 6EI4PU7VPQYYSWBMFEICHVOP56VXL4Q3
   scripts: {}
   server_modules:
     Custom: '1733247027802746950478261.5111'

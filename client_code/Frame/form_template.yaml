@@ -37,7 +37,7 @@ components:
     properties: {align: left, background: 'theme:Outline', foreground: 'theme:On Primary', icon: 'fa:moon-o', role: null, text: ''}
     type: Button
   layout_properties: {slot: left-nav}
-  name: column_panel_2
+  name: sidebar_panel
   properties: {col_widths: '{}'}
   type: ColumnPanel
 - layout_properties: {slot: logo}
