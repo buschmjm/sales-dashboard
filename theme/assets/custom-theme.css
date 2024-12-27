@@ -1,0 +1,64 @@
+/* General theming */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Panel theming */
+.anvil-panel {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}
+
+/* Button theming */
+.btn {
+  background-color: var(--surface-variant);
+  color: var(--on-surface-variant);
+  border-color: var(--overlay-color);
+}
+
+.btn:hover {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+}
+
+/* Table theming */
+.anvil-data-grid {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  border-color: var(--overlay-color);
+}
+
+.anvil-data-grid-header {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+}
+
+/* Input theming */
+.anvil-text-box, .anvil-text-area {
+  background-color: var(--surface-variant);
+  color: var(--text-color);
+  border-color: var(--overlay-color);
+}
+
+/* Link theming */
+a {
+  color: var(--primary-color);
+}
+
+a:hover {
+  color: var(--primary-container);
+}
+
+/* Card theming */
+.anvil-role-card {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  box-shadow: 0 2px 4px var(--overlay-color);
+}
+
+/* Plot theming */
+.js-plotly-plot {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}

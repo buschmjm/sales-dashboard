@@ -30,6 +30,10 @@ class Frame(FrameTemplate):
             Plot.templates.default = "rally"
             self._setup_navigation()
             
+            # Initialize theme
+            self.current_theme = 'light'
+            self._apply_theme(self.current_theme)
+            
         except Exception as e:
             print(f"Error initializing Frame: {e}")
             alert(f"Error initializing Frame: {e}")
@@ -40,15 +44,15 @@ class Frame(FrameTemplate):
         self.current_page = 'sales'
         self.content_panel.add_component(Sales())
         
-        # Configure navigation links
+        # Configure navigation links with theme variables
         nav_links = [self.sales_page_link, self.reports_page_link, self.admin_page_link]
         for link in nav_links:
             link.background = 'transparent'
-            link.foreground = 'black'
+            link.foreground = 'var(--text-color)'
         
-        # Set initial active state
-        self.sales_page_link.background = app.theme_colors['Primary Container']
-        self.sales_page_link.foreground = 'white'
+        # Set initial active state using theme variables
+        self.sales_page_link.background = 'var(--primary-color)'
+        self.sales_page_link.foreground = 'var(--background-color)'
 
     def _switch_page(self, page_name, component):
         if getattr(self, 'current_page', None) != page_name:
@@ -56,15 +60,15 @@ class Frame(FrameTemplate):
             self.content_panel.clear()
             self.content_panel.add_component(component)
             
-            # Reset all navigation backgrounds
+            # Reset all navigation backgrounds using theme variables
             for link in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
                 link.background = 'transparent'
-                link.foreground = 'black'
+                link.foreground = 'var(--text-color)'
             
-            # Set active link
+            # Set active link using theme variables
             active_link = getattr(self, f"{page_name}_page_link")
-            active_link.background = app.theme_colors['Primary Container']
-            active_link.foreground = 'white'
+            active_link.background = 'var(--primary-color)'
+            active_link.foreground = 'var(--background-color)'
 
     def refresh_button_click(self, **event_args):
         """Handle refresh button click - only triggers database refresh APIs."""
@@ -110,10 +114,41 @@ class Frame(FrameTemplate):
         alert("Sign out functionality not implemented yet.")
 
     def dark_mode_click(self, **event_args):
-      """This method is called when the button is clicked"""
-      pass
+        """Handle dark mode button click"""
+        self._apply_theme('dark')
 
     def light_mode_click(self, **event_args):
-      """This method is called when the button is clicked"""
-      pass
+        """Handle light mode button click"""
+        self._apply_theme('light')
+
+    def _apply_theme(self, theme):
+        """Apply the selected theme to the application"""
+        try:
+            # Update root element's data-theme attribute
+            anvil.js.call('eval', f'document.documentElement.setAttribute("data-theme", "{theme}")')
+            
+            # Store current theme
+            self.current_theme = theme
+            
+            # Update button states using theme variables
+            if theme == 'light':
+                self.light_mode.background = 'var(--primary-color)'
+                self.light_mode.foreground = 'var(--background-color)'
+                self.dark_mode.background = 'transparent'
+                self.dark_mode.foreground = 'var(--text-color)'
+            else:
+                self.dark_mode.background = 'var(--primary-color)'
+                self.dark_mode.foreground = 'var(--background-color)'
+                self.light_mode.background = 'transparent'
+                self.light_mode.foreground = 'var(--text-color)'
+            
+            # Update content panel and other elements
+            self.content_panel.background = 'var(--background-color)'
+            self.content_panel.foreground = 'var(--text-color)'
+            
+            # Save user preference
+            anvil.server.call('save_user_theme_preference', theme)
+            
+        except Exception as e:
+            print(f"Error applying theme: {e}")
 

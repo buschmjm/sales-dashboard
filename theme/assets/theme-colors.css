@@ -1,0 +1,23 @@
+/* Light theme variables */
+:root[data-theme="light"] {
+  --background-color: #ffffff;
+  --text-color: rgba(0, 0, 0, 0.87);
+  --surface-color: #f5f5f5;
+  --primary-color: var(--Primary, #2196F3);
+  --primary-container: var(--Primary-Container, #1976D2);
+  --surface-variant: #e0e0e0;
+  --on-surface-variant: #424242;
+  --overlay-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme variables */
+:root[data-theme="dark"] {
+  --background-color: #121212;
+  --text-color: rgba(255, 255, 255, 0.87);
+  --surface-color: #1e1e1e;
+  --primary-color: var(--Primary, #90caf9);
+  --primary-container: var(--Primary-Container, #1976D2);
+  --surface-variant: #2d2d2d;
+  --on-surface-variant: #e0e0e0;
+  --overlay-color: rgba(255, 255, 255, 0.1);
+}
