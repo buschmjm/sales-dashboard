@@ -15,11 +15,6 @@ class B2bReports(B2bReportsTemplate):
     self.b2b_end_date.date = date.today()
     self.b2b_start_date.date = date.today() - timedelta(days=7)
     
-    # Make sure all checkboxes start checked
-    self.b2b_metric_business_cards.checked = True
-    self.b2b_metric_flyers.checked = True
-    self.b2b_metric_emails.checked = True
-    
     # Initialize metrics cache
     self._cache = {}
     
@@ -153,16 +148,6 @@ class B2bReports(B2bReportsTemplate):
       "showlegend": False
     })
     
-  # Checkbox event handlers
-  def b2b_metric_business_cards_change(self, **event_args):
-    self.refresh_b2b_data()
-
-  def b2b_metric_flyers_change(self, **event_args):
-    self.refresh_b2b_data()
-
-  def b2b_metric_emails_change(self, **event_args):
-    self.refresh_b2b_data()
-
   def b2b_start_date_change(self, **event_args):
     """Handle start date changes"""
     self._cache = {}  # Invalidate cache when date changes
