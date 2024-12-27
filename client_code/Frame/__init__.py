@@ -12,29 +12,31 @@ from ..ReportsInnerFrame import ReportsInnerFrame
 anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
+    # Class-level theme definitions
+    light_theme = {
+      'Primary Container': '#007AFF',
+      'Background': '#FFFFFF',
+      'Surface': '#F5F5F5',
+      'Text': '#000000',
+      'Secondary Text': '#666666'
+    }
+    
+    dark_theme = {
+      'Primary Container': '#0A84FF',
+      'Background': '#000000',
+      'Surface': '#1C1C1E',
+      'Text': '#FFFFFF',
+      'Secondary Text': '#EBEBF5'
+    }
+    
+    # Class-level current theme reference
+    current_theme = dict(light_theme)
+
     def __init__(self, **properties):
-        # Define theme colors before initialization
-        self.light_theme = {
-          'Primary Container': '#007AFF',
-          'Background': '#FFFFFF',
-          'Surface': '#F5F5F5',
-          'Text': '#000000',
-          'Secondary Text': '#666666'
-        }
+        # Make theme globally accessible
+        app.theme_colors = self.current_theme
         
-        self.dark_theme = {
-          'Primary Container': '#0A84FF',
-          'Background': '#000000',
-          'Surface': '#1C1C1E',
-          'Text': '#FFFFFF',
-          'Secondary Text': '#EBEBF5'
-        }
-        
-        # Initialize current_theme before init_components
-        self.current_theme = dict(self.light_theme)
-        app.add_property('theme_colors', self.current_theme)
-        
-        # Now initialize components
+        # Initialize components
         self.init_components(**properties)
         
         try:
@@ -136,15 +138,15 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         """Switch to dark theme"""
+        self.current_theme.clear()
         self.current_theme.update(self.dark_theme)
-        app.theme_colors = self.current_theme
         self._update_theme_buttons()
         self._apply_theme()
 
     def light_mode_click(self, **event_args):
         """Switch to light theme"""
+        self.current_theme.clear()
         self.current_theme.update(self.light_theme)
-        app.theme_colors = self.current_theme
         self._update_theme_buttons()
         self._apply_theme()
 
