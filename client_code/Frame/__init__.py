@@ -39,6 +39,13 @@ class Frame(FrameTemplate):
             print(f"Error initializing Frame: {e}")
             alert(f"Error initializing Frame: {e}")
 
+    @staticmethod
+    def get_current_theme():
+        """Get the current theme colors. Called by child components."""
+        if not hasattr(Frame, '_current_theme'):
+            Frame._current_theme = theme_utils.theme.get_colors(False)  # Default to light theme
+        return Frame._current_theme
+
     def _setup_navigation(self):
         """Initialize navigation state and styling"""
         # Set initial states
@@ -128,7 +135,8 @@ class Frame(FrameTemplate):
 
     def _update_theme_buttons(self):
         """Update the visual state of theme buttons"""
-        colors = theme_utils.theme.get_colors(self.is_dark_mode)
+        Frame._current_theme = theme_utils.theme.get_colors(self.is_dark_mode)
+        colors = Frame._current_theme
         button_colors = colors['Button']
         
         # Light mode button

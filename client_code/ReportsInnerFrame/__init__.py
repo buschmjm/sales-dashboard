@@ -14,7 +14,7 @@ from .. import theme_utils
 class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
-        colors = theme_utils.theme.get_colors(self._get_theme_mode())
+        colors = theme_utils.theme.get_colors(False)  # Default to light theme
         
         # Add table styling
         if hasattr(self, 'repeating_panel_1'):
@@ -25,7 +25,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         self.content_panel.background = colors['Background']
         self.current_section = 'phone'
         
-        # Configure navigation
+        # Configure navigation with initial colors
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = 'transparent'
             nav.foreground = colors['Button']['Text Inactive']
@@ -42,7 +42,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             self.content_panel.clear()
             self.content_panel.add_component(component)
             
-            colors = theme_utils.theme.get_colors(self._get_theme_mode())
+            colors = self._get_theme_mode()
             button_colors = colors['Button']
             
             # Reset all nav buttons
@@ -56,8 +56,9 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             active_nav.foreground = button_colors['Text Active']
 
     def _get_theme_mode(self):
-        """Get current theme mode from parent Frame"""
-        return getattr(self.parent.parent, 'is_dark_mode', False)
+        """Get current theme mode safely"""
+        from .. import Frame
+        return Frame.Frame.get_current_theme()
 
     def phone_nav_click(self, **event_args):
         self._switch_section('phone', PhoneReports())

@@ -54,8 +54,9 @@ class EmailReports(EmailReportsTemplate):
         self.refresh_email_data()
 
     def _get_theme_mode(self):
-        """Get current theme mode from parent Frame"""
-        return getattr(self.parent.parent.parent, 'is_dark_mode', False)
+        """Get current theme colors safely"""
+        from .. import Frame
+        return Frame.Frame.get_current_theme()
 
     def email_metric_changed(self, **event_args):
         """Handle metric selector change"""

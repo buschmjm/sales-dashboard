@@ -40,8 +40,9 @@ class PhoneReports(PhoneReportsTemplate):
         self.refresh_data()
     
     def _get_theme_mode(self):
-        """Get current theme mode from parent Frame"""
-        return getattr(self.parent.parent.parent, 'is_dark_mode', False)
+        """Get current theme colors safely"""
+        from .. import Frame
+        return Frame.Frame.get_current_theme()
 
     def _setup_event_handlers(self):
         """Set up all event handlers at once"""
