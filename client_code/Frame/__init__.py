@@ -131,12 +131,12 @@ class Frame(FrameTemplate):
         colors = theme_utils.theme.get_colors(self.is_dark_mode)
         
         # Light mode button
-        self.light_mode.background = colors['Primary Container'] if not self.is_dark_mode else 'transparent'
-        self.light_mode.foreground = '#FFFFFF' if not self.is_dark_mode else '#000000'
+        self.light_mode.background = colors['Button Active'] if not self.is_dark_mode else 'transparent'
+        self.light_mode.foreground = colors['Button Text'] if not self.is_dark_mode else colors['Nav Button Text']
         
         # Dark mode button
-        self.dark_mode.background = colors['Primary Container'] if self.is_dark_mode else 'transparent'
-        self.dark_mode.foreground = '#FFFFFF' if self.is_dark_mode else '#000000'
+        self.dark_mode.background = colors['Button Active'] if self.is_dark_mode else 'transparent'
+        self.dark_mode.foreground = colors['Button Text'] if self.is_dark_mode else colors['Nav Button Text']
 
     def _apply_theme(self):
         """Apply the current theme to all components"""

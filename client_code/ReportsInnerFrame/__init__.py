@@ -45,12 +45,12 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             # Reset all nav buttons
             for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
                 nav.background = 'transparent'
-                nav.foreground = colors['Text']
+                nav.foreground = colors['Nav Button Text']
             
             # Set active button
             active_nav = getattr(self, f"{section}_nav")
-            active_nav.background = colors['Primary Container']
-            active_nav.foreground = 'white'
+            active_nav.background = colors['Nav Button Active']
+            active_nav.foreground = colors['Nav Button Active Text']
 
     def _get_theme_mode(self):
         """Get current theme mode from parent Frame"""

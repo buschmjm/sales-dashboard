@@ -45,7 +45,16 @@ class ThemeColors:
                 
                 # Disabled states
                 'Disabled Container': 'rgba(133, 133, 139, 0.12)',
-                'On Disabled': '#85858B'
+                'On Disabled': '#85858B',
+                
+                # Button colors
+                'Button Background': '#1EB980',
+                'Button Text': '#FFFFFF',
+                'Button Hover': '#73FBBC',
+                'Button Active': '#005235',
+                'Nav Button Active': '#005235',
+                'Nav Button Text': '#E1E3DF',
+                'Nav Button Active Text': '#73FBBC'
             }
         return {
             'Primary Container': '#007AFF',
