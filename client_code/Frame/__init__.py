@@ -47,8 +47,12 @@ class Frame(FrameTemplate):
               'Secondary Text': '#EBEBF5'
             }
             
-            # Set initial theme
-            app.theme_colors = self.light_theme
+            # Set initial theme as instance variable
+            self.current_theme = dict(self.light_theme)
+            
+            # Create theme property
+            app.add_property('theme_colors', self.current_theme)
+            
             self._update_theme_buttons()
             self._apply_theme()
             
@@ -69,7 +73,7 @@ class Frame(FrameTemplate):
             link.foreground = 'black'
         
         # Set initial active state
-        self.sales_page_link.background = app.theme_colors['Primary Container']
+        self.sales_page_link.background = self.current_theme['Primary Container']
         self.sales_page_link.foreground = 'white'
 
     def _switch_page(self, page_name, component):
@@ -85,7 +89,7 @@ class Frame(FrameTemplate):
             
             # Set active link
             active_link = getattr(self, f"{page_name}_page_link")
-            active_link.background = app.theme_colors['Primary Container']
+            active_link.background = self.current_theme['Primary Container']
             active_link.foreground = 'white'
 
     def refresh_button_click(self, **event_args):
@@ -133,19 +137,21 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         """Switch to dark theme"""
-        app.theme_colors = self.dark_theme
+        self.current_theme.update(self.dark_theme)
+        app.theme_colors = self.current_theme
         self._update_theme_buttons()
         self._apply_theme()
 
     def light_mode_click(self, **event_args):
         """Switch to light theme"""
-        app.theme_colors = self.light_theme
+        self.current_theme.update(self.light_theme)
+        app.theme_colors = self.current_theme
         self._update_theme_buttons()
         self._apply_theme()
 
     def _update_theme_buttons(self):
         """Update the visual state of theme buttons"""
-        is_light = app.theme_colors == self.light_theme
+        is_light = self.current_theme == self.light_theme
         
         # Light mode button
         self.light_mode.background = self.light_theme['Primary Container'] if is_light else 'transparent'
@@ -158,10 +164,10 @@ class Frame(FrameTemplate):
     def _apply_theme(self):
         """Apply the current theme to all components"""
         # Update main container backgrounds
-        self.content_panel.background = app.theme_colors['Background']
-        self.sidebar_panel.background = app.theme_colors['Surface']
+        self.content_panel.background = self.current_theme['Background']
+        self.sidebar_panel.background = self.current_theme['Surface']
         
         # Update text colors for navigation links
         for nav in [self.home_link, self.sales_link, self.reports_link, self.admin_link]:
-            nav.foreground = app.theme_colors['Text']
+            nav.foreground = self.current_theme['Text']
 
