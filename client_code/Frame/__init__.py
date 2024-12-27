@@ -14,7 +14,30 @@ anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
     def __init__(self, **properties):
+        # Define theme colors before initialization
+        self.light_theme = {
+            'Primary Container': '#007AFF',
+            'Background': '#FFFFFF',
+            'Surface': '#F5F5F5',
+            'Text': '#000000',
+            'Secondary Text': '#666666'
+        }
+        
+        self.dark_theme = {
+            'Primary Container': '#0A84FF',
+            'Background': '#000000',
+            'Surface': '#1C1C1E',
+            'Text': '#FFFFFF',
+            'Secondary Text': '#EBEBF5'
+        }
+        
+        # Initialize current_theme before init_components
+        self.current_theme = dict(self.light_theme)
+        app.theme_colors = self.current_theme
+        
+        # Initialize components
         self.init_components(**properties)
+        
         self._update_theme_buttons()
         self._apply_theme()
 
@@ -138,9 +161,11 @@ class Frame(FrameTemplate):
 
     def _apply_theme(self):
         """Apply the current theme to all components"""
-        self.content_panel.background = theme_service.theme.get_color('Background')
-        self.sidebar_panel.background = theme_service.theme.get_color('Surface')
+        # Update main container backgrounds
+        self.content_panel.background = self.current_theme['Background']
+        self.sidebar_panel.background = self.current_theme['Surface']
         
-        for nav in [self.home_link, self.sales_link, self.reports_link, self.admin_link]:
-            nav.foreground = theme_service.theme.get_color('Text')
+        # Update text colors for correct navigation links
+        for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
+            nav.foreground = self.current_theme['Text']
 
