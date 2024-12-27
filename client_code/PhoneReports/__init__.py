@@ -1,7 +1,7 @@
 # Reports Client-Side Code
 from ._anvil_designer import PhoneReportsTemplate
 from anvil import *
-from ..common.theme import AppTheme
+from ..theme_service import AppTheme
 import plotly.graph_objects as go
 import anvil.server
 import anvil.users

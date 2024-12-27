@@ -1,29 +1,60 @@
-class ThemeService:
-    def __init__(self):
-        self.light_theme = {
-            'Primary Container': '#007AFF',
+class AppTheme:
+    _current_theme = None
+    
+    @classmethod
+    def get_colors(cls):
+        if cls._current_theme is None:
+            cls._current_theme = cls._get_light_theme()
+        return cls._current_theme
+    
+    @classmethod
+    def set_dark_mode(cls, is_dark):
+        cls._current_theme = cls._get_dark_theme() if is_dark else cls._get_light_theme()
+    
+    @staticmethod
+    def _get_light_theme():
+        return {
+            'Button': {
+                'Default': '#1EB980',
+                'Active': '#005235',
+                'Hover': '#73FBBC',
+                'Text': '#FFFFFF',
+                'Text Active': '#73FBBC',
+                'Text Inactive': '#000000'
+            },
+            'Primary': '#1EB980',
+            'Primary Container': '#005235',
             'Background': '#FFFFFF',
             'Surface': '#F5F5F5',
-            'Text': '#000000',
-            'Secondary Text': '#666666'
+            'Surface Variant': '#E1E3DF',
+            'Text': '#191C1A',
+            'Plot': {
+                'Background': '#FFFFFF',
+                'Text': '#191C1A',
+                'Grid': '#E1E3DF'
+            }
         }
-        
-        self.dark_theme = {
-            'Primary Container': '#0A84FF',
-            'Background': '#000000',
-            'Surface': '#1C1C1E',
-            'Text': '#FFFFFF',
-            'Secondary Text': '#EBEBF5'
+    
+    @staticmethod
+    def _get_dark_theme():
+        return {
+            'Button': {
+                'Default': '#1EB980',
+                'Active': '#005235',
+                'Hover': '#73FBBC',
+                'Text': '#FFFFFF',
+                'Text Active': '#73FBBC',
+                'Text Inactive': '#E1E3DF'
+            },
+            'Primary': '#1EB980',
+            'Primary Container': '#005235',
+            'Background': '#191C1A',
+            'Surface': '#191C1A',
+            'Surface Variant': '#404943',
+            'Text': '#E1E3DF',
+            'Plot': {
+                'Background': '#191C1A',
+                'Text': '#E1E3DF',
+                'Grid': '#404943'
+            }
         }
-        
-        self.current_theme = dict(self.light_theme)
-    
-    def get_color(self, key):
-        return self.current_theme.get(key)
-    
-    def set_theme(self, is_dark):
-        self.current_theme.clear()
-        self.current_theme.update(self.dark_theme if is_dark else self.light_theme)
-
-# Create a singleton instance
-theme = ThemeService()

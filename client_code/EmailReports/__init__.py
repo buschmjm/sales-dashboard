@@ -1,6 +1,7 @@
 # Reports Client-Side Code
 from ._anvil_designer import EmailReportsTemplate
 from anvil import *
+from ..theme_service import AppTheme
 from .. import theme_utils
 import plotly.graph_objects as go
 import anvil.server
