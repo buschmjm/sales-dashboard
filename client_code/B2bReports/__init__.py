@@ -15,7 +15,7 @@ class B2bReports(B2bReportsTemplate):
     self.b2b_end_date.date = date.today()
     self.b2b_start_date.date = date.today() - timedelta(days=7)
     
-    # Initialize metrics cache
+    # Initialize cache
     self._cache = {}
     
     # Set up color scheme
@@ -28,20 +28,9 @@ class B2bReports(B2bReportsTemplate):
     # Initial data refresh
     self.refresh_b2b_data()
 
-  def get_selected_metrics(self):
-    """Get currently selected metrics"""
-    metrics = []
-    if self.b2b_metric_emails.checked:
-        metrics.append('Email')
-    if self.b2b_metric_flyers.checked:
-        metrics.append('Flyers')
-    if self.b2b_metric_business_cards.checked:
-        metrics.append('Business Cards')
-    return metrics
-
   def is_cache_valid(self, start_date, end_date):
     """Check if cached data is still valid"""
-    if not self._cache['data'] or not self._cache['last_fetch']:
+    if not self._cache.get('data') or not self._cache.get('last_fetch'):
         return False
     
     cache_age = datetime.now() - self._cache['last_fetch']
@@ -58,7 +47,9 @@ class B2bReports(B2bReportsTemplate):
         
     print("Fetching fresh data")
     all_data = {}
-    for metric in ['Email', 'Flyers', 'Business Cards']:
+    metrics = ['Email', 'Flyers', 'Business Cards']
+    
+    for metric in metrics:
         data = anvil.server.call('get_b2b_stats', start_date, end_date, metric)
         if data and "users" in data and "metrics" in data:
             all_data[metric] = data
@@ -73,22 +64,13 @@ class B2bReports(B2bReportsTemplate):
     return all_data
 
   def refresh_b2b_data(self):
-    """Refresh plot with current selections"""
+    """Refresh plot with all metrics"""
     try:
-      selected_metrics = self.get_selected_metrics()
-      if not selected_metrics:
-        self._show_empty_plot(error="Please select at least one promotional type")
-        return
-      
-      # Gather data for each selected metric
-      all_data = {}
-      for metric in selected_metrics:
-        data = anvil.server.call('get_b2b_stats', 
-                                self.b2b_start_date.date, 
-                                self.b2b_end_date.date,
-                                metric)
-        if data and "users" in data and "metrics" in data:
-          all_data[metric] = data
+      # Always fetch all metrics
+      all_data = self.fetch_b2b_data(
+          self.b2b_start_date.date, 
+          self.b2b_end_date.date
+      )
       
       if not all_data:
         self._show_empty_plot()
@@ -115,7 +97,7 @@ class B2bReports(B2bReportsTemplate):
     """Update the stacked bar plot"""
     plot_data = []
     
-    for metric in self.get_selected_metrics():
+    for metric in ['Email', 'Flyers', 'Business Cards']:
         if metric in data:
             metrics = data[metric].get("metrics", {})
             values = [metrics.get(rep, 0) for rep in sales_reps]
