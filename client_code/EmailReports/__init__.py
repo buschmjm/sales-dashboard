@@ -2,7 +2,6 @@
 from ._anvil_designer import EmailReportsTemplate
 from anvil import *
 from ..theme_service import AppTheme
-from .. import theme_utils
 import plotly.graph_objects as go
 import anvil.server
 import anvil.users
@@ -56,11 +55,6 @@ class EmailReports(EmailReportsTemplate):
             self.email_metric_selector.background = colors['Surface Variant']
         if hasattr(self, 'email_numbers_plot'):
             self._update_email_plot()
-
-    def _get_theme_mode(self):
-        """Get current theme colors safely"""
-        from .. import Frame
-        return Frame.Frame.get_current_theme()
 
     def email_metric_changed(self, **event_args):
         """Handle metric selector change"""

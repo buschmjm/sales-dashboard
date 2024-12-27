@@ -8,7 +8,7 @@ from anvil.tables import app_tables
 from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
-from ..theme_service import AppTheme
+from . import theme_service
 
 anvil.users.login_with_form()
 

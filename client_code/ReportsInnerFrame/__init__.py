@@ -55,11 +55,6 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             active_nav.background = button_colors['Active']
             active_nav.foreground = button_colors['Text Active']
 
-    def _get_theme_mode(self):
-        """Get current theme mode safely"""
-        from .. import Frame
-        return Frame.Frame.get_current_theme()
-
     def phone_nav_click(self, **event_args):
         self._switch_section('phone', PhoneReports())
 

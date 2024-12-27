@@ -42,11 +42,6 @@ class PhoneReports(PhoneReportsTemplate):
         if hasattr(self, 'data_column_selector') and self.data_column_selector.selected_value:
             self._update_plot(self.data_column_selector.selected_value)
 
-    def _get_theme_mode(self):
-        """Get current theme colors safely"""
-        from .. import Frame
-        return Frame.Frame.get_current_theme()
-
     def _setup_event_handlers(self):
         """Set up all event handlers at once"""
         self.start_date_picker.set_event_handler('change', self.date_picker_change)
