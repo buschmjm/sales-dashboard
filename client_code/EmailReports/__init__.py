@@ -14,6 +14,13 @@ from .. import theme_service
 class EmailReports(EmailReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
+        colors = theme_utils.theme.get_colors(self._get_theme_mode())
+        
+        # Update component colors
+        self.background = colors['Background']
+        if hasattr(self, 'email_metric_selector'):
+            self.email_metric_selector.foreground = colors['Text']
+            self.email_metric_selector.background = colors['Surface Variant']
         
         # Set table role and styling
         if hasattr(self, 'repeating_panel_1'):
@@ -45,6 +52,10 @@ class EmailReports(EmailReportsTemplate):
         self.email_end_date.set_event_handler('change', self.email_date_change)
 
         self.refresh_email_data()
+
+    def _get_theme_mode(self):
+        """Get current theme mode from parent Frame"""
+        return getattr(self.parent.parent.parent, 'is_dark_mode', False)
 
     def email_metric_changed(self, **event_args):
         """Handle metric selector change"""
@@ -109,15 +120,22 @@ class EmailReports(EmailReportsTemplate):
                 })
 
             self.email_numbers_plot.data = traces
+            colors = theme_utils.theme.get_colors(self._get_theme_mode())
             self.email_numbers_plot.layout = {
                 "title": f"Email Statistics ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {
                     "title": None,
                     "tickangle": -45,
                     "showticklabels": True,
-                    "type": "category"  # Ensures proper category spacing
+                    "type": "category",  # Ensures proper category spacing
+                    'gridcolor': colors['Plot']['Grid'],
+                    'color': colors['Plot']['Text']
                 },
-                "yaxis": {"title": "Number of Emails"},
+                "yaxis": {
+                    "title": "Number of Emails",
+                    'gridcolor': colors['Plot']['Grid'],
+                    'color': colors['Plot']['Text']
+                },
                 "showlegend": True,
                 "barmode": 'group',  # Changed from 'stack' to 'group' to match phone
                 "margin": {
@@ -140,9 +158,9 @@ class EmailReports(EmailReportsTemplate):
                 },
                 "dragmode": False,  # Disable zooming/panning
                 "hovermode": "closest",
-                'paper_bgcolor': theme_service.theme.get_color('Background'),
-                'plot_bgcolor': theme_service.theme.get_color('Background'),
-                'font': {'color': theme_service.theme.get_color('Text')},
+                'paper_bgcolor': colors['Plot']['Background'],
+                'plot_bgcolor': colors['Plot']['Background'],
+                'font': {'color': colors['Plot']['Text']},
             }
 
         except Exception as e:

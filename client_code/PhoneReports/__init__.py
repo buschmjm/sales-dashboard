@@ -13,6 +13,13 @@ from .. import theme_service
 class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
+        colors = theme_utils.theme.get_colors(self._get_theme_mode())
+        
+        # Update component colors
+        self.background = colors['Background']
+        if hasattr(self, 'data_column_selector'):
+            self.data_column_selector.foreground = colors['Text']
+            self.data_column_selector.background = colors['Surface Variant']
         
         # Set table role and styling
         if hasattr(self, 'repeating_panel_1'):
@@ -32,6 +39,10 @@ class PhoneReports(PhoneReportsTemplate):
         # Single initial data refresh
         self.refresh_data()
     
+    def _get_theme_mode(self):
+        """Get current theme mode from parent Frame"""
+        return getattr(self.parent.parent.parent, 'is_dark_mode', False)
+
     def _setup_event_handlers(self):
         """Set up all event handlers at once"""
         self.start_date_picker.set_event_handler('change', self.date_picker_change)
@@ -152,15 +163,24 @@ class PhoneReports(PhoneReportsTemplate):
             # Set complete fresh layout
             date_range = f"({self.start_date_picker.date} - {self.end_date_picker.date})"
             
+            colors = theme_utils.theme.get_colors(self._get_theme_mode())
             self.call_info_plot.data = traces
             self.call_info_plot.layout = {  # Complete layout reset
                 'title': f"{formatted_title} {date_range}",
-                'xaxis': {'title': None},
-                'yaxis': {'title': formatted_title},
+                'xaxis': {
+                    'title': None,
+                    'gridcolor': colors['Plot']['Grid'],
+                    'color': colors['Plot']['Text']
+                },
+                'yaxis': {
+                    'title': formatted_title,
+                    'gridcolor': colors['Plot']['Grid'],
+                    'color': colors['Plot']['Text']
+                },
                 'showlegend': True,
-                'paper_bgcolor': theme_service.theme.get_color('Background'),
-                'plot_bgcolor': theme_service.theme.get_color('Background'),
-                'font': {'color': theme_service.theme.get_color('Text')},
+                'paper_bgcolor': colors['Plot']['Background'],
+                'plot_bgcolor': colors['Plot']['Background'],
+                'font': {'color': colors['Plot']['Text']},
             }
 
         except Exception as e:

@@ -14,6 +14,7 @@ from .. import theme_utils
 class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
+        colors = theme_utils.theme.get_colors(self._get_theme_mode())
         
         # Add table styling
         if hasattr(self, 'repeating_panel_1'):
@@ -21,18 +22,19 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
         
         # Basic initialization
         self.content_panel.role = 'none'
+        self.content_panel.background = colors['Background']
         self.current_section = 'phone'
         
         # Configure navigation
         for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
             nav.background = 'transparent'
-            nav.foreground = 'black'
+            nav.foreground = colors['Button']['Text Inactive']
             nav.role = 'none'
         
         # Initialize with phone view
         self.content_panel.add_component(PhoneReports())
-        self.phone_nav.background = app.theme_colors['Primary Container']
-        self.phone_nav.foreground = 'white'
+        self.phone_nav.background = colors['Button']['Active']
+        self.phone_nav.foreground = colors['Button']['Text Active']
 
     def _switch_section(self, section, component):
         if self.current_section != section:
