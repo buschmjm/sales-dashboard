@@ -8,13 +8,13 @@ from anvil.tables import app_tables
 from ..PhoneReports import PhoneReports
 from ..EmailReports import EmailReports
 from ..B2bReports import B2bReports
-from .. import theme_utils
+from ..theme_service import AppTheme
 
 
 class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
-        colors = theme_utils.theme.get_colors(False)  # Default to light theme
+        colors = AppTheme.get_colors()
         
         # Add table styling
         if hasattr(self, 'repeating_panel_1'):
@@ -42,7 +42,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             self.content_panel.clear()
             self.content_panel.add_component(component)
             
-            colors = self._get_theme_mode()
+            colors = AppTheme.get_colors()
             button_colors = colors['Button']
             
             # Reset all nav buttons

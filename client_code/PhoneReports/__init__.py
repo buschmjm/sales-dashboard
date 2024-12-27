@@ -9,17 +9,11 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import datetime, timedelta, date
-from .. import theme_service
 
 class PhoneReports(PhoneReportsTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         self.refresh_theme()
-        # Update component colors
-        self.background = colors['Background']
-        if hasattr(self, 'data_column_selector'):
-            self.data_column_selector.foreground = colors['Text']
-            self.data_column_selector.background = colors['Surface Variant']
         
         # Set table role and styling
         if hasattr(self, 'repeating_panel_1'):
@@ -40,12 +34,12 @@ class PhoneReports(PhoneReportsTemplate):
         self.refresh_data()
     
     def refresh_theme(self):
-        colors = Theme.get_colors()
+        colors = AppTheme.get_colors()
         self.background = colors['Background']
         if hasattr(self, 'data_column_selector'):
             self.data_column_selector.foreground = colors['Text']
             self.data_column_selector.background = colors['Surface Variant']
-        if self.data_column_selector.selected_value:
+        if hasattr(self, 'data_column_selector') and self.data_column_selector.selected_value:
             self._update_plot(self.data_column_selector.selected_value)
 
     def _get_theme_mode(self):
@@ -173,7 +167,7 @@ class PhoneReports(PhoneReportsTemplate):
             # Set complete fresh layout
             date_range = f"({self.start_date_picker.date} - {self.end_date_picker.date})"
             
-            colors = theme_utils.theme.get_colors(self._get_theme_mode())
+            colors = AppTheme.get_colors()
             self.call_info_plot.data = traces
             self.call_info_plot.layout = {  # Complete layout reset
                 'title': f"{formatted_title} {date_range}",

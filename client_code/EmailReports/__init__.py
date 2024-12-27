@@ -10,7 +10,6 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import datetime, timedelta, date
-from .. import theme_service
 
 
 class EmailReports(EmailReportsTemplate):
@@ -50,14 +49,13 @@ class EmailReports(EmailReportsTemplate):
         self.refresh_email_data()
 
     def refresh_theme(self):
-        """Update component colors based on current theme"""
-        from .. import Frame
-        colors = Frame.Frame._current_theme
+        colors = AppTheme.get_colors()
         self.background = colors['Background']
         if hasattr(self, 'email_metric_selector'):
             self.email_metric_selector.foreground = colors['Text']
             self.email_metric_selector.background = colors['Surface Variant']
-        self._update_email_plot()
+        if hasattr(self, 'email_numbers_plot'):
+            self._update_email_plot()
 
     def _get_theme_mode(self):
         """Get current theme colors safely"""
@@ -99,7 +97,6 @@ class EmailReports(EmailReportsTemplate):
             return email
 
     def _update_email_plot(self, data=None):
-        """Update the email statistics plot with a vertical bar chart."""
         try:
             if data is None or not data or "users" not in data or "metrics" not in data:
                 self._show_empty_plot()
@@ -127,7 +124,7 @@ class EmailReports(EmailReportsTemplate):
                 })
 
             self.email_numbers_plot.data = traces
-            colors = theme_utils.theme.get_colors(self._get_theme_mode())
+            colors = AppTheme.get_colors()
             self.email_numbers_plot.layout = {
                 "title": f"Email Statistics ({self.email_start_date.date} - {self.email_end_date.date})",
                 "xaxis": {
