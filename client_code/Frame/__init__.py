@@ -9,35 +9,14 @@ from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
 from .. import theme_service
+from .. import theme_utils
 
 anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
     def __init__(self, **properties):
-        # Define theme colors before initialization
-        self.light_theme = {
-            'Primary Container': '#007AFF',
-            'Background': '#FFFFFF',
-            'Surface': '#F5F5F5',
-            'Text': '#000000',
-            'Secondary Text': '#666666'
-        }
-        
-        self.dark_theme = {
-            'Primary Container': '#0A84FF',
-            'Background': '#000000',
-            'Surface': '#1C1C1E',
-            'Text': '#FFFFFF',
-            'Secondary Text': '#EBEBF5'
-        }
-        
-        # Initialize current_theme before init_components
-        self.current_theme = dict(self.light_theme)
-        app.theme_colors = self.current_theme
-        
-        # Initialize components
         self.init_components(**properties)
-        
+        self.is_dark_mode = False
         self._update_theme_buttons()
         self._apply_theme()
 
@@ -137,35 +116,35 @@ class Frame(FrameTemplate):
 
     def dark_mode_click(self, **event_args):
         """Switch to dark theme"""
-        theme_service.theme.set_theme(True)
+        self.is_dark_mode = True
         self._update_theme_buttons()
         self._apply_theme()
 
     def light_mode_click(self, **event_args):
         """Switch to light theme"""
-        theme_service.theme.set_theme(False)
+        self.is_dark_mode = False
         self._update_theme_buttons()
         self._apply_theme()
 
     def _update_theme_buttons(self):
         """Update the visual state of theme buttons"""
-        is_light = theme_service.theme.current_theme == theme_service.theme.light_theme
+        colors = theme_utils.theme.get_colors(self.is_dark_mode)
         
         # Light mode button
-        self.light_mode.background = theme_service.theme.get_color('Primary Container') if is_light else 'transparent'
-        self.light_mode.foreground = '#FFFFFF' if is_light else '#000000'
+        self.light_mode.background = colors['Primary Container'] if not self.is_dark_mode else 'transparent'
+        self.light_mode.foreground = '#FFFFFF' if not self.is_dark_mode else '#000000'
         
         # Dark mode button
-        self.dark_mode.background = theme_service.theme.get_color('Primary Container') if not is_light else 'transparent'
-        self.dark_mode.foreground = '#FFFFFF' if not is_light else '#000000'
+        self.dark_mode.background = colors['Primary Container'] if self.is_dark_mode else 'transparent'
+        self.dark_mode.foreground = '#FFFFFF' if self.is_dark_mode else '#000000'
 
     def _apply_theme(self):
         """Apply the current theme to all components"""
-        # Update main container backgrounds
-        self.content_panel.background = self.current_theme['Background']
-        self.sidebar_panel.background = self.current_theme['Surface']
+        colors = theme_utils.theme.get_colors(self.is_dark_mode)
         
-        # Update text colors for correct navigation links
+        self.content_panel.background = colors['Background']
+        self.sidebar_panel.background = colors['Surface']
+        
         for nav in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
-            nav.foreground = self.current_theme['Text']
+            nav.foreground = colors['Text']
 

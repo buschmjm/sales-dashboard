@@ -8,6 +8,7 @@ from anvil.tables import app_tables
 from ..PhoneReports import PhoneReports
 from ..EmailReports import EmailReports
 from ..B2bReports import B2bReports
+from .. import theme_utils
 
 
 class ReportsInnerFrame(ReportsInnerFrameTemplate):
@@ -39,15 +40,21 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
             self.content_panel.clear()
             self.content_panel.add_component(component)
             
+            colors = theme_utils.theme.get_colors(self._get_theme_mode())
+            
             # Reset all nav buttons
             for nav in [self.phone_nav, self.email_nav, self.b2b_nav]:
                 nav.background = 'transparent'
-                nav.foreground = app.theme_colors['Text']
+                nav.foreground = colors['Text']
             
             # Set active button
             active_nav = getattr(self, f"{section}_nav")
-            active_nav.background = app.theme_colors['Primary Container']
+            active_nav.background = colors['Primary Container']
             active_nav.foreground = 'white'
+
+    def _get_theme_mode(self):
+        """Get current theme mode from parent Frame"""
+        return getattr(self.parent.parent, 'is_dark_mode', False)
 
     def phone_nav_click(self, **event_args):
         self._switch_section('phone', PhoneReports())
