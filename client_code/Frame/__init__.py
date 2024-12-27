@@ -123,15 +123,17 @@ class Frame(FrameTemplate):
         self._apply_theme('light')
 
     def _apply_theme(self, theme):
-        """Apply the selected theme to the application"""
+        """Apply the selected theme to the application using Anvil components"""
         try:
-            # Set theme using Anvil component properties
-            self.background = 'var(--background-color)' if theme == 'light' else 'var(--background-color-dark)'
-            
             # Store current theme
             self.current_theme = theme
             
-            # Update button states using theme variables
+            # Update navigation panel colors
+            nav_panel_bg = '#ffffff' if theme == 'light' else '#121212'
+            nav_text = '#000000' if theme == 'light' else '#ffffff'
+            primary_color = '#2196F3' if theme == 'light' else '#90caf9'
+            
+            # Update button states
             if theme == 'light':
                 self.light_mode.role = 'primary-color'
                 self.dark_mode.role = 'outline'
@@ -139,15 +141,21 @@ class Frame(FrameTemplate):
                 self.dark_mode.role = 'primary-color'
                 self.light_mode.role = 'outline'
             
-            # Update container backgrounds
-            self.content_panel.background = 'var(--background-color)' if theme == 'light' else 'var(--background-color-dark)'
+            # Update panel colors
+            self.content_panel.background = nav_panel_bg
+            self.content_panel.foreground = nav_text
             
-            # Update text colors on all components that need it
+            # Update navigation links
             for link in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
-                link.foreground = 'var(--text-color)' if theme == 'light' else 'var(--text-color-dark)'
+                if link == getattr(self, f"{self.current_page}_page_link"):
+                    link.background = primary_color
+                    link.foreground = nav_panel_bg
+                else:
+                    link.background = 'transparent'
+                    link.foreground = nav_text
             
-            # Save user preference
-            anvil.server.call('save_user_theme_preference', theme)
+            # Save theme preference
+            self.call_server('save_user_theme_preference', theme)
             
         except Exception as e:
             print(f"Error applying theme: {str(e)}")
