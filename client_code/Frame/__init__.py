@@ -14,6 +14,22 @@ anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
     def __init__(self, **properties):
+        # Define theme colors as class attributes
+        self.colors = {
+            'light': {
+                'background': '#ffffff',
+                'text': '#000000',
+                'primary': '#2196F3',
+                'secondary': '#f5f5f5'
+            },
+            'dark': {
+                'background': '#121212',
+                'text': '#ffffff',
+                'primary': '#90caf9',
+                'secondary': '#1e1e1e'
+            }
+        }
+        
         self.init_components(**properties)
         
         try:
@@ -31,29 +47,60 @@ class Frame(FrameTemplate):
             Plot.templates.default = "rally"
             self._setup_navigation()
             
-            # Initialize theme
+            # Initialize theme state
             self.current_theme = 'light'
-            self._apply_theme(self.current_theme)
+            self._apply_theme('light')
             
         except Exception as e:
             print(f"Error initializing Frame: {e}")
             alert(f"Error initializing Frame: {e}")
 
+    def _apply_theme(self, theme):
+        """Apply theme colors to components"""
+        try:
+            self.current_theme = theme
+            colors = self.colors[theme]
+            
+            # Update content panel
+            self.content_panel.background = colors['background']
+            self.content_panel.foreground = colors['text']
+            
+            # Update theme buttons to show active state
+            self.light_mode.background = colors['primary'] if theme == 'light' else 'transparent'
+            self.light_mode.foreground = colors['background'] if theme == 'light' else colors['text']
+            
+            self.dark_mode.background = colors['primary'] if theme == 'dark' else 'transparent'
+            self.dark_mode.foreground = colors['background'] if theme == 'dark' else colors['text']
+            
+            # Update navigation links
+            for link in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
+                if link == getattr(self, f"{self.current_page}_page_link"):
+                    link.background = colors['primary']
+                    link.foreground = colors['background']
+                else:
+                    link.background = 'transparent'
+                    link.foreground = colors['text']
+            
+        except Exception as e:
+            print(f"Error applying theme: {str(e)}")
+            print(f"Full error details: {repr(e)}")
+
     def _setup_navigation(self):
         """Initialize navigation state and styling"""
-        # Set initial states
         self.current_page = 'sales'
         self.content_panel.add_component(Sales())
         
-        # Configure navigation links with theme variables
+        colors = self.colors[self.current_theme]
+        
+        # Configure navigation links
         nav_links = [self.sales_page_link, self.reports_page_link, self.admin_page_link]
         for link in nav_links:
             link.background = 'transparent'
-            link.foreground = 'var(--text-color)'
+            link.foreground = colors['text']
         
-        # Set initial active state using theme variables
-        self.sales_page_link.background = 'var(--primary-color)'
-        self.sales_page_link.foreground = 'var(--background-color)'
+        # Set initial active state
+        self.sales_page_link.background = colors['primary']
+        self.sales_page_link.foreground = colors['background']
 
     def _switch_page(self, page_name, component):
         if getattr(self, 'current_page', None) != page_name:
@@ -121,54 +168,4 @@ class Frame(FrameTemplate):
     def light_mode_click(self, **event_args):
         """Handle light mode button click"""
         self._apply_theme('light')
-
-    def _apply_theme(self, theme):
-        """Apply the selected theme to the application using Anvil components"""
-        try:
-            # Store current theme
-            self.current_theme = theme
-            
-            # Set theme colors based on theme
-            colors = {
-                'light': {
-                    'background': '#ffffff',
-                    'text': '#000000',
-                    'primary': '#2196F3'
-                },
-                'dark': {
-                    'background': '#121212',
-                    'text': '#ffffff',
-                    'primary': '#90caf9'
-                }
-            }
-            
-            current_colors = colors[theme]
-            
-            # Update button states
-            if theme == 'light':
-                self.light_mode.role = 'primary-color'
-                self.dark_mode.role = 'outline'
-            else:
-                self.dark_mode.role = 'primary-color'
-                self.light_mode.role = 'outline'
-            
-            # Update panel colors
-            self.content_panel.background = current_colors['background']
-            self.content_panel.foreground = current_colors['text']
-            
-            # Update navigation links
-            for link in [self.sales_page_link, self.reports_page_link, self.admin_page_link]:
-                if link == getattr(self, f"{self.current_page}_page_link"):
-                    link.background = current_colors['primary']
-                    link.foreground = current_colors['background']
-                else:
-                    link.background = 'transparent'
-                    link.foreground = current_colors['text']
-            
-            # Save theme preference using anvil.server.call
-            anvil.server.call('save_user_theme_preference', theme)
-            
-        except Exception as e:
-            print(f"Error applying theme: {str(e)}")
-            print(f"Full error details: {repr(e)}")
 
