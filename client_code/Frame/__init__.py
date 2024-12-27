@@ -8,10 +8,7 @@ from anvil.tables import app_tables
 from ..Sales import Sales
 from ..Admin import Admin
 from ..ReportsInnerFrame import ReportsInnerFrame
-from .. import theme_service
-from . import theme_utils
-from ..theme_manager import ThemeManager
-from ..theme import Theme
+from ..app_theme import AppTheme
 
 anvil.users.login_with_form()
 
@@ -42,7 +39,7 @@ class Frame(FrameTemplate):
             alert(f"Error initializing Frame: {e}")
 
     def _apply_theme(self):
-        colors = Theme.get_colors()
+        colors = AppTheme.get_colors(self.is_dark_mode)
         self.content_panel.background = colors['Background']
         self.sidebar_panel.background = colors['Surface']
         
@@ -50,32 +47,34 @@ class Frame(FrameTemplate):
             nav.foreground = colors['Text']
 
     def _update_theme_buttons(self):
-        colors = Theme.get_colors()
+        colors = AppTheme.get_colors(self.is_dark_mode)
         button_colors = colors['Button']
         
-        # Light mode button
         self.light_mode.background = button_colors['Active'] if not self.is_dark_mode else 'transparent'
         self.light_mode.foreground = button_colors['Text'] if not self.is_dark_mode else button_colors['Text Inactive']
         
-        # Dark mode button
         self.dark_mode.background = button_colors['Active'] if self.is_dark_mode else 'transparent'
         self.dark_mode.foreground = button_colors['Text'] if self.is_dark_mode else button_colors['Text Inactive']
 
     def light_mode_click(self, **event_args):
         self.is_dark_mode = False
-        Theme.set_dark_mode(False)
+        AppTheme.set_dark_mode(False)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
-            self.content_panel.get_components()[0].refresh_theme()
+            comp = self.content_panel.get_components()[0]
+            if hasattr(comp, 'refresh_theme'):
+                comp.refresh_theme()
 
     def dark_mode_click(self, **event_args):
         self.is_dark_mode = True
-        Theme.set_dark_mode(True)
+        AppTheme.set_dark_mode(True)
         self._update_theme_buttons()
         self._apply_theme()
         if self.content_panel.get_components():
-            self.content_panel.get_components()[0].refresh_theme()
+            comp = self.content_panel.get_components()[0]
+            if hasattr(comp, 'refresh_theme'):
+                comp.refresh_theme()
 
     @staticmethod
     def get_current_theme():
