@@ -8,13 +8,10 @@ from anvil.tables import app_tables
 from ..theme_manager import ThemeManager
 
 class Sales(SalesTemplate):
-  def __init__(self, **properties):
-    # Set Form properties and Data Bindings.
-    self.init_components(**properties)
-    self.refresh_theme()
+    def __init__(self, **properties):
+        self.init_components(**properties)
+        self.refresh_theme()
 
-  def refresh_theme(self):
-    """Update component colors based on current theme"""
-    colors = ThemeManager.get_theme()
-    self.background = colors['Background']
-    # Update other components as needed
+    def refresh_theme(self):
+        colors = ThemeManager.get_theme()
+        self.background = colors['Background']
