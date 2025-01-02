@@ -72,3 +72,7 @@ class Sales(SalesTemplate):
                 "barmode": "group",
                 "margin": {"l": 50, "r": 50, "t": 50, "b": 30}
             }
+
+    def search_button_click(self, **event_args):
+      """This method is called when the button is clicked"""
+      pass

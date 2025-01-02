@@ -1,10 +1,32 @@
 components:
 - components:
-  - data_bindings: []
-    layout_properties: {grid_position: 'DOXUWS,GBVMFC'}
-    name: label_5
-    properties: {align: center, bold: true, font: '', font_size: 22, text: Statistics Versus Average}
-    type: Label
+  - components:
+    - data_bindings: []
+      layout_properties: {grid_position: 'SKGDRP,XSXOLW'}
+      name: label_5
+      properties: {align: center, bold: true, font: '', font_size: 22, text: Statistics Versus Average}
+      type: Label
+    - layout_properties: {grid_position: 'LZGIYC,PJXINC CWJRWG,YOTPVI'}
+      name: start_date_picker
+      properties: {}
+      type: DatePicker
+    - layout_properties: {grid_position: 'LZGIYC,PJXINC KMIPIM,MTIYMC'}
+      name: user_select
+      properties: {visible: false}
+      type: DropDown
+    - layout_properties: {grid_position: 'LZGIYC,EABJHP AHCDCC,UBTGNJ'}
+      name: end_date_picker
+      properties: {}
+      type: DatePicker
+    - event_bindings: {click: search_button_click}
+      layout_properties: {grid_position: 'LZGIYC,EABJHP JLXBAS,ABMHXD'}
+      name: search_button
+      properties: {text: Search}
+      type: Button
+    layout_properties: {grid_position: 'QTGGIB,OOLPAK'}
+    name: card_5
+    properties: {role: card}
+    type: ColumnPanel
   - components:
     - layout_properties: {grid_position: 'NFXUSU,VASAZM'}
       name: label_4
