@@ -18,8 +18,14 @@ components:
       name: end_date_picker
       properties: {}
       type: DatePicker
+<<<<<<< HEAD
     - layout_properties: {grid_position: 'LZGIYC,EABJHP JLXBAS,ABMHXD'}
       name: button_1
+=======
+    - event_bindings: {click: search_button_click}
+      layout_properties: {grid_position: 'LZGIYC,EABJHP JLXBAS,ABMHXD'}
+      name: search_button
+>>>>>>> fd83845137468df5f09d842e59517fa53f249762
       properties: {text: Search}
       type: Button
     layout_properties: {grid_position: 'QTGGIB,OOLPAK'}

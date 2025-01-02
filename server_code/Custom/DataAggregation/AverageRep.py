@@ -319,3 +319,73 @@ def recalculate_todays_averages():
     except Exception as e:
         print(f"Error in force recalculation: {e}")
         return False
+
+@anvil.server.callable
+def get_date_range_comparison(user_email, start_date, end_date):
+    """Get comparison data between a specific user and average rep for a date range"""
+    try:
+        # Get all average rep records in date range
+        avg_records = app_tables.average_rep.search(
+            date=q.between(start_date, end_date)
+        )
+        
+        # Convert to list and sort by date
+        dates = []
+        avg_data = []
+        user_data = []
+        
+        for avg_rec in sorted(avg_records, key=lambda x: x['date']):
+            date_str = avg_rec['date'].strftime('%Y-%m-%d')
+            dates.append(date_str)
+            
+            # Get average data
+            avg_data.append({
+                'calls_time': avg_rec['calls_time'],
+                'call_volume': avg_rec['call_volume'],
+                'emails_sent': avg_rec['emails_sent'],
+                'emails_received': avg_rec['emails_received'],
+                'business_cards': avg_rec['business_cards'],
+                'flyers': avg_rec['flyers'],
+                'b2b_emails': avg_rec['b2b_emails']
+            })
+            
+            # Get user data for this date
+            user_stats = {
+                'calls_time': 0,
+                'call_volume': 0,
+                'emails_sent': 0,
+                'emails_received': 0,
+                'business_cards': 0,
+                'flyers': 0,
+                'b2b_emails': 0
+            }
+            
+            # Get call stats
+            call_row = app_tables.call_statistics.get(
+                reportDate=avg_rec['date'],
+                userId=user_email
+            )
+            if call_row:
+                user_stats['calls_time'] = call_row['totalDuration']
+                user_stats['call_volume'] = call_row['volume']
+                
+            # Get email stats
+            email_row = app_tables.outlook_statistics.get(
+                reportDate=avg_rec['date'],
+                userId=user_email
+            )
+            if email_row:
+                user_stats['emails_sent'] = email_row['outbound']
+                user_stats['emails_received'] = email_row['inbound']
+                
+            user_data.append(user_stats)
+            
+        return {
+            'dates': dates,
+            'average': avg_data,
+            'user': user_data
+        }
+        
+    except Exception as e:
+        print(f"Error getting date range comparison: {e}")
+        return None
