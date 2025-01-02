@@ -193,6 +193,12 @@ scheduled_tasks:
     at: {minute: 0}
     every: hour
     n: 1
+- job_id: XCDCILYV
+  task_name: calculate_average_rep_stats_scheduled
+  time_spec:
+    at: {}
+    every: minute
+    n: 10
 secrets:
   b2b_sheets_secret:
     type: secret
