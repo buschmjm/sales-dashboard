@@ -4,9 +4,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.server
-<<<<<<< HEAD
-from datetime import datetime, timedelta
-import statistics
+from datetime import datetime
 
 @anvil.server.callable
 def calculate_average_rep_stats():
@@ -15,7 +13,12 @@ def calculate_average_rep_stats():
         today = datetime.now().date()
         print(f"Calculating average rep stats for {today}")
         
-        # Initialize stats dictionary
+        # Get all records for today
+        call_stats = app_tables.call_statistics.search(reportDate=today)
+        email_stats = app_tables.outlook_statistics.search(reportDate=today)
+        b2b_stats = app_tables.b2b_statistics.search(reportDate=today)
+        
+        # Calculate averages
         stats = {
             'date': today,
             'calls_time': 0,
@@ -27,51 +30,40 @@ def calculate_average_rep_stats():
             'b2b_emails': 0
         }
         
-        # Get call statistics
-        call_rows = app_tables.call_statistics.search(reportDate=today)
-        call_times = []
-        call_volumes = []
-        
-        for row in call_rows:
-            call_times.append(row['totalDuration'])
-            call_volumes.append(row['volume'])
+        # Calculate call averages
+        call_count = 0
+        for row in call_stats:
+            stats['calls_time'] += row['totalDuration']
+            stats['call_volume'] += row['volume']
+            call_count += 1
             
-        if call_times:
-            stats['calls_time'] = statistics.mean(call_times)
-        if call_volumes:
-            stats['call_volume'] = statistics.mean(call_volumes)
+        if call_count > 0:
+            stats['calls_time'] /= call_count
+            stats['call_volume'] /= call_count
             
-        # Get email statistics
-        email_rows = app_tables.outlook_statistics.search(reportDate=today)
-        sent_counts = []
-        received_counts = []
-        
-        for row in email_rows:
-            sent_counts.append(row['outbound'])
-            received_counts.append(row['inbound'])
+        # Calculate email averages
+        email_count = 0
+        for row in email_stats:
+            stats['emails_sent'] += row['outbound']
+            stats['emails_received'] += row['inbound']
+            email_count += 1
             
-        if sent_counts:
-            stats['emails_sent'] = statistics.mean(sent_counts)
-        if received_counts:
-            stats['emails_received'] = statistics.mean(received_counts)
+        if email_count > 0:
+            stats['emails_sent'] /= email_count
+            stats['emails_received'] /= email_count
             
-        # Get B2B statistics
-        b2b_rows = app_tables.b2b_statistics.search(reportDate=today)
-        cards = []
-        flyers = []
-        emails = []
-        
-        for row in b2b_rows:
-            cards.append(row['business_cards'])
-            flyers.append(row['flyers'])
-            emails.append(row['emails'])
+        # Calculate B2B averages
+        b2b_count = 0
+        for row in b2b_stats:
+            stats['business_cards'] += row['business_cards']
+            stats['flyers'] += row['flyers']
+            stats['b2b_emails'] += row['emails']
+            b2b_count += 1
             
-        if cards:
-            stats['business_cards'] = statistics.mean(cards)
-        if flyers:
-            stats['flyers'] = statistics.mean(flyers)
-        if emails:
-            stats['b2b_emails'] = statistics.mean(emails)
+        if b2b_count > 0:
+            stats['business_cards'] /= b2b_count
+            stats['flyers'] /= b2b_count
+            stats['b2b_emails'] /= b2b_count
             
         # Update or create average_rep record
         existing = app_tables.average_rep.get(date=today)
@@ -86,6 +78,14 @@ def calculate_average_rep_stats():
     except Exception as e:
         print(f"Error calculating average rep stats: {e}")
         return False
+
+@anvil.server.background_task
+def calculate_average_rep_stats_scheduled():
+    """Scheduled task to calculate average rep statistics"""
+    print("Starting scheduled average rep calculation")
+    result = calculate_average_rep_stats()
+    print(f"Scheduled average rep calculation completed: {result}")
+    return result
 
 @anvil.server.callable
 def get_comparison_data(user_email):
@@ -149,18 +149,3 @@ def get_comparison_data(user_email):
     except Exception as e:
         print(f"Error getting comparison data: {e}")
         return None
-=======
-
-# This is a server module. It runs on the Anvil server,
-# rather than in the user's browser.
-#
-# To allow anvil.server.call() to call functions here, we mark
-# them with @anvil.server.callable.
-# Here is an example - you can replace it with your own:
-#
-# @anvil.server.callable
-# def say_hello(name):
-#   print("Hello, " + name + "!")
-#   return 42
-#
->>>>>>> e141d3b1a35b527c6c66b27cb020abb07e4127bc
