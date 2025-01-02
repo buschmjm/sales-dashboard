@@ -20,29 +20,11 @@ class Sales(SalesTemplate):
             if not current_user:
                 raise ValueError("No user logged in")
                 
-            # Get today's date
-            today = datetime.now().date()
-            
-            # Get user's data for today
-            user_data = {
-                'calls_time': 0,
-                'call_volume': 0,
-                'emails_sent': 0,
-                'emails_received': 0,
-                'business_cards': 0,
-                'flyers': 0,
-                'b2b_emails': 0
-            }
-            
-            # Get average rep data
-            avg_rep = app_tables.average_rep.get(date=today)
-            if not avg_rep:
-                avg_rep = user_data
+            data = anvil.server.call('get_comparison_data', current_user['email'])
+            if not data:
+                raise ValueError("No data available")
                 
-            self._update_plots({
-                'user': user_data,
-                'average': avg_rep
-            })
+            self._update_plots(data)
             
         except Exception as e:
             alert("Failed to load sales data")
