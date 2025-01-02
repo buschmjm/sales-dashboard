@@ -130,12 +130,36 @@ def calculate_average_rep_stats():
     """Calculate and store average rep statistics for the current date"""
     try:
         today = datetime.now().date()
-        print(f"Calculating average rep stats for {today}")
+        print(f"\n=== Calculating Average Rep Stats for {today} ===")
         
         # Get all records for today
         call_stats = app_tables.call_statistics.search(reportDate=today)
         email_stats = app_tables.outlook_statistics.search(reportDate=today)
         
+        print("\n--- Call Statistics Input Data ---")
+        call_data = []
+        for row in call_stats:
+            call_data.append({
+                'user': row['userId'],
+                'time': row['totalDuration'],
+                'volume': row['volume']
+            })
+            print(f"User: {row['userId']}")
+            print(f"  - Call Time: {row['totalDuration']} minutes")
+            print(f"  - Call Volume: {row['volume']} calls")
+            
+        print("\n--- Email Statistics Input Data ---")
+        email_data = []
+        for row in email_stats:
+            email_data.append({
+                'user': row['userId'],
+                'sent': row['outbound'],
+                'received': row['inbound']
+            })
+            print(f"User: {row['userId']}")
+            print(f"  - Emails Sent: {row['outbound']}")
+            print(f"  - Emails Received: {row['inbound']}")
+            
         # Calculate averages
         stats = {
             'date': today,
@@ -149,39 +173,44 @@ def calculate_average_rep_stats():
         }
         
         # Calculate call averages
-        call_count = 0
-        for row in call_stats:
-            stats['calls_time'] += row['totalDuration']
-            stats['call_volume'] += row['volume']
-            call_count += 1
-            
-        if call_count > 0:
-            stats['calls_time'] /= call_count
-            stats['call_volume'] /= call_count
-            
+        if call_data:
+            stats['calls_time'] = sum(d['time'] for d in call_data) / len(call_data)
+            stats['call_volume'] = sum(d['volume'] for d in call_data) / len(call_data)
+            print(f"\nCall Averages (from {len(call_data)} users):")
+            print(f"  - Average Call Time: {stats['calls_time']:.2f} minutes")
+            print(f"  - Average Call Volume: {stats['call_volume']:.2f} calls")
+        
         # Calculate email averages
-        email_count = 0
-        for row in email_stats:
-            stats['emails_sent'] += row['outbound']
-            stats['emails_received'] += row['inbound']
-            email_count += 1
-            
-        if email_count > 0:
-            stats['emails_sent'] /= email_count
-            stats['emails_received'] /= email_count
+        if email_data:
+            stats['emails_sent'] = sum(d['sent'] for d in email_data) / len(email_data)
+            stats['emails_received'] = sum(d['received'] for d in email_data) / len(email_data)
+            print(f"\nEmail Averages (from {len(email_data)} users):")
+            print(f"  - Average Emails Sent: {stats['emails_sent']:.2f}")
+            print(f"  - Average Emails Received: {stats['emails_received']:.2f}")
             
         # Get B2B averages from Google Sheet
+        print("\n--- Fetching B2B Statistics ---")
         b2b_stats = get_b2b_stats_for_today()
+        print("B2B Averages:")
+        print(f"  - Average Business Cards: {b2b_stats['business_cards']:.2f}")
+        print(f"  - Average Flyers: {b2b_stats['flyers']:.2f}")
+        print(f"  - Average B2B Emails: {b2b_stats['b2b_emails']:.2f}")
         stats.update(b2b_stats)
             
         # Update or create average_rep record
         existing = app_tables.average_rep.get(date=today)
         if existing:
             existing.update(**stats)
+            print("\nUpdated existing average_rep record")
         else:
             app_tables.average_rep.add_row(**stats)
+            print("\nCreated new average_rep record")
             
-        print(f"Successfully updated average rep stats for {today}")
+        print("\n=== Final Average Statistics ===")
+        for key, value in stats.items():
+            if key != 'date':
+                print(f"{key}: {value:.2f}")
+                
         return True
         
     except Exception as e:
