@@ -4,6 +4,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.server
+<<<<<<< HEAD
 from datetime import datetime, timedelta
 import statistics
 
@@ -148,3 +149,18 @@ def get_comparison_data(user_email):
     except Exception as e:
         print(f"Error getting comparison data: {e}")
         return None
+=======
+
+# This is a server module. It runs on the Anvil server,
+# rather than in the user's browser.
+#
+# To allow anvil.server.call() to call functions here, we mark
+# them with @anvil.server.callable.
+# Here is an example - you can replace it with your own:
+#
+# @anvil.server.callable
+# def say_hello(name):
+#   print("Hello, " + name + "!")
+#   return 42
+#
+>>>>>>> e141d3b1a35b527c6c66b27cb020abb07e4127bc
