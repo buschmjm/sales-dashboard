@@ -68,6 +68,63 @@ def get_b2b_stats_for_today():
         print(f"Error getting B2B stats: {e}")
         return {'business_cards': 0, 'flyers': 0, 'b2b_emails': 0}
 
+def get_b2b_stats_for_user(user_email):
+    """Get B2B statistics from Google Sheet for a specific user"""
+    try:
+        today = datetime.now().date()
+        api_key = anvil.secrets.get_secret("b2b_sheets_secret")
+        url = "https://script.google.com/macros/s/AKfycbzrm6ttNyYRxfibYUHYExxlWruT33m1gXdDRZFo4hLFap0zkmhutKKkHdpQNW27GdS4Yw/exec"
+        
+        response = requests.get(
+            url,
+            params={"key": api_key},
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            return {'business_cards': 0, 'flyers': 0, 'b2b_emails': 0}
+            
+        sheet_data = response.json()
+        
+        # Initialize counters
+        totals = {'business_cards': 0, 'flyers': 0, 'b2b_emails': 0}
+        
+        for row in sheet_data:
+            try:
+                if row.get('Sales Rep', '').strip().lower() != user_email.lower():
+                    continue
+                    
+                timestamp_str = row.get('Timestamp', '').strip()
+                if not timestamp_str:
+                    continue
+                    
+                try:
+                    timestamp = datetime.strptime(timestamp_str, "%m/%d/%Y %H:%M:%S")
+                except ValueError:
+                    try:
+                        timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        continue
+                        
+                if timestamp.date() == today:
+                    promo_material = row.get('Promotional Material the customer would like?', '').lower()
+                    if 'business card' in promo_material:
+                        totals['business_cards'] += 1
+                    if 'flyer' in promo_material:
+                        totals['flyers'] += 1
+                    if 'email' in promo_material:
+                        totals['b2b_emails'] += 1
+                    
+            except Exception as row_error:
+                print(f"Error processing B2B row: {str(row_error)}")
+                continue
+                
+        return totals
+        
+    except Exception as e:
+        print(f"Error getting user B2B stats: {e}")
+        return {'business_cards': 0, 'flyers': 0, 'b2b_emails': 0}
+
 @anvil.server.callable
 def calculate_average_rep_stats():
     """Calculate and store average rep statistics for the current date"""
@@ -183,15 +240,9 @@ def get_comparison_data(user_email):
             user_data['emails_sent'] = email_row['outbound']
             user_data['emails_received'] = email_row['inbound']
             
-        # Get B2B data
-        b2b_row = app_tables.b2b_statistics.get(
-            reportDate=today,
-            userId=user_email
-        )
-        if b2b_row:
-            user_data['business_cards'] = b2b_row['business_cards']
-            user_data['flyers'] = b2b_row['flyers']
-            user_data['b2b_emails'] = b2b_row['emails']
+        # Get B2B data from Google Sheets
+        b2b_stats = get_b2b_stats_for_user(user_email)
+        user_data.update(b2b_stats)
             
         return {
             'user': user_data,
