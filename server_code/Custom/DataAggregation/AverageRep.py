@@ -202,15 +202,20 @@ def get_comparison_data(user_email):
     try:
         today = datetime.now().date()
         
-        # Get average rep data
+        # First attempt to get average rep data
         avg_rep = app_tables.average_rep.get(date=today)
+        
+        # If no data exists, calculate it first
         if not avg_rep:
-            calculate_average_rep_stats()
-            avg_rep = app_tables.average_rep.get(date=today)
-            
-        if not avg_rep:
-            raise ValueError("No average rep data available")
-            
+            print("No average rep data found for today, calculating...")
+            success = calculate_average_rep_stats()
+            if success:
+                avg_rep = app_tables.average_rep.get(date=today)
+                if not avg_rep:
+                    raise ValueError("Failed to create average rep data")
+            else:
+                raise ValueError("Failed to calculate average rep stats")
+        
         # Get user's data
         user_data = {
             'calls_time': 0,
@@ -243,10 +248,21 @@ def get_comparison_data(user_email):
         # Get B2B data from Google Sheets
         b2b_stats = get_b2b_stats_for_user(user_email)
         user_data.update(b2b_stats)
+        
+        # Convert avg_rep data to dictionary for consistent access
+        avg_data = {
+            'calls_time': avg_rep['calls_time'],
+            'call_volume': avg_rep['call_volume'],
+            'emails_sent': avg_rep['emails_sent'],
+            'emails_received': avg_rep['emails_received'],
+            'business_cards': avg_rep['business_cards'],
+            'flyers': avg_rep['flyers'],
+            'b2b_emails': avg_rep['b2b_emails']
+        }
             
         return {
             'user': user_data,
-            'average': {k: getattr(avg_rep, k) for k in user_data.keys()}
+            'average': avg_data
         }
         
     except Exception as e:
