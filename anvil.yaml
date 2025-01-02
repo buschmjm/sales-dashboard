@@ -24,6 +24,35 @@ db_schema:
       type: string
     server: search
     title: API Keys
+  average_rep:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: date
+      type: date
+    - admin_ui: {order: 3, width: 200}
+      name: emails_sent
+      type: number
+    - admin_ui: {order: 4, width: 200}
+      name: call_volume
+      type: number
+    - admin_ui: {order: 5, width: 200}
+      name: calls_time
+      type: number
+    - admin_ui: {order: 6, width: 200}
+      name: emails_received
+      type: number
+    - admin_ui: {order: 7, width: 200}
+      name: business_cards
+      type: number
+    - admin_ui: {order: 8, width: 200}
+      name: flyers
+      type: number
+    - admin_ui: {order: 9, width: 200}
+      name: b2b_emails
+      type: number
+    server: full
+    title: Average Rep
   call_statistics:
     client: none
     columns:
