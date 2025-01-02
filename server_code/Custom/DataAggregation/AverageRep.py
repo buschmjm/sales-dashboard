@@ -297,3 +297,25 @@ def get_comparison_data(user_email):
     except Exception as e:
         print(f"Error getting comparison data: {e}")
         return None
+
+@anvil.server.callable
+def recalculate_todays_averages():
+    """Force recalculation of today's averages, called by refresh button"""
+    try:
+        today = datetime.now().date()
+        print(f"\n=== Force Recalculating Average Rep Stats for {today} ===")
+        
+        # Delete existing record for today if it exists
+        existing = app_tables.average_rep.get(date=today)
+        if existing:
+            print("Removing existing average rep record for today")
+            existing.delete()
+            
+        # Recalculate averages
+        result = calculate_average_rep_stats()
+        print(f"Force recalculation completed: {result}")
+        return result
+        
+    except Exception as e:
+        print(f"Error in force recalculation: {e}")
+        return False

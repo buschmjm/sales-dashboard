@@ -89,10 +89,11 @@ class Frame(FrameTemplate):
             active_link.foreground = 'white'
 
     def refresh_button_click(self, **event_args):
-        """Handle refresh button click - only triggers database refresh APIs."""
+        """Handle refresh button click - triggers database refresh APIs."""
         try:
             # Show loading indicator to user
-            Notification("Refreshing data...").show()
+            notification = Notification("Refreshing data...", timeout=None)
+            notification.show()
             
             # Call APIs sequentially and capture results
             call_reports_refreshed = anvil.server.call('fetch_call_reports')
@@ -104,13 +105,26 @@ class Frame(FrameTemplate):
                 print(f"Error in fetch_user_email_stats: {email_error}")
                 email_stats_status = 'Failed to update'
             
-            # Log results without affecting UI
+            # Force recalculation of averages
+            averages_recalculated = anvil.server.call('recalculate_todays_averages')
+            
+            # Log results
             print("Refresh results:")
             print(f"- Call reports: {'Updated' if call_reports_refreshed else 'No new data'}")
             print(f"- Email stats: {email_stats_status}")
+            print(f"- Averages: {'Recalculated' if averages_recalculated else 'Failed to recalculate'}")
             
-            # Notify user of completion
-            Notification("Data refresh complete.").show()
+            # Hide loading indicator
+            notification.hide()
+            
+            # Show completion notification
+            Notification("Data refresh complete.", timeout=3).show()
+            
+            # Refresh current page if it's the Sales page
+            if self.current_page == 'sales':
+                current_content = self.content_panel.get_components()[0]
+                if hasattr(current_content, 'refresh_data'):
+                    current_content.refresh_data()
             
         except Exception as e:
             print(f"Error during data refresh: {e}")
