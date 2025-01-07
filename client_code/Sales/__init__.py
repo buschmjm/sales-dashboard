@@ -26,28 +26,43 @@ class Sales(SalesTemplate):
         """Configure user selector dropdown for admins"""
         try:
             current_user = anvil.users.get_user()
+            print(f"Current user: {current_user['email']}")  # Debug log
+            
             user_row = app_tables.users.get(email=current_user['email'])
+            if not user_row:
+                print("User not found in users table")
+                self.user_select.visible = False
+                return
+                
+            print(f"User admin status: {user_row['Admin']}")  # Debug log
+            print(f"Found sales users: {list(app_tables.users.search(Sales=True))}")  # Debug log
             
             # Default to invisible
             self.user_select.visible = False
             
-            if user_row and user_row['Admin']:
+            if user_row['Admin']:  # Changed from 'and user_row['Admin']'
                 # Get all sales users, sorted alphabetically
-                sales_users = app_tables.users.search(
+                sales_users = list(app_tables.users.search(
                     Sales=True,
                     tables.order_by('name')
-                )
+                ))
+                
+                print(f"Number of sales users found: {len(sales_users)}")  # Debug log
                 
                 # Format items for dropdown
                 self.user_select.items = [(u['name'], u['email']) for u in sales_users]
+                print(f"Dropdown items: {self.user_select.items}")  # Debug log
                 
                 # Make visible and select first user
                 self.user_select.visible = True
                 if self.user_select.items:
                     self.user_select.selected_value = self.user_select.items[0][1]
                     
+                print(f"Selector visibility set to: {self.user_select.visible}")  # Debug log
+                
         except Exception as e:
             print(f"Error setting up user selector: {e}")
+            self.user_select.visible = False
             
     def get_target_user_email(self):
         """Get the email of the user whose data should be displayed"""
