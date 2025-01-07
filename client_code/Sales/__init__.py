@@ -26,42 +26,46 @@ class Sales(SalesTemplate):
         """Configure user selector dropdown for admins"""
         try:
             current_user = anvil.users.get_user()
-            print(f"Current user: {current_user['email']}")  # Debug log
+            print(f"Current user email: {current_user['email']}")
             
             user_row = app_tables.users.get(email=current_user['email'])
             if not user_row:
-                print("User not found in users table")
+                print("User not found in users table - hiding selector")
                 self.user_select.visible = False
                 return
                 
-            print(f"User admin status: {user_row['Admin']}")  # Debug log
-            print(f"Found sales users: {list(app_tables.users.search(Sales=True))}")  # Debug log
+            print(f"User row found: {user_row}")
+            print(f"Admin status: {user_row['Admin']}")
             
-            # Default to invisible
-            self.user_select.visible = False
+            # Hide selector if user is not admin
+            if not user_row['Admin']:
+                print("User is not admin - hiding selector")
+                self.user_select.visible = False
+                return
+                
+            # Get all sales users
+            sales_users = list(app_tables.users.search(
+                Sales=True,
+                tables.order_by('name')
+            ))
             
-            if user_row['Admin']:  # Changed from 'and user_row['Admin']'
-                # Get all sales users, sorted alphabetically
-                sales_users = list(app_tables.users.search(
-                    Sales=True,
-                    tables.order_by('name')
-                ))
+            print(f"Found {len(sales_users)} sales users")
+            
+            if not sales_users:
+                print("No sales users found - hiding selector")
+                self.user_select.visible = False
+                return
                 
-                print(f"Number of sales users found: {len(sales_users)}")  # Debug log
-                
-                # Format items for dropdown
-                self.user_select.items = [(u['name'], u['email']) for u in sales_users]
-                print(f"Dropdown items: {self.user_select.items}")  # Debug log
-                
-                # Make visible and select first user
-                self.user_select.visible = True
-                if self.user_select.items:
-                    self.user_select.selected_value = self.user_select.items[0][1]
-                    
-                print(f"Selector visibility set to: {self.user_select.visible}")  # Debug log
+            # Keep selector visible and populate it
+            self.user_select.items = [(u['name'], u['email']) for u in sales_users]
+            print(f"Populated dropdown with {len(self.user_select.items)} items")
+            
+            if self.user_select.items:
+                self.user_select.selected_value = self.user_select.items[0][1]
+                print(f"Selected first user: {self.user_select.items[0][0]}")
                 
         except Exception as e:
-            print(f"Error setting up user selector: {e}")
+            print(f"Error in setup_user_selector: {e}")
             self.user_select.visible = False
             
     def get_target_user_email(self):
