@@ -6,16 +6,19 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 class Sales(SalesTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
         # Set default date range to last 7 days
-        end_date = datetime.now()
+        end_date = date.today()
         start_date = end_date - timedelta(days=7)
+        
+        # Set the DatePicker properties
         self.end_date_selector.date = end_date
         self.start_date_selector.date = start_date
+        
         self.refresh_data()
         
     def refresh_data(self):
