@@ -29,6 +29,9 @@ class Frame(FrameTemplate):
 
             Plot.templates.default = "rally"
             
+            # Add content before checking admin status
+            self.content_panel.add_component(Sales())
+            
             # Check admin status and setup navigation accordingly
             self.is_admin = self._check_admin_status()
             if not self.is_admin:
