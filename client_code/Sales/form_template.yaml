@@ -22,7 +22,8 @@ components:
       name: end_date_selector
       properties: {}
       type: DatePicker
-    - layout_properties: {grid_position: 'QFUVCW,SCWFWO HPSCTI,EJRUZK'}
+    - event_bindings: {click: update_button_click}
+      layout_properties: {grid_position: 'QFUVCW,SCWFWO HPSCTI,EJRUZK'}
       name: update_button
       properties: {text: Update Date Range}
       type: Button
