@@ -13,26 +13,27 @@ anvil.users.login_with_form()
 
 class Frame(FrameTemplate):
     def __init__(self, **properties):
+        # Initialize components first
         self.init_components(**properties)
         
         try:
             # Minimal configuration
             self.content_panel.role = 'none'
             
+            # Create Sales component first
+            sales_component = Sales()
+            
             # Simple button setup
-            self.refresh_button = Button(
-                text="Refresh",
-                role="primary-color"
-            )
+            self.refresh_button = Button(text="Refresh", role="primary-color")
             self.refresh_button.set_event_handler("click", self.refresh_button_click)
             self.add_component(self.refresh_button, slot="top-right")
 
             Plot.templates.default = "rally"
             
             # Add content before checking admin status
-            self.content_panel.add_component(Sales())
+            self.content_panel.add_component(sales_component)
             
-            # Check admin status and setup navigation accordingly
+            # Check admin status and setup navigation
             self.is_admin = self._check_admin_status()
             if not self.is_admin:
                 self.admin_page_link.visible = False

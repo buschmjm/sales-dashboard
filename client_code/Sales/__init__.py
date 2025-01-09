@@ -10,23 +10,18 @@ from datetime import datetime, timedelta
 
 class Sales(SalesTemplate):
     def __init__(self, **properties):
-        # Initialize form first
+        # Initialize components first
         self.init_components(**properties)
         
-        try:
-            # Set default date range
-            self.end_date_picker.date = datetime.now().date()
-            self.start_date_picker.date = self.end_date_picker.date - timedelta(days=7)
-            
-            # Setup user selector for admins
-            self.setup_user_selector()
-            
-            # Initial data load (today only)
-            self.refresh_data()
-            
-        except Exception as e:
-            print(f"Error initializing Sales: {e}")
-            alert(f"Error initializing Sales: {e}")
+        # Set default date range
+        self.end_date_picker.date = datetime.now().date()
+        self.start_date_picker.date = self.end_date_picker.date - timedelta(days=7)
+        
+        # Setup user selector for admins
+        self.setup_user_selector()
+        
+        # Initial data load (today only)
+        self.refresh_data()
         
     def setup_user_selector(self):
         """Configure user selector dropdown for admins"""
