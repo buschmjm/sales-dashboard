@@ -6,11 +6,16 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class Sales(SalesTemplate):
     def __init__(self, **properties):
         self.init_components(**properties)
+        # Set default date range to last 7 days
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=7)
+        self.end_date_selector.date = end_date
+        self.start_date_selector.date = start_date
         self.refresh_data()
         
     def refresh_data(self):
@@ -19,8 +24,14 @@ class Sales(SalesTemplate):
             current_user = anvil.users.get_user()
             if not current_user:
                 raise ValueError("No user logged in")
-                
-            data = anvil.server.call('get_comparison_data', current_user['email'])
+            
+            start_date = self.start_date_selector.date
+            end_date = self.end_date_selector.date
+            
+            data = anvil.server.call('get_comparison_data', 
+                                   current_user['email'],
+                                   start_date,
+                                   end_date)
             if not data:
                 raise ValueError("No data available")
                 
@@ -29,6 +40,10 @@ class Sales(SalesTemplate):
         except Exception as e:
             alert("Failed to load sales data")
             print(f"Error refreshing data: {e}")
+
+    def update_button_click(self, **event_args):
+        """Update button click handler"""
+        self.refresh_data()
             
     def _update_plots(self, data):
         """Update all plots with comparison data"""
@@ -57,6 +72,7 @@ class Sales(SalesTemplate):
                 },
                 {
                     "type": "bar",
+
                     "name": "Average Rep",
                     "x": ["Current"],
                     "y": [data['average'][metric]],
@@ -72,11 +88,6 @@ class Sales(SalesTemplate):
                 "barmode": "group",
                 "margin": {"l": 50, "r": 50, "t": 50, "b": 30}
             }
-
     def drop_down_1_change(self, **event_args):
       """This method is called when an item is selected"""
-      pass
-
-    def update_button_click(self, **event_args):
-      """This method is called when the button is clicked"""
       pass
