@@ -1,10 +1,35 @@
 components:
 - components:
-  - data_bindings: []
-    layout_properties: {grid_position: 'DOXUWS,GBVMFC'}
-    name: label_5
-    properties: {align: center, bold: true, font: '', font_size: 22, text: Statistics Versus Average}
-    type: Label
+  - components:
+    - data_bindings: []
+      layout_properties: {grid_position: 'PWGBPV,GYTRLV'}
+      name: label_5
+      properties: {align: center, bold: true, font: '', font_size: 22, text: Statistics Versus Average}
+      type: Label
+    - layout_properties: {grid_position: 'QFUVCW,PWPCUB AHBNCW,RMRHPE'}
+      name: start_range_selector
+      properties: {align: center, text: Start Date}
+      type: Label
+    - layout_properties: {grid_position: 'QFUVCW,PWPCUB QYVMYW,VDSDUN'}
+      name: start_date_selector
+      properties: {}
+      type: DatePicker
+    - layout_properties: {grid_position: 'QFUVCW,SCWFWO XVBEND,NEFCJL'}
+      name: end_range_selector
+      properties: {align: center, text: End Date}
+      type: Label
+    - layout_properties: {grid_position: 'QFUVCW,SCWFWO AUVPSU,GFMFZV'}
+      name: end_date_selector
+      properties: {}
+      type: DatePicker
+    - layout_properties: {grid_position: 'QFUVCW,SCWFWO HPSCTI,EJRUZK'}
+      name: update_button
+      properties: {text: Update Date Range}
+      type: Button
+    layout_properties: {grid_position: 'AXNOXC,DASWNX'}
+    name: card_5
+    properties: {role: card}
+    type: ColumnPanel
   - components:
     - layout_properties: {grid_position: 'NFXUSU,VASAZM'}
       name: label_4
