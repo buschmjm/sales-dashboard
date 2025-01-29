@@ -91,29 +91,35 @@ def initialize_auth():
             print("No refresh token found in secrets")
             return False
             
-        # Basic auth header is required
+        # URL encode the client credentials for the Authorization header
         auth_header = encode_client_credentials(CLIENT_ID, CLIENT_SECRET)
         
         headers = {
             "Authorization": f"Basic {auth_header}",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Cache-Control": "no-cache"
         }
         
-        # GoTo Connect expects a simpler payload
-        payload = {
+        # Create form-encoded payload
+        from urllib.parse import urlencode
+        payload = urlencode({
             "grant_type": "refresh_token",
-            "refresh_token": stored_refresh_token
-        }
+            "refresh_token": stored_refresh_token,
+            "client_id": CLIENT_ID
+        })
         
         print("Attempting to get new token...")
-        print(f"Using refresh token: {stored_refresh_token[:10]}...")  # Log first 10 chars
+        print(f"Using refresh token: {stored_refresh_token[:10]}...")
+        print(f"Request URL: {TOKEN_URL}")
+        print(f"Request headers: {headers}")
+        print(f"Request payload: {payload}")
         
         response = requests.post(
             TOKEN_URL, 
             data=payload,
             headers=headers,
-            verify=True  # Ensure SSL verification
+            verify=True
         )
         
         print(f"Token response status: {response.status_code}")
@@ -133,7 +139,8 @@ def initialize_auth():
             print("Successfully initialized authorization")
             return True
         else:
-            print(f"Failed to initialize authorization: {response.text}")
+            error_msg = response.json() if response.text else "No error details available"
+            print(f"Failed to initialize authorization: {error_msg}")
             return False
             
     except Exception as e:
