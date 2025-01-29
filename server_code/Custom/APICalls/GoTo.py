@@ -91,61 +91,62 @@ def initialize_auth():
             print("No refresh token found in secrets")
             return False
             
-        # URL encode the client credentials for the Authorization header
-        auth_header = encode_client_credentials(CLIENT_ID, CLIENT_SECRET)
+        # Create auth string and encode properly
+        auth_string = f"{CLIENT_ID}:{CLIENT_SECRET}"
+        auth_bytes = auth_string.encode('ascii')
+        auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
         
         headers = {
-            "Authorization": f"Basic {auth_header}",
+            "Authorization": f"Basic {auth_b64}",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-            "Cache-Control": "no-cache"
+            "Accept": "application/json"
         }
         
-        # Create form-encoded payload
-        from urllib.parse import urlencode
-        payload = urlencode({
+        # Simplified payload without client_id
+        payload = {
             "grant_type": "refresh_token",
-            "refresh_token": stored_refresh_token,
-            "client_id": CLIENT_ID
-        })
+            "refresh_token": stored_refresh_token
+        }
         
-        print("Attempting to get new token...")
-        print(f"Using refresh token: {stored_refresh_token[:10]}...")
-        print(f"Request URL: {TOKEN_URL}")
-        print(f"Request headers: {headers}")
-        print(f"Request payload: {payload}")
+        print("\nAttempting token refresh...")
+        print(f"Token URL: {TOKEN_URL}")
+        print("Using headers:", {k: v if k != 'Authorization' else '[REDACTED]' for k, v in headers.items()})
         
+        # Send request with form-encoded data
         response = requests.post(
             TOKEN_URL, 
-            data=payload,
+            data=payload,  # requests will handle form encoding
             headers=headers,
             verify=True
         )
         
-        print(f"Token response status: {response.status_code}")
-        print(f"Token response headers: {dict(response.headers)}")
-        print(f"Token response: {response.text}")
-        
-        if response.status_code == 200:
-            tokens = response.json()
-            ACCESS_TOKEN = tokens["access_token"]
-            if "refresh_token" in tokens:
-                REFRESH_TOKEN = tokens["refresh_token"]
-                anvil.secrets.set_secret('refresh_token', REFRESH_TOKEN)
-            else:
-                REFRESH_TOKEN = stored_refresh_token
-            
-            save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
-            print("Successfully initialized authorization")
-            return True
-        else:
-            error_msg = response.json() if response.text else "No error details available"
-            print(f"Failed to initialize authorization: {error_msg}")
+        print(f"\nResponse Status: {response.status_code}")
+        if response.status_code != 200:
+            print(f"Error Response: {response.text}")
+            # Try to parse the error for more details
+            try:
+                error_data = response.json()
+                print(f"Error Details: {json.dumps(error_data, indent=2)}")
+            except:
+                print("Could not parse error response")
             return False
             
+        tokens = response.json()
+        ACCESS_TOKEN = tokens["access_token"]
+        if "refresh_token" in tokens:
+            REFRESH_TOKEN = tokens["refresh_token"]
+            anvil.secrets.set_secret('refresh_token', REFRESH_TOKEN)
+        else:
+            REFRESH_TOKEN = stored_refresh_token
+        
+        save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
+        print("Successfully initialized authorization")
+        return True
+            
     except Exception as e:
-        print(f"Error during authorization initialization: {e}")
-        print(f"Full error details: {repr(e)}")
+        print(f"Error during authorization initialization: {str(e)}")
+        import traceback
+        print(f"Stack trace:\n{traceback.format_exc()}")
         return False
 
 # ===============================================
