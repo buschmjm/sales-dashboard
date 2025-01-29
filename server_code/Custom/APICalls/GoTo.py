@@ -82,38 +82,29 @@ def refresh_access_token():
 load_tokens()
 
 def initialize_auth():
-    """Initialize authorization using authorization code flow"""
+    """Initialize authorization using password grant type"""
     global ACCESS_TOKEN, REFRESH_TOKEN
     
     try:
-        stored_refresh_token = anvil.secrets.get_secret('refresh_token')
-        if not stored_refresh_token:
-            print("No refresh token found in secrets")
-            return False
-            
-        # Format credentials properly
+        # Create auth string
         auth_string = f"{CLIENT_ID}:{CLIENT_SECRET}"
-        auth_bytes = auth_string.encode('ascii')
-        auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
+        auth_b64 = base64.b64encode(auth_string.encode('ascii')).decode('ascii')
         
-        # Set up request
         headers = {
             "Authorization": f"Basic {auth_b64}",
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json"
         }
         
-        # Ensure proper URL encoding of parameters
-        from urllib.parse import urlencode
-        payload = urlencode({
-            "grant_type": "authorization_code",
-            "code": stored_refresh_token,
-            "redirect_uri": REDIRECT_URI
-        })
+        # Using password grant type with API credentials
+        payload = {
+            "grant_type": "password",
+            "username": CLIENT_ID,  # Use client_id as username
+            "password": CLIENT_SECRET,  # Use client_secret as password
+            "scope": "call-reports:read"
+        }
         
-        print("\nAttempting authorization...")
-        print(f"Token URL: {TOKEN_URL}")
-        print(f"Payload (encoded): {payload}")
+        print("\nAttempting direct authorization...")
         
         response = requests.post(
             TOKEN_URL, 
@@ -124,49 +115,24 @@ def initialize_auth():
         
         print(f"\nResponse Status: {response.status_code}")
         print(f"Response Headers: {dict(response.headers)}")
-        print(f"Response Body: {response.text}")
         
         if response.status_code == 200:
             tokens = response.json()
             ACCESS_TOKEN = tokens["access_token"]
             if "refresh_token" in tokens:
                 REFRESH_TOKEN = tokens["refresh_token"]
-                anvil.secrets.set_secret('refresh_token', REFRESH_TOKEN)
             
             save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
             print("Successfully initialized authorization")
             return True
             
         else:
-            # Try alternate authorization approach if first fails
-            payload = urlencode({
-                "grant_type": "client_credentials",
-                "scope": "call-reports:read"
-            })
-            
-            print("\nAttempting alternate authorization method...")
-            response = requests.post(
-                TOKEN_URL,
-                data=payload,
-                headers=headers,
-                verify=True
-            )
-            
-            if response.status_code == 200:
-                tokens = response.json()
-                ACCESS_TOKEN = tokens["access_token"]
-                save_tokens(ACCESS_TOKEN, None)  # No refresh token in client credentials flow
-                print("Successfully initialized with client credentials")
-                return True
-                
-            print(f"Both authorization attempts failed. Status: {response.status_code}")
+            print(f"Authorization failed. Status: {response.status_code}")
             print(f"Error Details: {response.text}")
             return False
             
     except Exception as e:
         print(f"Error during authorization initialization: {str(e)}")
-        import traceback
-        print(f"Stack trace:\n{traceback.format_exc()}")
         return False
 
 # Add a function to handle the OAuth callback
