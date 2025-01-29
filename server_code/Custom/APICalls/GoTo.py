@@ -82,31 +82,46 @@ def refresh_access_token():
 load_tokens()
 
 def initialize_auth():
-    """Initialize authorization using stored refresh token"""
+    """Initialize authorization using authorization code flow"""
     global ACCESS_TOKEN, REFRESH_TOKEN
     
     try:
-        # Use the stored refresh token from secrets
+        # First, try to get the stored refresh token
         stored_refresh_token = anvil.secrets.get_secret('refresh_token')
+        
         if not stored_refresh_token:
-            raise Exception("No refresh token found in secrets")
+            print("No refresh token found in secrets")
+            return False
             
         headers = {
             "Authorization": f"Basic {encode_client_credentials(CLIENT_ID, CLIENT_SECRET)}",
             "Content-Type": "application/x-www-form-urlencoded"
         }
         
+        # Properly encode payload parameters
         payload = {
             "grant_type": "refresh_token",
-            "refresh_token": stored_refresh_token
+            "refresh_token": stored_refresh_token,
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET
         }
         
+        print("Attempting to get new token...")
         response = requests.post(TOKEN_URL, data=payload, headers=headers)
+        print(f"Token response status: {response.status_code}")
+        print(f"Token response: {response.text}")
         
         if response.status_code == 200:
             tokens = response.json()
             ACCESS_TOKEN = tokens["access_token"]
-            REFRESH_TOKEN = tokens.get("refresh_token", stored_refresh_token)
+            # Only update refresh token if a new one is provided
+            if "refresh_token" in tokens:
+                REFRESH_TOKEN = tokens["refresh_token"]
+                # Store the new refresh token in secrets
+                anvil.secrets.set_secret('refresh_token', REFRESH_TOKEN)
+            else:
+                REFRESH_TOKEN = stored_refresh_token
+            
             save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
             print("Successfully initialized authorization using refresh token")
             return True
