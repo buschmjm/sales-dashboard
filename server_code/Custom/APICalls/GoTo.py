@@ -86,44 +86,51 @@ def initialize_auth():
     global ACCESS_TOKEN, REFRESH_TOKEN
     
     try:
-        # First, try to get the stored refresh token
         stored_refresh_token = anvil.secrets.get_secret('refresh_token')
-        
         if not stored_refresh_token:
             print("No refresh token found in secrets")
             return False
             
+        # Basic auth header is required
+        auth_header = encode_client_credentials(CLIENT_ID, CLIENT_SECRET)
+        
         headers = {
-            "Authorization": f"Basic {encode_client_credentials(CLIENT_ID, CLIENT_SECRET)}",
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Authorization": f"Basic {auth_header}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json"
         }
         
-        # Properly encode payload parameters
+        # GoTo Connect expects a simpler payload
         payload = {
             "grant_type": "refresh_token",
-            "refresh_token": stored_refresh_token,
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET
+            "refresh_token": stored_refresh_token
         }
         
         print("Attempting to get new token...")
-        response = requests.post(TOKEN_URL, data=payload, headers=headers)
+        print(f"Using refresh token: {stored_refresh_token[:10]}...")  # Log first 10 chars
+        
+        response = requests.post(
+            TOKEN_URL, 
+            data=payload,
+            headers=headers,
+            verify=True  # Ensure SSL verification
+        )
+        
         print(f"Token response status: {response.status_code}")
+        print(f"Token response headers: {dict(response.headers)}")
         print(f"Token response: {response.text}")
         
         if response.status_code == 200:
             tokens = response.json()
             ACCESS_TOKEN = tokens["access_token"]
-            # Only update refresh token if a new one is provided
             if "refresh_token" in tokens:
                 REFRESH_TOKEN = tokens["refresh_token"]
-                # Store the new refresh token in secrets
                 anvil.secrets.set_secret('refresh_token', REFRESH_TOKEN)
             else:
                 REFRESH_TOKEN = stored_refresh_token
             
             save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
-            print("Successfully initialized authorization using refresh token")
+            print("Successfully initialized authorization")
             return True
         else:
             print(f"Failed to initialize authorization: {response.text}")
@@ -131,6 +138,7 @@ def initialize_auth():
             
     except Exception as e:
         print(f"Error during authorization initialization: {e}")
+        print(f"Full error details: {repr(e)}")
         return False
 
 # ===============================================
