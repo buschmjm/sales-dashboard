@@ -81,22 +81,24 @@ def refresh_access_token():
 # Load any previously saved tokens
 load_tokens()
 
-# Add this new function after TOKEN_URL definition
 def initialize_auth():
-    """Initialize authorization using authorization code flow"""
+    """Initialize authorization using stored refresh token"""
     global ACCESS_TOKEN, REFRESH_TOKEN
     
     try:
+        # Use the stored refresh token from secrets
+        stored_refresh_token = anvil.secrets.get_secret('refresh_token')
+        if not stored_refresh_token:
+            raise Exception("No refresh token found in secrets")
+            
         headers = {
             "Authorization": f"Basic {encode_client_credentials(CLIENT_ID, CLIENT_SECRET)}",
             "Content-Type": "application/x-www-form-urlencoded"
         }
         
-        # Using password grant type instead of client_credentials
         payload = {
-            "grant_type": "password",
-            "username": anvil.secrets.get_secret('goto_username'),  # Add these secrets in Anvil
-            "password": anvil.secrets.get_secret('goto_password'),  # Add these secrets in Anvil
+            "grant_type": "refresh_token",
+            "refresh_token": stored_refresh_token
         }
         
         response = requests.post(TOKEN_URL, data=payload, headers=headers)
@@ -104,9 +106,9 @@ def initialize_auth():
         if response.status_code == 200:
             tokens = response.json()
             ACCESS_TOKEN = tokens["access_token"]
-            REFRESH_TOKEN = tokens.get("refresh_token")
+            REFRESH_TOKEN = tokens.get("refresh_token", stored_refresh_token)
             save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
-            print("Successfully initialized authorization")
+            print("Successfully initialized authorization using refresh token")
             return True
         else:
             print(f"Failed to initialize authorization: {response.text}")
