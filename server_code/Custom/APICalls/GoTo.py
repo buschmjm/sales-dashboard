@@ -83,7 +83,7 @@ load_tokens()
 
 # Add this new function after TOKEN_URL definition
 def initialize_auth():
-    """Initialize authorization using client credentials flow"""
+    """Initialize authorization using authorization code flow"""
     global ACCESS_TOKEN, REFRESH_TOKEN
     
     try:
@@ -92,9 +92,11 @@ def initialize_auth():
             "Content-Type": "application/x-www-form-urlencoded"
         }
         
+        # Using password grant type instead of client_credentials
         payload = {
-            "grant_type": "client_credentials",
-            "scope": "call-reports:read"  # Adjust scope as needed
+            "grant_type": "password",
+            "username": anvil.secrets.get_secret('goto_username'),  # Add these secrets in Anvil
+            "password": anvil.secrets.get_secret('goto_password'),  # Add these secrets in Anvil
         }
         
         response = requests.post(TOKEN_URL, data=payload, headers=headers)
