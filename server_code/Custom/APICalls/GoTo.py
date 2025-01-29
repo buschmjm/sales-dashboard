@@ -91,62 +91,93 @@ def initialize_auth():
             print("No refresh token found in secrets")
             return False
             
-        # Create auth string and encode properly
+        # Format credentials properly
         auth_string = f"{CLIENT_ID}:{CLIENT_SECRET}"
         auth_bytes = auth_string.encode('ascii')
         auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
         
+        # Set up request
         headers = {
             "Authorization": f"Basic {auth_b64}",
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json"
         }
         
-        # Simplified payload without client_id
-        payload = {
-            "grant_type": "refresh_token",
-            "refresh_token": stored_refresh_token
-        }
+        # Ensure proper URL encoding of parameters
+        from urllib.parse import urlencode
+        payload = urlencode({
+            "grant_type": "authorization_code",
+            "code": stored_refresh_token,
+            "redirect_uri": REDIRECT_URI
+        })
         
-        print("\nAttempting token refresh...")
+        print("\nAttempting authorization...")
         print(f"Token URL: {TOKEN_URL}")
-        print("Using headers:", {k: v if k != 'Authorization' else '[REDACTED]' for k, v in headers.items()})
+        print(f"Payload (encoded): {payload}")
         
-        # Send request with form-encoded data
         response = requests.post(
             TOKEN_URL, 
-            data=payload,  # requests will handle form encoding
+            data=payload,
             headers=headers,
             verify=True
         )
         
         print(f"\nResponse Status: {response.status_code}")
-        if response.status_code != 200:
-            print(f"Error Response: {response.text}")
-            # Try to parse the error for more details
-            try:
-                error_data = response.json()
-                print(f"Error Details: {json.dumps(error_data, indent=2)}")
-            except:
-                print("Could not parse error response")
-            return False
-            
-        tokens = response.json()
-        ACCESS_TOKEN = tokens["access_token"]
-        if "refresh_token" in tokens:
-            REFRESH_TOKEN = tokens["refresh_token"]
-            anvil.secrets.set_secret('refresh_token', REFRESH_TOKEN)
-        else:
-            REFRESH_TOKEN = stored_refresh_token
+        print(f"Response Headers: {dict(response.headers)}")
+        print(f"Response Body: {response.text}")
         
-        save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
-        print("Successfully initialized authorization")
-        return True
+        if response.status_code == 200:
+            tokens = response.json()
+            ACCESS_TOKEN = tokens["access_token"]
+            if "refresh_token" in tokens:
+                REFRESH_TOKEN = tokens["refresh_token"]
+                anvil.secrets.set_secret('refresh_token', REFRESH_TOKEN)
+            
+            save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
+            print("Successfully initialized authorization")
+            return True
+            
+        else:
+            # Try alternate authorization approach if first fails
+            payload = urlencode({
+                "grant_type": "client_credentials",
+                "scope": "call-reports:read"
+            })
+            
+            print("\nAttempting alternate authorization method...")
+            response = requests.post(
+                TOKEN_URL,
+                data=payload,
+                headers=headers,
+                verify=True
+            )
+            
+            if response.status_code == 200:
+                tokens = response.json()
+                ACCESS_TOKEN = tokens["access_token"]
+                save_tokens(ACCESS_TOKEN, None)  # No refresh token in client credentials flow
+                print("Successfully initialized with client credentials")
+                return True
+                
+            print(f"Both authorization attempts failed. Status: {response.status_code}")
+            print(f"Error Details: {response.text}")
+            return False
             
     except Exception as e:
         print(f"Error during authorization initialization: {str(e)}")
         import traceback
         print(f"Stack trace:\n{traceback.format_exc()}")
+        return False
+
+# Add a function to handle the OAuth callback
+@anvil.server.callable
+def handle_oauth_callback(code):
+    """Handle the OAuth callback and store the authorization code"""
+    try:
+        anvil.secrets.set_secret('refresh_token', code)
+        return initialize_auth()
+    except Exception as e:
+        print(f"Error handling OAuth callback: {str(e)}")
         return False
 
 # ===============================================
