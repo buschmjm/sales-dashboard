@@ -81,6 +81,39 @@ def refresh_access_token():
 # Load any previously saved tokens
 load_tokens()
 
+# Add this new function after TOKEN_URL definition
+def initialize_auth():
+    """Initialize authorization using client credentials flow"""
+    global ACCESS_TOKEN, REFRESH_TOKEN
+    
+    try:
+        headers = {
+            "Authorization": f"Basic {encode_client_credentials(CLIENT_ID, CLIENT_SECRET)}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        
+        payload = {
+            "grant_type": "client_credentials",
+            "scope": "call-reports:read"  # Adjust scope as needed
+        }
+        
+        response = requests.post(TOKEN_URL, data=payload, headers=headers)
+        
+        if response.status_code == 200:
+            tokens = response.json()
+            ACCESS_TOKEN = tokens["access_token"]
+            REFRESH_TOKEN = tokens.get("refresh_token")
+            save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
+            print("Successfully initialized authorization")
+            return True
+        else:
+            print(f"Failed to initialize authorization: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"Error during authorization initialization: {e}")
+        return False
+
 # ===============================================
 # Update Data Table with API Data
 # ===============================================
@@ -131,9 +164,16 @@ def update_call_statistics(data):
 @anvil.server.callable
 def fetch_call_reports():
     global ACCESS_TOKEN
+    
+    # Try to load tokens if they're not set
     if not ACCESS_TOKEN:
-        raise Exception("Access token not available. Complete the authorization flow first.")
-
+        load_tokens()
+    
+    # If still no access token, try to initialize auth
+    if not ACCESS_TOKEN:
+        if not initialize_auth():
+            raise Exception("Failed to initialize authorization. Please check your credentials.")
+    
     # Calculate startTime as the start of today and endTime as the current time in UTC
     now = datetime.utcnow()
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
