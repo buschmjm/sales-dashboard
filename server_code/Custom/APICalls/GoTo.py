@@ -9,9 +9,27 @@ from datetime import datetime, timedelta
 # ===============================================
 # Configuration
 # ===============================================
-CLIENT_ID = "2093fcb3-dd35-4320-b5bf-1e92e7ef0032"
-CLIENT_SECRET = "nkWiybVLmqvpVvS7jQRMaF5N"
-REDIRECT_URI = "http://localhost:8000/callback"
+def get_credentials():
+    """Get GoTo credentials from database"""
+    try:
+        creds = app_tables.tokens.search()
+        for row in creds:
+            return {
+                'client_id': row.get('Client ID', ''),
+                'client_secret': row.get('Secret', ''),
+                'access_token': row.get('access_token', ''),
+                'personal_key': row.get('Personal Access Key', '')
+            }
+    except Exception as e:
+        print(f"Error getting credentials: {e}")
+        return None
+
+# Remove hardcoded credentials
+CLIENT_ID = None
+CLIENT_SECRET = None
+ACCESS_TOKEN = None
+REFRESH_TOKEN = None
+
 TOKEN_URL = "https://authentication.logmeininc.com/oauth/token"
 AUTH_URL = "https://authentication.logmeininc.com/oauth/authorize"
 CALL_REPORTS_URL = "https://api.goto.com/call-reports/v1/reports/user-activity"
@@ -82,12 +100,25 @@ def refresh_access_token():
 load_tokens()
 
 def initialize_auth():
-    """Initialize authorization using password grant type"""
-    global ACCESS_TOKEN, REFRESH_TOKEN
+    """Initialize authorization using stored credentials"""
+    global ACCESS_TOKEN
     
     try:
-        # Create auth string
-        auth_string = f"{CLIENT_ID}:{CLIENT_SECRET}"
+        # Get credentials from database
+        creds = get_credentials()
+        if not creds:
+            print("No credentials found in database")
+            return False
+            
+        # Use personal access key if available
+        if creds['personal_key']:
+            ACCESS_TOKEN = creds['personal_key']
+            save_tokens(ACCESS_TOKEN, None)
+            print("Using personal access key for authentication")
+            return True
+            
+        # Otherwise try client credentials
+        auth_string = f"{creds['client_id']}:{creds['client_secret']}"
         auth_b64 = base64.b64encode(auth_string.encode('ascii')).decode('ascii')
         
         headers = {
@@ -96,16 +127,12 @@ def initialize_auth():
             "Accept": "application/json"
         }
         
-        # Using password grant type with API credentials
         payload = {
-            "grant_type": "password",
-            "username": CLIENT_ID,  # Use client_id as username
-            "password": CLIENT_SECRET,  # Use client_secret as password
+            "grant_type": "client_credentials",
             "scope": "call-reports:read"
         }
         
-        print("\nAttempting direct authorization...")
-        
+        print("\nAttempting authorization with client credentials...")
         response = requests.post(
             TOKEN_URL, 
             data=payload,
@@ -113,19 +140,14 @@ def initialize_auth():
             verify=True
         )
         
-        print(f"\nResponse Status: {response.status_code}")
-        print(f"Response Headers: {dict(response.headers)}")
+        print(f"Response Status: {response.status_code}")
         
         if response.status_code == 200:
             tokens = response.json()
             ACCESS_TOKEN = tokens["access_token"]
-            if "refresh_token" in tokens:
-                REFRESH_TOKEN = tokens["refresh_token"]
-            
-            save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
-            print("Successfully initialized authorization")
+            save_tokens(ACCESS_TOKEN, None)
+            print("Successfully initialized with client credentials")
             return True
-            
         else:
             print(f"Authorization failed. Status: {response.status_code}")
             print(f"Error Details: {response.text}")
@@ -197,11 +219,6 @@ def update_call_statistics(data):
 def fetch_call_reports():
     global ACCESS_TOKEN
     
-    # Try to load tokens if they're not set
-    if not ACCESS_TOKEN:
-        load_tokens()
-    
-    # If still no access token, try to initialize auth
     if not ACCESS_TOKEN:
         if not initialize_auth():
             raise Exception("Failed to initialize authorization. Please check your credentials.")
