@@ -134,53 +134,98 @@ def verify_existing_credentials():
         print(f"Stack trace:\n{traceback.format_exc()}")
         return False
 
+def get_and_verify_credentials():
+    """Get credentials from all possible sources and verify them"""
+    try:
+        print("\nAttempting to gather credentials from all sources...")
+        
+        # First try API Keys table
+        api_keys = app_tables.api_keys.search()
+        api_creds = None
+        for row in api_keys:
+            if row.get('Client ID') and row.get('Secret'):
+                api_creds = {
+                    'client_id': row['Client ID'],
+                    'client_secret': row['Secret'],
+                    'personal_key': row.get('Personal Access Key', '')
+                }
+                print("Found credentials in API Keys table")
+                break
+                
+        # Try secret from Anvil secrets
+        secret_cred = anvil.secrets.get_secret('client_secret')
+        if secret_cred:
+            print("Found client_secret in Anvil secrets")
+            
+        # Check tokens table
+        tokens_row = None
+        for row in app_tables.tokens.search():
+            tokens_row = row
+            break
+            
+        # Determine best credentials to use
+        best_creds = None
+        
+        # If API Keys table has complete credentials, use those
+        if api_creds and api_creds['client_id'] and api_creds['client_secret']:
+            best_creds = api_creds
+            print("Using credentials from API Keys table")
+            
+        # If we have secret from Anvil secrets, consider using it
+        elif secret_cred:
+            if api_creds and api_creds['client_id']:  # If we have client_id from API Keys
+                best_creds = {
+                    'client_id': api_creds['client_id'],
+                    'client_secret': secret_cred,
+                    'personal_key': api_creds.get('personal_key', '')
+                }
+                print("Using mixed credentials (API Keys + Anvil secret)")
+                
+        # Verify the credentials work
+        if best_creds:
+            # Test API access
+            headers = {
+                "Authorization": f"Bearer {best_creds.get('personal_key', '')}",
+                "Accept": "application/json"
+            }
+            
+            test_url = f"{CALL_REPORTS_URL}?startTime={datetime.utcnow().isoformat()}Z&endTime={datetime.utcnow().isoformat()}Z"
+            response = requests.get(test_url, headers=headers)
+            
+            if response.status_code in (200, 404):
+                print("Credentials verified successfully!")
+                
+                # Update tokens table if needed
+                if not tokens_row:
+                    app_tables.tokens.add_row(
+                        **{
+                            'Client ID': best_creds['client_id'],
+                            'Secret': best_creds['client_secret'],
+                            'Personal Access Key': best_creds.get('personal_key', ''),
+                            'access_token': best_creds.get('personal_key', '')
+                        }
+                    )
+                    print("Created new row in tokens table")
+                    
+                # Set global access token
+                global ACCESS_TOKEN
+                ACCESS_TOKEN = best_creds.get('personal_key', '')
+                return True
+                
+        print("No valid credentials found or verification failed")
+        return False
+        
+    except Exception as e:
+        print(f"Error in get_and_verify_credentials: {str(e)}")
+        return False
+
 def initialize_auth():
-    """Initialize authorization using existing credentials first"""
-    if verify_existing_credentials():
+    """Initialize authorization using all possible credential sources"""
+    if get_and_verify_credentials():
         return True
         
-    global ACCESS_TOKEN
-    
-    try:
-        # Get credentials from database
-        creds = get_credentials()
-        if not creds:
-            print("No credentials found in database")
-            return False
-            
-        # Use Personal Access Key directly
-        if not creds.get('personal_key'):
-            print("No Personal Access Key found in credentials")
-            return False
-            
-        print("\nInitializing with Personal Access Key...")
-        ACCESS_TOKEN = creds['personal_key']
-        
-        # Verify the token works
-        headers = {
-            "Authorization": f"Bearer {ACCESS_TOKEN}",
-            "Accept": "application/json"
-        }
-        
-        # Test the token with a simple API call
-        now = datetime.utcnow()
-        test_url = f"{CALL_REPORTS_URL}?startTime={now.isoformat()}Z&endTime={now.isoformat()}Z"
-        
-        print("Testing Personal Access Key...")
-        response = requests.get(test_url, headers=headers)
-        
-        if response.status_code in (200, 404):  # Both are valid responses
-            print("Personal Access Key verified successfully")
-            save_tokens(ACCESS_TOKEN, None)  # No refresh token needed with PAK
-            return True
-        else:
-            print(f"Personal Access Key verification failed. Status: {response.status_code}")
-            print(f"Error Details: {response.text}")
-            return False
-            
-    except Exception as e:
-        print(f"Error during authorization initialization: {str(e)}")
-        return False
+    print("Failed to initialize using any credential source")
+    return False
 
 # Remove or comment out unused OAuth-related functions
 # def refresh_access_token():
