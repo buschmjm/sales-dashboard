@@ -134,6 +134,21 @@ def verify_existing_credentials():
         print(f"Stack trace:\n{traceback.format_exc()}")
         return False
 
+@anvil.server.callable
+def get_api_keys():
+    """Server function to get API keys from the database"""
+    try:
+        api_keys = app_tables.api_keys.search()
+        for row in api_keys:
+            return {
+                'client_id': row.get('Client ID', ''),
+                'client_secret': row.get('Secret', ''),
+                'personal_key': row.get('Personal Access Key', '')
+            }
+    except Exception as e:
+        print(f"Error getting API keys: {str(e)}")
+        return None
+
 def get_and_verify_credentials():
     """Get credentials from all possible sources and verify them"""
     try:
@@ -142,20 +157,14 @@ def get_and_verify_credentials():
         # Try known tables in order of preference
         credentials = None
         
-        # 1. Try API Keys table first
+        # 1. Try API Keys table first using server function
         try:
-            api_key_rows = app_tables.api_keys.search()
-            for row in api_key_rows:
-                if row.get('Client ID') and row.get('Secret'):
-                    credentials = {
-                        'client_id': row['Client ID'],
-                        'client_secret': row['Secret'],
-                        'personal_key': row.get('Personal Access Key', '')
-                    }
-                    print("Found credentials in API Keys table")
-                    break
+            api_creds = anvil.server.call('get_api_keys')
+            if api_creds and api_creds.get('client_id') and api_creds.get('client_secret'):
+                credentials = api_creds
+                print("Found credentials in API Keys table")
         except Exception as e:
-            print(f"Note: API Keys table not available: {str(e)}")
+            print(f"Note: Could not get API keys: {str(e)}")
         
         # 2. Try tokens table if no API Keys credentials found
         if not credentials:
@@ -172,26 +181,26 @@ def get_and_verify_credentials():
             except Exception as e:
                 print(f"Error checking tokens table: {str(e)}")
         
-        # 3. Try Anvil secrets if still no credentials or missing pieces
-        secret_cred = anvil.secrets.get_secret('client_secret')
-        if secret_cred:
-            print("Found client_secret in Anvil secrets")
-            if credentials:
-                # Supplement existing credentials
-                credentials['client_secret'] = secret_cred
-            else:
-                credentials = {
-                    'client_id': '',  # We'll need to get this from somewhere
-                    'client_secret': secret_cred,
-                    'personal_key': ''
-                }
+        # 3. Try Anvil secrets
+        if not credentials or not credentials.get('client_secret'):
+            secret_cred = anvil.secrets.get_secret('client_secret')
+            if secret_cred:
+                print("Found client_secret in Anvil secrets")
+                if credentials:
+                    credentials['client_secret'] = secret_cred
+                else:
+                    credentials = {
+                        'client_id': api_creds.get('client_id') if api_creds else '',
+                        'client_secret': secret_cred,
+                        'personal_key': api_creds.get('personal_key', '') if api_creds else ''
+                    }
         
-        # Verify and use the best credentials we found
-        if credentials:
+        if credentials and credentials.get('personal_key'):
+            print(f"Found complete credentials with Personal Access Key")
             if verify_credentials(credentials):
                 return True
             
-        print("No valid credentials found")
+        print("No valid credentials found or verification failed")
         return False
         
     except Exception as e:
