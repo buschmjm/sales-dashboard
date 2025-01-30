@@ -208,3 +208,33 @@ def fetch_call_reports():
     else:
         raise Exception(f"Failed to fetch call data: {response.status_code} - {response.text}")
 
+@anvil.server.callable
+def initialize_goto_credentials(client_id, client_secret, personal_access_key):
+    """Initialize GoTo credentials in the tokens table"""
+    try:
+        # Clear existing tokens
+        for row in app_tables.tokens.search():
+            row.delete()
+            
+        # Add new credentials
+        app_tables.tokens.add_row(
+            **{
+                'Client ID': client_id,
+                'Secret': client_secret,
+                'Personal Access Key': personal_access_key,
+                'access_token': personal_access_key  # Use PAK as initial access token
+            }
+        )
+        
+        # Test the credentials
+        if initialize_auth():
+            print("Successfully initialized GoTo credentials")
+            return True
+        else:
+            print("Credentials verification failed")
+            return False
+            
+    except Exception as e:
+        print(f"Error initializing credentials: {e}")
+        return False
+
