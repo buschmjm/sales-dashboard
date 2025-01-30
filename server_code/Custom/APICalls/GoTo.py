@@ -301,3 +301,55 @@ def initialize_goto_credentials(client_id, client_secret, personal_access_key):
         print(f"Error initializing credentials: {e}")
         return False
 
+@anvil.server.callable
+def debug_tokens_table():
+    """Debug function to check tokens table structure and content"""
+    try:
+        # Get table columns
+        columns = [col['name'] for col in app_tables.tokens.list_columns()]
+        print(f"Available columns in tokens table: {columns}")
+        
+        # Get existing rows
+        rows = list(app_tables.tokens.search())
+        print(f"Number of rows in tokens table: {len(rows)}")
+        
+        # Show row content if any exists
+        for row in rows:
+            print("\nRow data:")
+            for col in columns:
+                # Mask sensitive data
+                value = row.get(col, 'Not set')
+                if col in ['Secret', 'Personal Access Key', 'access_token']:
+                    if value:
+                        value = f"{value[:5]}...{value[-5:]}"
+                print(f"{col}: {value}")
+                
+        return True
+        
+    except Exception as e:
+        print(f"Error debugging tokens table: {str(e)}")
+        return False
+
+@anvil.server.callable
+def add_token_row():
+    """Add a single row to tokens table with proper column names"""
+    try:
+        # Clear existing rows
+        for row in app_tables.tokens.search():
+            row.delete()
+            
+        # Add new row with empty values to see structure
+        app_tables.tokens.add_row(
+            **{
+                'Client ID': '',
+                'Secret': '',
+                'Personal Access Key': '',
+                'access_token': '',
+                'refresh_token': None
+            }
+        )
+        return True
+    except Exception as e:
+        print(f"Error adding token row: {str(e)}")
+        return False
+
