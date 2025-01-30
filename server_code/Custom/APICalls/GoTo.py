@@ -139,12 +139,15 @@ def get_api_keys():
     """Server function to get API keys from the database"""
     try:
         api_keys = app_tables.api_keys.search()
+        result = None
         for row in api_keys:
-            return {
-                'client_id': row.get('Client ID', ''),
-                'client_secret': row.get('Secret', ''),
-                'personal_key': row.get('Personal Access Key', '')
+            result = {
+                'client_id': row['Client ID'],
+                'client_secret': row['Secret'],
+                'personal_key': row['Personal Access Key']
             }
+            break  # Just get the first row
+        return result
     except Exception as e:
         print(f"Error getting API keys: {str(e)}")
         return None
@@ -153,48 +156,39 @@ def get_and_verify_credentials():
     """Get credentials from all possible sources and verify them"""
     try:
         print("\nAttempting to gather credentials from all sources...")
-        
-        # Try known tables in order of preference
         credentials = None
         
-        # 1. Try API Keys table first using server function
+        # 1. Try tokens table first (local access)
         try:
-            api_creds = anvil.server.call('get_api_keys')
-            if api_creds and api_creds.get('client_id') and api_creds.get('client_secret'):
-                credentials = api_creds
-                print("Found credentials in API Keys table")
+            token_rows = list(app_tables.tokens.search())
+            if token_rows:
+                row = token_rows[0]
+                credentials = {
+                    'client_id': row.get('Client ID', ''),
+                    'client_secret': row.get('Secret', ''),
+                    'personal_key': row.get('Personal Access Key', '')
+                }
+                print("Found credentials in tokens table")
         except Exception as e:
-            print(f"Note: Could not get API keys: {str(e)}")
+            print(f"Error checking tokens table: {str(e)}")
         
-        # 2. Try tokens table if no API Keys credentials found
+        # 2. Try API Keys table through server function
         if not credentials:
             try:
-                token_rows = list(app_tables.tokens.search())
-                if token_rows:
-                    row = token_rows[0]
-                    credentials = {
-                        'client_id': row.get('Client ID', ''),
-                        'client_secret': row.get('Secret', ''),
-                        'personal_key': row.get('Personal Access Key', '')
-                    }
-                    print("Found credentials in tokens table")
+                api_creds = get_api_keys()  # Direct call since we're already server-side
+                if api_creds:
+                    credentials = api_creds
+                    print("Found credentials in API Keys table")
             except Exception as e:
-                print(f"Error checking tokens table: {str(e)}")
+                print(f"Error getting API keys: {str(e)}")
         
         # 3. Try Anvil secrets
-        if not credentials or not credentials.get('client_secret'):
-            secret_cred = anvil.secrets.get_secret('client_secret')
-            if secret_cred:
-                print("Found client_secret in Anvil secrets")
-                if credentials:
-                    credentials['client_secret'] = secret_cred
-                else:
-                    credentials = {
-                        'client_id': api_creds.get('client_id') if api_creds else '',
-                        'client_secret': secret_cred,
-                        'personal_key': api_creds.get('personal_key', '') if api_creds else ''
-                    }
+        secret_cred = anvil.secrets.get_secret('client_secret')
+        if secret_cred and credentials:
+            print("Found client_secret in Anvil secrets")
+            credentials['client_secret'] = secret_cred
         
+        # Verify and use the credentials
         if credentials and credentials.get('personal_key'):
             print(f"Found complete credentials with Personal Access Key")
             if verify_credentials(credentials):
