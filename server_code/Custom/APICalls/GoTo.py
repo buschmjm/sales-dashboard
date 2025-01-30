@@ -139,47 +139,58 @@ def get_and_verify_credentials():
     try:
         print("\nAttempting to gather credentials from all sources...")
         
-        # Debug: Print available tables
-        print("Available tables:", [table.name for table in app_tables.list_tables()])
+        # Try known tables in order of preference
+        credentials = None
         
-        # First try tokens table since we know it exists
-        tokens_row = None
+        # 1. Try API Keys table first
         try:
-            tokens = list(app_tables.tokens.search())
-            if tokens:
-                tokens_row = tokens[0]
-                print("Found existing tokens row")
-                
-                if tokens_row.get('Personal Access Key'):
+            api_key_rows = app_tables.api_keys.search()
+            for row in api_key_rows:
+                if row.get('Client ID') and row.get('Secret'):
                     credentials = {
-                        'client_id': tokens_row.get('Client ID', ''),
-                        'client_secret': tokens_row.get('Secret', ''),
-                        'personal_key': tokens_row.get('Personal Access Key', '')
+                        'client_id': row['Client ID'],
+                        'client_secret': row['Secret'],
+                        'personal_key': row.get('Personal Access Key', '')
+                    }
+                    print("Found credentials in API Keys table")
+                    break
+        except Exception as e:
+            print(f"Note: API Keys table not available: {str(e)}")
+        
+        # 2. Try tokens table if no API Keys credentials found
+        if not credentials:
+            try:
+                token_rows = list(app_tables.tokens.search())
+                if token_rows:
+                    row = token_rows[0]
+                    credentials = {
+                        'client_id': row.get('Client ID', ''),
+                        'client_secret': row.get('Secret', ''),
+                        'personal_key': row.get('Personal Access Key', '')
                     }
                     print("Found credentials in tokens table")
-                    
-                    # Test these credentials
-                    if verify_credentials(credentials):
-                        return True
-        except Exception as e:
-            print(f"Error checking tokens table: {str(e)}")
+            except Exception as e:
+                print(f"Error checking tokens table: {str(e)}")
         
-        # Try Anvil secrets
-        try:
-            secret_cred = anvil.secrets.get_secret('client_secret')
-            if secret_cred:
-                print("Found client_secret in Anvil secrets")
+        # 3. Try Anvil secrets if still no credentials or missing pieces
+        secret_cred = anvil.secrets.get_secret('client_secret')
+        if secret_cred:
+            print("Found client_secret in Anvil secrets")
+            if credentials:
+                # Supplement existing credentials
+                credentials['client_secret'] = secret_cred
+            else:
                 credentials = {
-                    'client_id': tokens_row.get('Client ID') if tokens_row else None,
+                    'client_id': '',  # We'll need to get this from somewhere
                     'client_secret': secret_cred,
-                    'personal_key': tokens_row.get('Personal Access Key') if tokens_row else None
+                    'personal_key': ''
                 }
-                
-                if verify_credentials(credentials):
-                    return True
-        except Exception as e:
-            print(f"Error checking Anvil secrets: {str(e)}")
         
+        # Verify and use the best credentials we found
+        if credentials:
+            if verify_credentials(credentials):
+                return True
+            
         print("No valid credentials found")
         return False
         
