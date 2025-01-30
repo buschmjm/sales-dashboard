@@ -71,36 +71,11 @@ def save_tokens(access_token, refresh_token):
 def encode_client_credentials(client_id, client_secret):
     return base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
 
-def refresh_access_token():
-    global ACCESS_TOKEN, REFRESH_TOKEN
-
-    if not REFRESH_TOKEN:
-        raise Exception("No refresh token available. Start the authorization flow again.")
-
-    payload = {
-        "grant_type": "refresh_token",
-        "refresh_token": REFRESH_TOKEN
-    }
-    headers = {
-        "Authorization": f"Basic {encode_client_credentials(CLIENT_ID, CLIENT_SECRET)}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-
-    response = requests.post(TOKEN_URL, data=payload, headers=headers)
-    if response.status_code == 200:
-        tokens = response.json()
-        ACCESS_TOKEN = tokens["access_token"]
-        REFRESH_TOKEN = tokens.get("refresh_token", REFRESH_TOKEN)
-        save_tokens(ACCESS_TOKEN, REFRESH_TOKEN)
-        print("Access token refreshed and saved successfully.")
-    else:
-        raise Exception(f"Failed to refresh access token: {response.text}")
-
 # Load any previously saved tokens
 load_tokens()
 
 def initialize_auth():
-    """Initialize authorization using stored credentials"""
+    """Initialize authorization using Personal Access Key"""
     global ACCESS_TOKEN
     
     try:
@@ -110,46 +85,33 @@ def initialize_auth():
             print("No credentials found in database")
             return False
             
-        # Use personal access key if available
-        if creds['personal_key']:
-            ACCESS_TOKEN = creds['personal_key']
-            save_tokens(ACCESS_TOKEN, None)
-            print("Using personal access key for authentication")
-            return True
+        # Use Personal Access Key directly
+        if not creds.get('personal_key'):
+            print("No Personal Access Key found in credentials")
+            return False
             
-        # Otherwise try client credentials
-        auth_string = f"{creds['client_id']}:{creds['client_secret']}"
-        auth_b64 = base64.b64encode(auth_string.encode('ascii')).decode('ascii')
+        print("\nInitializing with Personal Access Key...")
+        ACCESS_TOKEN = creds['personal_key']
         
+        # Verify the token works
         headers = {
-            "Authorization": f"Basic {auth_b64}",
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Bearer {ACCESS_TOKEN}",
             "Accept": "application/json"
         }
         
-        payload = {
-            "grant_type": "client_credentials",
-            "scope": "call-reports:read"
-        }
+        # Test the token with a simple API call
+        now = datetime.utcnow()
+        test_url = f"{CALL_REPORTS_URL}?startTime={now.isoformat()}Z&endTime={now.isoformat()}Z"
         
-        print("\nAttempting authorization with client credentials...")
-        response = requests.post(
-            TOKEN_URL, 
-            data=payload,
-            headers=headers,
-            verify=True
-        )
+        print("Testing Personal Access Key...")
+        response = requests.get(test_url, headers=headers)
         
-        print(f"Response Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            tokens = response.json()
-            ACCESS_TOKEN = tokens["access_token"]
-            save_tokens(ACCESS_TOKEN, None)
-            print("Successfully initialized with client credentials")
+        if response.status_code in (200, 404):  # Both are valid responses
+            print("Personal Access Key verified successfully")
+            save_tokens(ACCESS_TOKEN, None)  # No refresh token needed with PAK
             return True
         else:
-            print(f"Authorization failed. Status: {response.status_code}")
+            print(f"Personal Access Key verification failed. Status: {response.status_code}")
             print(f"Error Details: {response.text}")
             return False
             
@@ -157,16 +119,9 @@ def initialize_auth():
         print(f"Error during authorization initialization: {str(e)}")
         return False
 
-# Add a function to handle the OAuth callback
-@anvil.server.callable
-def handle_oauth_callback(code):
-    """Handle the OAuth callback and store the authorization code"""
-    try:
-        anvil.secrets.set_secret('refresh_token', code)
-        return initialize_auth()
-    except Exception as e:
-        print(f"Error handling OAuth callback: {str(e)}")
-        return False
+# Remove or comment out unused OAuth-related functions
+# def refresh_access_token():
+# def handle_oauth_callback():
 
 # ===============================================
 # Update Data Table with API Data
