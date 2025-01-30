@@ -74,8 +74,71 @@ def encode_client_credentials(client_id, client_secret):
 # Load any previously saved tokens
 load_tokens()
 
+@anvil.server.callable
+def verify_existing_credentials():
+    """Verify and set up existing credentials from the tokens table"""
+    try:
+        # Get all rows from tokens table
+        token_rows = list(app_tables.tokens.search())
+        print(f"Found {len(token_rows)} rows in tokens table")
+        
+        if not token_rows:
+            print("No credentials found in tokens table")
+            return False
+            
+        # Get the first row since we expect only one
+        creds = token_rows[0]
+        print("Found existing credentials row")
+        
+        # Print available columns (for debugging)
+        print(f"Available columns: {[col['name'] for col in app_tables.tokens.list_columns()]}")
+        
+        # Try to get the Personal Access Key
+        if 'Personal Access Key' in creds:
+            access_key = creds['Personal Access Key']
+            print(f"Found Personal Access Key: {access_key[:10]}...")
+            
+            # Store it as our access token
+            global ACCESS_TOKEN
+            ACCESS_TOKEN = access_key
+            
+            # Test the access token
+            headers = {
+                "Authorization": f"Bearer {ACCESS_TOKEN}",
+                "Accept": "application/json"
+            }
+            
+            # Make a test API call
+            now = datetime.utcnow()
+            test_url = f"{CALL_REPORTS_URL}?startTime={now.isoformat()}Z&endTime={now.isoformat()}Z"
+            
+            print("\nTesting existing credentials...")
+            response = requests.get(test_url, headers=headers)
+            
+            print(f"Test API response status: {response.status_code}")
+            
+            if response.status_code in (200, 404):
+                print("Credentials verified successfully!")
+                return True
+            else:
+                print(f"API test failed: {response.text}")
+                return False
+                
+        else:
+            print("No Personal Access Key found in credentials")
+            return False
+            
+    except Exception as e:
+        print(f"Error verifying credentials: {str(e)}")
+        import traceback
+        print(f"Stack trace:\n{traceback.format_exc()}")
+        return False
+
 def initialize_auth():
-    """Initialize authorization using Personal Access Key"""
+    """Initialize authorization using existing credentials first"""
+    if verify_existing_credentials():
+        return True
+        
     global ACCESS_TOKEN
     
     try:
