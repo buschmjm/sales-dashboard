@@ -208,32 +208,51 @@ def verify_credentials(creds):
             print("No Personal Access Key available")
             return False
             
+        # Clean the personal access key
+        personal_key = creds['personal_key'].strip()
+        if not personal_key:
+            print("Personal Access Key is empty")
+            return False
+
         headers = {
-            "Authorization": f"Bearer {creds['personal_key']}",
-            "Accept": "application/json"
+            "Authorization": f"Bearer {personal_key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json"
         }
         
-        test_url = f"{CALL_REPORTS_URL}?startTime={datetime.utcnow().isoformat()}Z&endTime={datetime.utcnow().isoformat()}Z"
-        print("Testing credentials...")
+        # Use a small time window for the test call
+        now = datetime.utcnow()
+        five_mins_ago = now - timedelta(minutes=5)
+        test_url = f"{CALL_REPORTS_URL}?startTime={five_mins_ago.isoformat()}Z&endTime={now.isoformat()}Z"
+        
+        print(f"Testing credentials with key: {personal_key[:10]}...")
+        print(f"Test URL: {test_url}")
         
         response = requests.get(test_url, headers=headers)
         print(f"Test response status: {response.status_code}")
+        print(f"Response headers: {dict(response.headers)}")
+        print(f"Response body: {response.text[:200]}...")  # Print first 200 chars
         
         if response.status_code in (200, 404):
             print("Credentials verified successfully!")
             
             # Set global access token
             global ACCESS_TOKEN
-            ACCESS_TOKEN = creds['personal_key']
+            ACCESS_TOKEN = personal_key
             
-            # Update tokens table if needed
+            # Update tokens table with verified credentials
             try:
+                # Clear existing tokens
+                for row in app_tables.tokens.search():
+                    row.delete()
+                
+                # Add new verified credentials
                 app_tables.tokens.add_row(
                     **{
                         'Client ID': creds.get('client_id', ''),
                         'Secret': creds.get('client_secret', ''),
-                        'Personal Access Key': creds['personal_key'],
-                        'access_token': creds['personal_key']
+                        'Personal Access Key': personal_key,
+                        'access_token': personal_key
                     }
                 )
                 print("Updated tokens table with verified credentials")
@@ -242,12 +261,53 @@ def verify_credentials(creds):
                 
             return True
             
-        print(f"Credential verification failed: {response.text}")
+        print(f"Credential verification failed with status {response.status_code}")
+        print(f"Error response: {response.text}")
         return False
         
     except Exception as e:
         print(f"Error verifying credentials: {str(e)}")
+        import traceback
+        print(f"Stack trace:\n{traceback.format_exc()}")
         return False
+
+@anvil.server.callable
+def test_goto_connection():
+    """Test GoTo API connection and return detailed diagnostics"""
+    try:
+        creds = get_credentials()
+        if not creds:
+            return {"success": False, "error": "No credentials found"}
+            
+        if not creds.get('personal_key'):
+            return {"success": False, "error": "No Personal Access Key found"}
+            
+        headers = {
+            "Authorization": f"Bearer {creds['personal_key']}",
+            "Accept": "application/json"
+        }
+        
+        now = datetime.utcnow()
+        five_mins_ago = now - timedelta(minutes=5)
+        test_url = f"{CALL_REPORTS_URL}?startTime={five_mins_ago.isoformat()}Z&endTime={now.isoformat()}Z"
+        
+        response = requests.get(test_url, headers=headers)
+        
+        return {
+            "success": response.status_code in (200, 404),
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "response": response.text[:500],  # First 500 chars
+            "url": test_url,
+            "key_preview": f"{creds['personal_key'][:5]}...{creds['personal_key'][-5:]}"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
 
 def initialize_auth():
     """Initialize authorization using all possible credential sources"""
