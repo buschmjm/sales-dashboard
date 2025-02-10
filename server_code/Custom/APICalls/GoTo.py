@@ -208,65 +208,91 @@ def verify_credentials(creds):
             print("No Personal Access Key available")
             return False
             
-        # Clean the personal access key
+        # Clean and validate the personal access key
         personal_key = creds['personal_key'].strip()
         if not personal_key:
-            print("Personal Access Key is empty")
+            print("Personal Access Key is empty after cleaning")
             return False
-
+            
+        print(f"\nCredential Verification Details:")
+        print(f"Key Length: {len(personal_key)}")
+        print(f"Key Format Check: {'Bearer' in personal_key}")
+        
+        # Remove 'Bearer ' prefix if present
+        if personal_key.startswith('Bearer '):
+            personal_key = personal_key[7:]
+            print("Removed 'Bearer ' prefix from key")
+            
         headers = {
             "Authorization": f"Bearer {personal_key}",
             "Accept": "application/json",
             "Content-Type": "application/json"
         }
         
-        # Use a small time window for the test call
+        # Use current time window for test
         now = datetime.utcnow()
-        five_mins_ago = now - timedelta(minutes=5)
-        test_url = f"{CALL_REPORTS_URL}?startTime={five_mins_ago.isoformat()}Z&endTime={now.isoformat()}Z"
+        start_time = (now - timedelta(hours=1)).isoformat() + 'Z'  # Last hour
+        end_time = now.isoformat() + 'Z'
         
-        print(f"Testing credentials with key: {personal_key[:10]}...")
-        print(f"Test URL: {test_url}")
+        test_url = f"{CALL_REPORTS_URL}?startTime={start_time}&endTime={end_time}"
+        
+        print("\nMaking API Test Call:")
+        print(f"URL: {test_url}")
+        print(f"Headers: {headers}")
         
         response = requests.get(test_url, headers=headers)
-        print(f"Test response status: {response.status_code}")
-        print(f"Response headers: {dict(response.headers)}")
-        print(f"Response body: {response.text[:200]}...")  # Print first 200 chars
+        
+        print(f"\nAPI Response:")
+        print(f"Status Code: {response.status_code}")
+        print(f"Headers: {dict(response.headers)}")
+        print(f"Body: {response.text[:500]}")
         
         if response.status_code in (200, 404):
-            print("Credentials verified successfully!")
+            print("\nCredentials verified successfully!")
             
             # Set global access token
             global ACCESS_TOKEN
             ACCESS_TOKEN = personal_key
             
-            # Update tokens table with verified credentials
             try:
                 # Clear existing tokens
                 for row in app_tables.tokens.search():
                     row.delete()
                 
                 # Add new verified credentials
-                app_tables.tokens.add_row(
+                new_row = app_tables.tokens.add_row(
                     **{
                         'Client ID': creds.get('client_id', ''),
                         'Secret': creds.get('client_secret', ''),
                         'Personal Access Key': personal_key,
-                        'access_token': personal_key
+                        'access_token': personal_key,
+                        'last_verified': datetime.utcnow()
                     }
                 )
-                print("Updated tokens table with verified credentials")
+                print(f"Updated tokens table with row id: {new_row.get_id()}")
             except Exception as e:
                 print(f"Warning: Could not update tokens table: {e}")
-                
+                import traceback
+                print(f"Stack trace:\n{traceback.format_exc()}")
+            
             return True
             
-        print(f"Credential verification failed with status {response.status_code}")
-        print(f"Error response: {response.text}")
+        print(f"\nCredential verification failed:")
+        print(f"Status: {response.status_code}")
+        print(f"Error: {response.text}")
+        
+        if response.status_code == 401:
+            print("\nTroubleshooting 401 Error:")
+            print("1. Check if Personal Access Key is expired in GoTo admin portal")
+            print("2. Verify API permissions include 'call-reports:read'")
+            print("3. Confirm the key format is correct (should be a JWT token)")
+            
         return False
         
     except Exception as e:
-        print(f"Error verifying credentials: {str(e)}")
+        print(f"\nError in verify_credentials:")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
         import traceback
         print(f"Stack trace:\n{traceback.format_exc()}")
         return False
@@ -486,5 +512,45 @@ def add_token_row():
         return True
     except Exception as e:
         print(f"Error adding token row: {str(e)}")
+        return False
+
+@anvil.server.callable
+def debug_goto_auth():
+    """Debug function to check GoTo authentication setup"""
+    try:
+        print("\nDebug GoTo Auth:")
+        print("1. Checking tokens table...")
+        
+        token_rows = list(app_tables.tokens.search())
+        print(f"Found {len(token_rows)} rows in tokens table")
+        
+        if token_rows:
+            row = token_rows[0]
+            columns = [col['name'] for col in app_tables.tokens.list_columns()]
+            print(f"\nAvailable columns: {columns}")
+            
+            for col in columns:
+                value = row.get(col, 'Not set')
+                if col in ['Secret', 'Personal Access Key', 'access_token']:
+                    if value:
+                        value = f"{value[:5]}...{value[-5:]}"
+                print(f"{col}: {value}")
+                
+        print("\n2. Checking API Keys table...")
+        api_keys = get_api_keys()
+        if api_keys:
+            print("Found API keys")
+            for key, value in api_keys.items():
+                masked_value = f"{value[:5]}...{value[-5:]}" if value else 'Not set'
+                print(f"{key}: {masked_value}")
+                
+        print("\n3. Testing API Connection...")
+        test_result = test_goto_connection()
+        print(f"Test result: {json.dumps(test_result, indent=2)}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error in debug_goto_auth: {str(e)}")
         return False
 
