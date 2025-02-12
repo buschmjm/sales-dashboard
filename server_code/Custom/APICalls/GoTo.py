@@ -216,13 +216,19 @@ def verify_credentials(creds):
             
         print(f"\nCredential Verification Details:")
         print(f"Key Length: {len(personal_key)}")
-        print(f"Key Format Check: {'Bearer' in personal_key}")
         
-        # Remove 'Bearer ' prefix if present
-        if personal_key.startswith('Bearer '):
-            personal_key = personal_key[7:]
-            print("Removed 'Bearer ' prefix from key")
-            
+        # GoTo API expects OAuth tokens in JWT format
+        # If the key doesn't look like a JWT, try to format it properly
+        if '_' in personal_key and not personal_key.count('.') == 2:
+            # Format appears to be in the old style with underscore
+            # Convert to proper Bearer token format if needed
+            parts = personal_key.split('_')
+            if len(parts) == 2:
+                personal_key = parts[1]  # Use the second part after underscore
+                print("Reformatted key from underscore format")
+                
+        print(f"Final Key Format: {personal_key[:10]}...")
+        
         headers = {
             "Authorization": f"Bearer {personal_key}",
             "Accept": "application/json",
@@ -231,21 +237,19 @@ def verify_credentials(creds):
         
         # Use current time window for test
         now = datetime.utcnow()
-        start_time = (now - timedelta(hours=1)).isoformat() + 'Z'  # Last hour
+        start_time = (now - timedelta(minutes=5)).isoformat() + 'Z'
         end_time = now.isoformat() + 'Z'
         
         test_url = f"{CALL_REPORTS_URL}?startTime={start_time}&endTime={end_time}"
         
         print("\nMaking API Test Call:")
         print(f"URL: {test_url}")
-        print(f"Headers: {headers}")
+        print(f"Authorization: Bearer {personal_key[:10]}...")
         
         response = requests.get(test_url, headers=headers)
         
         print(f"\nAPI Response:")
         print(f"Status Code: {response.status_code}")
-        print(f"Headers: {dict(response.headers)}")
-        print(f"Body: {response.text[:500]}")
         
         if response.status_code in (200, 404):
             print("\nCredentials verified successfully!")
@@ -255,12 +259,11 @@ def verify_credentials(creds):
             ACCESS_TOKEN = personal_key
             
             try:
-                # Clear existing tokens
+                # Update tokens table with verified credentials
                 for row in app_tables.tokens.search():
                     row.delete()
                 
-                # Add new verified credentials
-                new_row = app_tables.tokens.add_row(
+                app_tables.tokens.add_row(
                     **{
                         'Client ID': creds.get('client_id', ''),
                         'Secret': creds.get('client_secret', ''),
@@ -269,32 +272,25 @@ def verify_credentials(creds):
                         'last_verified': datetime.utcnow()
                     }
                 )
-                print(f"Updated tokens table with row id: {new_row.get_id()}")
             except Exception as e:
                 print(f"Warning: Could not update tokens table: {e}")
-                import traceback
-                print(f"Stack trace:\n{traceback.format_exc()}")
             
             return True
             
-        print(f"\nCredential verification failed:")
-        print(f"Status: {response.status_code}")
-        print(f"Error: {response.text}")
-        
-        if response.status_code == 401:
-            print("\nTroubleshooting 401 Error:")
-            print("1. Check if Personal Access Key is expired in GoTo admin portal")
-            print("2. Verify API permissions include 'call-reports:read'")
-            print("3. Confirm the key format is correct (should be a JWT token)")
+        elif response.status_code == 401:
+            print("\nAuthentication failed (401):")
+            print("1. Your Personal Access Key may be expired")
+            print("2. Generate a new key in GoTo Admin Portal")
+            print("3. Ensure the key has 'call-reports:read' permission")
+            print(f"Error details: {response.text}")
+        else:
+            print(f"\nUnexpected response: {response.status_code}")
+            print(f"Error details: {response.text}")
             
         return False
         
     except Exception as e:
-        print(f"\nError in verify_credentials:")
-        print(f"Error type: {type(e).__name__}")
-        print(f"Error message: {str(e)}")
-        import traceback
-        print(f"Stack trace:\n{traceback.format_exc()}")
+        print(f"\nError in verify_credentials: {str(e)}")
         return False
 
 @anvil.server.callable
@@ -436,28 +432,28 @@ def fetch_call_reports():
 def initialize_goto_credentials(client_id, client_secret, personal_access_key):
     """Initialize GoTo credentials in the tokens table"""
     try:
-        # Clear existing tokens
-        for row in app_tables.tokens.search():
-            row.delete()
-            
-        # Add new credentials
-        app_tables.tokens.add_row(
-            **{
-                'Client ID': client_id,
-                'Secret': client_secret,
-                'Personal Access Key': personal_access_key,
-                'access_token': personal_access_key  # Use PAK as initial access token
-            }
-        )
+        # Clean up the personal access key
+        personal_access_key = personal_access_key.strip()
+        if '_' in personal_access_key:
+            parts = personal_access_key.split('_')
+            if len(parts) == 2:
+                personal_access_key = parts[1]
         
-        # Test the credentials
-        if initialize_auth():
+        # Create credentials dictionary
+        creds = {
+            'client_id': client_id.strip(),
+            'client_secret': client_secret.strip(),
+            'personal_key': personal_access_key
+        }
+        
+        # Verify the credentials
+        if verify_credentials(creds):
             print("Successfully initialized GoTo credentials")
             return True
-        else:
-            print("Credentials verification failed")
-            return False
             
+        print("Credentials verification failed")
+        return False
+        
     except Exception as e:
         print(f"Error initializing credentials: {e}")
         return False
