@@ -52,7 +52,7 @@ class ReportsInnerFrame(ReportsInnerFrameTemplate):
     def phone_nav_click(self, **event_args):
         self._switch_section('phone', PhoneReports())
 
-    def email_nav_click(self, **event_args):
+    def supermove_nav_click(self, **event_args):
         self._switch_section('email', EmailReports())
 
     def b2b_nav_click(self, **event_args):
